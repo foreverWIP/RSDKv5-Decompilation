@@ -1,6 +1,20 @@
 #ifndef MATH_H
 #define MATH_H
 
+extern "C" {
+    extern int32 sin256LookupTable[0x100];
+    extern int32 cos256LookupTable[0x100];
+    extern int32 tan256LookupTable[0x100];
+    extern int32 asin256LookupTable[0x100];
+    extern int32 acos256LookupTable[0x100];
+
+    int32 RSDK_Sin256(int32 angle);
+    int32 RSDK_Cos256(int32 angle);
+    int32 RSDK_Tan256(int32 angle);
+    int32 RSDK_ASin256(int32 angle);
+    int32 RSDK_ACos256(int32 angle);
+}
+
 namespace RSDK
 {
 
@@ -36,12 +50,6 @@ extern int32 cos512LookupTable[0x200];
 extern int32 tan512LookupTable[0x200];
 extern int32 asin512LookupTable[0x200];
 extern int32 acos512LookupTable[0x200];
-
-extern int32 sin256LookupTable[0x100];
-extern int32 cos256LookupTable[0x100];
-extern int32 tan256LookupTable[0x100];
-extern int32 asin256LookupTable[0x100];
-extern int32 acos256LookupTable[0x100];
 
 extern uint8 arcTan256LookupTable[0x100 * 0x100];
 
@@ -89,25 +97,11 @@ inline int32 ACos512(int32 angle)
     return acos512LookupTable[angle];
 }
 
-inline int32 Sin256(int32 angle) { return sin256LookupTable[angle & 0xFF]; }
-inline int32 Cos256(int32 angle) { return cos256LookupTable[angle & 0xFF]; }
-inline int32 Tan256(int32 angle) { return tan256LookupTable[angle & 0xFF]; }
-inline int32 ASin256(int32 angle)
-{
-    if (angle > 0xFF)
-        return 0;
-    if (angle < 0)
-        return -asin256LookupTable[-angle];
-    return asin256LookupTable[angle];
-}
-inline int32 ACos256(int32 angle)
-{
-    if (angle > 0xFF)
-        return 0;
-    if (angle < 0)
-        return -acos256LookupTable[-angle];
-    return acos256LookupTable[angle];
-}
+inline int32 Sin256(int32 angle) { return RSDK_Sin256(angle); }
+inline int32 Cos256(int32 angle) { return RSDK_Cos256(angle); }
+inline int32 Tan256(int32 angle) { return RSDK_Tan256(angle); }
+inline int32 ASin256(int32 angle) { return RSDK_ASin256(angle); }
+inline int32 ACos256(int32 angle) { return RSDK_ACos256(angle); }
 
 // Get Arc Tan value
 uint8 ArcTanLookup(int32 x, int32 y);

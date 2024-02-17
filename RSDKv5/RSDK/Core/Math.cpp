@@ -15,11 +15,11 @@ int32 RSDK::tan512LookupTable[0x200];
 int32 RSDK::asin512LookupTable[0x200];
 int32 RSDK::acos512LookupTable[0x200];
 
-int32 RSDK::sin256LookupTable[0x100];
-int32 RSDK::cos256LookupTable[0x100];
-int32 RSDK::tan256LookupTable[0x100];
-int32 RSDK::asin256LookupTable[0x100];
-int32 RSDK::acos256LookupTable[0x100];
+int32 sin256LookupTable[0x100];
+int32 cos256LookupTable[0x100];
+int32 tan256LookupTable[0x100];
+int32 asin256LookupTable[0x100];
+int32 acos256LookupTable[0x100];
 
 uint8 RSDK::arcTan256LookupTable[0x100 * 0x100];
 

@@ -163,6 +163,12 @@ target_compile_definitions(RetroEngine PRIVATE
     DECOMP_VERSION="${DECOMP_VERSION}"
 )
 
+if(WIN32)
+    target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/release/rsdkv5rs.lib)
+else()
+    target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/release/rsdkv5rs.a)
+endif()
+
 if(WITH_RSDK)
     if(NOT GAME_STATIC)
         add_custom_command(TARGET RetroEngine POST_BUILD
