@@ -164,6 +164,7 @@ target_compile_definitions(RetroEngine PRIVATE
 )
 
 if(WIN32)
+    target_link_libraries(RetroEngine ws2_32.dll userenv.dll bcrypt.dll ntdll.dll)
     target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/release/rsdkv5rs.lib)
 else()
     target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/release/librsdkv5rs.a)
