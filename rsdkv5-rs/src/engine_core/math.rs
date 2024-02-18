@@ -1,6 +1,28 @@
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::*;
+
+// #define SET_BIT(value, set, pos) ((value) ^= (-(int32)(set) ^ (value)) & (1 << (pos)))
+// #define GET_BIT(b, pos)          ((b) >> (pos)&1)
+
+// #define TO_FIXED(x)   ((x) << 16)
+#[macro_export]
+macro_rules! TO_FIXED {
+    ($x:expr) => {
+        $x << 16
+    };
+}
+// #define FROM_FIXED(x) ((x) >> 16)
+
+// floating point variants
+// #define TO_FIXED_F(x)   ((x)*65536.0)
+// #define FROM_FIXED_F(x) ((x) / 65536.0)
+
+#[repr(C)]
+pub struct Vector2 {
+    pub x: i32,
+    pub y: i32,
+}
 
 #[no_mangle]
 pub static mut sin256LookupTable: [i32; 0x100] = [0i32; 0x100];
@@ -101,14 +123,14 @@ pub extern "C" fn calc_trig_angles() {
         for y in 0..0x100 {
             for x in 0..0x100 {
                 // 40.743664 = 0x100 / (2 * M_PI) (roughly)
-                arcTan256LookupTable[y * 0x100 + x] =
+                arcTan256LookupTable[x * 0x100 + y] =
                     ((f32::atan2(y as f32, x as f32) * 40.743664) as i32) as u8;
             }
         }
     }
 }
 
-fn get_trig<const TABLE_SIZE: usize>(
+const fn get_trig<const TABLE_SIZE: usize>(
     angle: i32,
     table_256: &[i32; 0x100],
     table_512: &[i32; 0x200],

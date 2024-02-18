@@ -8,3 +8,10 @@ edition = "2021"
 [lib]
 name = "rsdkv5rs"
 crate-type = ["staticlib"]
+
+[features]
+default = ["version_u", "mod_loader"]
+use_original_code = []
+version_2 = []
+version_u = ["version_2"]
+mod_loader = ["use_original_code"]
