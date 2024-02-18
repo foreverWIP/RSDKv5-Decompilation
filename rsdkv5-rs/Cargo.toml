@@ -11,7 +11,10 @@ crate-type = ["staticlib"]
 
 [features]
 default = ["version_u", "mod_loader"]
-use_original_code = []
+original_code = []
 version_2 = []
 version_u = ["version_2"]
-mod_loader = ["use_original_code"]
+mod_loader = ["original_code"]
+
+[dependencies]
+cfg-if = "1.0.0"
