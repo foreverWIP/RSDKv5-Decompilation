@@ -193,7 +193,7 @@ void RSDK::GenerateHashCRC(uint32 *id, char *inputString)
     do ++len;
     while (inputString[len]);
 
-    for (uint32 i = 0; i < len; i++) {
+    for (int32 i = 0; i < len; i++) {
         *id = crc32_t[(uint8)(*id ^ *inputString)] ^ (*id >> 8);
         inputString++;
     }

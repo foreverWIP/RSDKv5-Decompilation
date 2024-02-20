@@ -57,7 +57,7 @@ uint16 RSDK::LoadSpriteAnimation(const char *filePath, uint8 scope)
         uint8 sheetCount = ReadInt8(&info);
         for (int32 s = 0; s < sheetCount; ++s) {
             ReadString(&info, fullFilePath);
-            sheetIDs[s] = LoadSpriteSheet(fullFilePath, scope);
+            sheetIDs[s] = (uint8)LoadSpriteSheet(fullFilePath, scope);
         }
 
         uint8 hitboxCount = ReadInt8(&info);

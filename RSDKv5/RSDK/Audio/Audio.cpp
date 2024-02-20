@@ -382,14 +382,14 @@ void RSDK::LoadSfxToSlot(char *filename, uint8 slot, uint8 plays, uint8 scope)
                 float *buffer = (float *)sfxList[slot].buffer;
                 if (sampleBits == 8) {
                     // 8-bit sample. Convert from U8 to S8, and then from S8 to F32.
-                    for (int32 s = 0; s < length; ++s) {
+                    for (uint32 s = 0; s < length; ++s) {
                         int32 sample = ReadInt8(&info);
                         *buffer++    = (sample - 0x80) / (float)0x80;
                     }
                 }
                 else {
                     // 16-bit sample. Convert from S16 to F32.
-                    for (int32 s = 0; s < length; ++s) {
+                    for (uint32 s = 0; s < length; ++s) {
                         // For some reason, the game performs sign-extension manually here.
                         // Note that this is different from the 8-bit format's unsigned-to-signed conversion.
                         int32 sample = (uint16)ReadInt16(&info);
@@ -435,7 +435,7 @@ void RSDK::LoadSfx(char *filename, uint8 plays, uint8 scope)
     }
 
     if (id != (uint16)-1)
-        LoadSfxToSlot(filename, id, plays, scope);
+        LoadSfxToSlot(filename, (uint8)id, plays, scope);
 }
 
 int32 RSDK::PlaySfx(uint16 sfx, uint32 loopPoint, uint32 priority)

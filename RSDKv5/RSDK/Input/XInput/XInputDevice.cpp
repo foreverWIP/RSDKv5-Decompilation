@@ -60,8 +60,8 @@ void RSDK::SKU::InputDeviceXInput::UpdateInput()
                 this->vDelta_L = 0.0;
             }
             else {
-                this->hDelta_L = this->hDelta_L * ((fminf(32767.0, div) - 7864.0) / 24903.0);
-                this->vDelta_L = this->vDelta_L * ((fminf(32767.0, div) - 7864.0) / 24903.0);
+                this->hDelta_L = this->hDelta_L * (float)((fminf(32767.0, div) - 7864.0) / 24903.0);
+                this->vDelta_L = this->vDelta_L * (float)((fminf(32767.0, div) - 7864.0) / 24903.0);
             }
 
             this->hDelta_R = gamePad->sThumbRX;
@@ -75,25 +75,25 @@ void RSDK::SKU::InputDeviceXInput::UpdateInput()
                 this->vDelta_R = 0.0;
             }
             else {
-                this->hDelta_R = this->hDelta_R * ((fminf(32767.0, div) - 7864.0) / 24903.0);
-                this->vDelta_R = this->vDelta_R * ((fminf(32767.0, div) - 7864.0) / 24903.0);
+                this->hDelta_R = this->hDelta_R * (float)((fminf(32767.0, div) - 7864.0) / 24903.0);
+                this->vDelta_R = this->vDelta_R * (float)((fminf(32767.0, div) - 7864.0) / 24903.0);
             }
 
-            this->deltaBumper_L = this->stateBumper_L ? 1.0 : 0.0;
+            this->deltaBumper_L = this->stateBumper_L ? 1.0f : 0.0f;
 
             this->deltaTrigger_L = gamePad->bLeftTrigger;
             if (this->deltaTrigger_L <= 30.0)
                 this->deltaTrigger_L = 0.0;
             else
-                this->deltaTrigger_L = (this->deltaTrigger_L - 30.0) / 225.0;
+                this->deltaTrigger_L = (float)((this->deltaTrigger_L - 30.0) / 225.0);
 
-            this->deltaBumper_R = this->stateBumper_R ? 1.0 : 0.0;
+            this->deltaBumper_R = this->stateBumper_R ? 1.0f : 0.0f;
 
             this->deltaTrigger_R = gamePad->bRightTrigger;
             if (this->deltaTrigger_R <= 30.0)
                 this->deltaTrigger_R = 0.0;
             else
-                this->deltaTrigger_R = (this->deltaTrigger_R - 30.0) / 225.0;
+                this->deltaTrigger_R = (float)((this->deltaTrigger_R - 30.0) / 225.0);
         }
 
         this->ProcessInput(CONT_ANY);

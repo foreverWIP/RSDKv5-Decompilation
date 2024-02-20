@@ -527,7 +527,7 @@ void RSDK::ProcessEngine()
 
             if (engine.imageFadeSpeed <= 0.0 || videoSettings.dimMax >= 1.0) {
                 if (engine.displayTime <= 0.0) {
-                    videoSettings.dimMax += engine.imageFadeSpeed;
+                    videoSettings.dimMax += (float)engine.imageFadeSpeed;
                     if (videoSettings.dimMax <= 0.0) {
                         videoSettings.shaderID    = engine.storedShaderID;
                         videoSettings.screenCount = 1;
@@ -546,7 +546,7 @@ void RSDK::ProcessEngine()
                 }
             }
             else {
-                videoSettings.dimMax += engine.imageFadeSpeed;
+                videoSettings.dimMax += (float)engine.imageFadeSpeed;
                 if (videoSettings.dimMax >= 1.0) {
                     engine.imageFadeSpeed = -engine.imageFadeSpeed;
                     videoSettings.dimMax  = 1.0;
@@ -963,8 +963,8 @@ void RSDK::LoadXMLStages(const tinyxml2::XMLElement *gameElement)
             sprintf_s(list->name, sizeof(list->name), "%s", lstName);
             HASH_COPY_MD5(list->hash, hash);
 
-            list->sceneOffsetStart = listData.size();
-            list->sceneOffsetEnd   = listData.size();
+            list->sceneOffsetStart = (uint16)listData.size();
+            list->sceneOffsetEnd   = (uint16)listData.size();
             list->sceneCount       = 0;
             sceneInfo.categoryCount++;
         }

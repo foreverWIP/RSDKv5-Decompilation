@@ -319,8 +319,8 @@ void RSDK::SKU::UpdateHIDButtonStates(HRAWINPUT hRawInput)
                     case RAWMAP_ONBUTTONUP:
                     case RAWMAP_DIRECTIONAL: break;
 
-                    case RAWMAP_ANALOG_NEG: delta = (rawInputData->data.hid.bRawData[offset >> 3] - 128.0) * -(1.0 / 128); break;
-                    case RAWMAP_ANALOG_POS: delta = (rawInputData->data.hid.bRawData[offset >> 3] - 128.0) * (1.0 / 128); break;
+                    case RAWMAP_ANALOG_NEG: delta = (float)((rawInputData->data.hid.bRawData[offset >> 3] - 128.0) * -(1.0 / 128)); break;
+                    case RAWMAP_ANALOG_POS: delta = (float)((rawInputData->data.hid.bRawData[offset >> 3] - 128.0) * (1.0 / 128)); break;
                 }
 
                 switch (b) {

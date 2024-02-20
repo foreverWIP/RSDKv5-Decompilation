@@ -172,7 +172,7 @@ void RSDK::RemoveStorageEntry(void **dataPtr)
         uint32 *data = *(uint32 **)dataPtr;
 
         uint32 set = HEADER(data, HEADER_SET_ID);
-        for (int32 e = 0; e < dataStorage[set].entryCount; ++e) {
+        for (uint32 e = 0; e < dataStorage[set].entryCount; ++e) {
 #if !RETRO_USE_ORIGINAL_CODE
             // make sure dataEntries[e] isn't null. If it is null by some ungodly chance then it was prolly already freed or something idk
             if (dataStorage[HEADER(data, HEADER_SET_ID)].dataEntries[e] && *dataPtr == *dataStorage[HEADER(data, HEADER_SET_ID)].dataEntries[e]) {
@@ -244,7 +244,7 @@ void RSDK::DefragmentAndGarbageCollectStorage(StorageDataSets set)
         // Check if this block of memory is currently allocated.
         currentHeader[HEADER_ACTIVE] = false;
 
-        for (int32 e = 0; e < dataStorage[set].entryCount; ++e)
+        for (uint32 e = 0; e < dataStorage[set].entryCount; ++e)
             if (dataPtr == dataStorage[set].storageEntries[e])
                 currentHeader[HEADER_ACTIVE] = true;
 
@@ -283,7 +283,7 @@ void RSDK::DefragmentAndGarbageCollectStorage(StorageDataSets set)
             uint32 size     = (currentHeader[HEADER_DATA_LENGTH] / sizeof(uint32)) + HEADER_SIZE; // size (in int32s)
 
             // Find every single pointer to this memory allocation and update them with its new address.
-            for (int32 c = 0; c < dataStorage[set].entryCount; ++c)
+            for (uint32 c = 0; c < dataStorage[set].entryCount; ++c)
 
 #if !RETRO_USE_ORIGINAL_CODE
                 // make sure dataEntries[e] isn't null. If it is null by some ungodly chance then it was prolly already freed or something idk

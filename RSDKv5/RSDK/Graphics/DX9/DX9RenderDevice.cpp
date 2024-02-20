@@ -381,7 +381,7 @@ void RenderDevice::RefreshWindow()
             D3DDISPLAYMODE displayMode;
             dx9Context->GetAdapterDisplayMode(dxAdapter, &displayMode);
 
-            if (videoSettings.windowWidth >= displayMode.Width || videoSettings.windowHeight >= displayMode.Height) {
+            if ((uint32)videoSettings.windowWidth >= displayMode.Width || (uint32)videoSettings.windowHeight >= displayMode.Height) {
                 videoSettings.windowWidth  = (displayMode.Height / 480 * videoSettings.pixWidth);
                 videoSettings.windowHeight = displayMode.Height / 480 * videoSettings.pixHeight;
             }
@@ -457,8 +457,8 @@ void RenderDevice::InitVertexBuffer()
     RenderVertex vertBuffer[sizeof(rsdkVertexBuffer) / sizeof(RenderVertex)];
     memcpy(vertBuffer, rsdkVertexBuffer, sizeof(rsdkVertexBuffer));
 
-    float x = 0.5 / (float)viewSize.x;
-    float y = 0.5 / (float)viewSize.y;
+    float x = (float)(0.5 / (float)viewSize.x);
+    float y = (float)(0.5 / (float)viewSize.y);
 
     // ignore the last 6 verts, they're scaled to the 1024x512 textures already!
     int32 vertCount = (RETRO_REV02 ? 60 : 24) - 6;
@@ -468,10 +468,10 @@ void RenderDevice::InitVertexBuffer()
         vertex->pos.y        = vertex->pos.y + y;
 
         if (vertex->tex.x)
-            vertex->tex.x = screens[0].size.x * (1.0 / textureSize.x);
+            vertex->tex.x = (float)(screens[0].size.x * (1.0 / textureSize.x));
 
         if (vertex->tex.y)
-            vertex->tex.y = screens[0].size.y * (1.0 / textureSize.y);
+            vertex->tex.y = (float)(screens[0].size.y * (1.0 / textureSize.y));
     }
 
     RenderVertex *vertBufferPtr;
@@ -684,8 +684,8 @@ bool RenderDevice::InitGraphicsAPI()
     engine.inFocus          = 1;
     videoSettings.viewportX = (float)dx9ViewPort.X;
     videoSettings.viewportY = (float)dx9ViewPort.Y;
-    videoSettings.viewportW = 1.0 / viewSize.x;
-    videoSettings.viewportH = 1.0 / viewSize.y;
+    videoSettings.viewportW = 1.0f / viewSize.x;
+    videoSettings.viewportH = 1.0f / viewSize.y;
 
     return true;
 }
@@ -1085,7 +1085,7 @@ void RenderDevice::ProcessEvent(MSG Msg)
             switch (Msg.wParam) {
                 default:
 #if RETRO_INPUTDEVICE_KEYBOARD
-                    SKU::UpdateKeyState(activeButtons);
+                    SKU::UpdateKeyState((int32)activeButtons);
                     handledMsg = true;
 #endif
                     break;
@@ -1134,7 +1134,7 @@ void RenderDevice::ProcessEvent(MSG Msg)
             switch (Msg.wParam) {
                 default:
 #if RETRO_INPUTDEVICE_KEYBOARD
-                    SKU::UpdateKeyState(activeButtons);
+                    SKU::UpdateKeyState((int32)activeButtons);
 #endif
                     break;
 
@@ -1161,7 +1161,7 @@ void RenderDevice::ProcessEvent(MSG Msg)
                     }
                     else {
 #if RETRO_INPUTDEVICE_KEYBOARD
-                        SKU::UpdateKeyState(activeButtons);
+                        SKU::UpdateKeyState((int32)activeButtons);
 #endif
                     }
 
@@ -1359,7 +1359,7 @@ void RenderDevice::ProcessEvent(MSG Msg)
             switch (Msg.wParam) {
                 default:
 #if RETRO_INPUTDEVICE_KEYBOARD
-                    SKU::ClearKeyState(activeButtons);
+                    SKU::ClearKeyState((int32)activeButtons);
 #endif
                     break;
 
@@ -1728,8 +1728,8 @@ void RenderDevice::SetupVideoTexture_YUV444(int32 width, int32 height, uint8 *yP
         if (videoSettings.shaderSupport) {
             // Shaders are supported! lets watch this video in full color!
             for (int32 y = 0; y < height; ++y) {
-                int32 pos1  = yPlane - vPlane;
-                int32 pos2  = uPlane - vPlane;
+                int32 pos1  = (int32)(yPlane - vPlane);
+                int32 pos2  = (int32)(uPlane - vPlane);
                 uint8 *pixV = vPlane;
                 for (int32 x = 0; x < width; ++x) {
                     *pixels++ = pixV[0] | (pixV[pos2] << 8) | (pixV[pos1] << 16) | 0xFF000000;

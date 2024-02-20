@@ -402,7 +402,7 @@ uint8 paethPredictor(int16 a, int16 b, int16 c)
         pa = pb;
     }
 
-    return (pc < pa) ? c : a;
+    return (uint8)((pc < pa) ? c : a);
 }
 
 void RSDK::ImagePNG::Unfilter(uint8 *recon)
@@ -640,7 +640,7 @@ bool32 RSDK::ImagePNG::Load(const char *fileName, bool32 loadHeader)
                         ProcessScanlines();
 #else
                         // read this chunk into the chunk buffer storage (we process em all at the end)
-                        dataSize += ReadBytes(&info, chunkBuffer + dataSize, chunkSize);
+                        dataSize += (int32)ReadBytes(&info, chunkBuffer + dataSize, chunkSize);
 #endif
                     }
                     else {

@@ -404,8 +404,8 @@ void RSDK::LoadSceneAssets()
 
             layer->layout = NULL;
             if (layer->xsize || layer->ysize) {
-                AllocateStorage((void **)&layer->layout, sizeof(uint16) * (1UL << layer->widthShift) * (1UL << layer->heightShift), DATASET_STG, true);
-                memset(layer->layout, 0xFF, sizeof(uint16) * (1UL << layer->widthShift) * (1UL << layer->heightShift));
+                AllocateStorage((void **)&layer->layout, sizeof(uint16) * (1ULL << layer->widthShift) * (1ULL << layer->heightShift), DATASET_STG, true);
+                memset(layer->layout, 0xFF, sizeof(uint16) * (1ULL << layer->widthShift) * (1ULL << layer->heightShift));
             }
 
             int32 size = layer->xsize;

@@ -559,9 +559,9 @@ inline uint32 GetFilteredInputDeviceID(bool32 confirmOnly, bool32 unassignedOnly
         for (int32 i = 0; i < inputDeviceCount; ++i) {
             if (inputDeviceList[i] && inputDeviceList[i]->active && !inputDeviceList[i]->disabled
                 && (!inputDeviceList[i]->isAssigned || !unassignedOnly)) {
-                if (inputDeviceList[i]->inactiveTimer[confirmOnly] < mostRecentTime) {
+                if ((uint32)inputDeviceList[i]->inactiveTimer[confirmOnly] < mostRecentTime) {
                     mostRecentTime = inputDeviceList[i]->inactiveTimer[confirmOnly];
-                    if (inputDeviceList[i]->inactiveTimer[confirmOnly] <= maxTime)
+                    if ((uint32)inputDeviceList[i]->inactiveTimer[confirmOnly] <= maxTime)
                         mostRecentValidID = inputDeviceList[i]->id;
                     mostRecentID = inputDeviceList[i]->id;
                 }

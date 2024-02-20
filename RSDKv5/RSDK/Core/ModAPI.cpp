@@ -239,7 +239,7 @@ void RSDK::LoadModSettings()
         return;
 
     // Iterate backwards to find the last active mod in the list
-    int32 start = modList.size() - 1;
+    int32 start = (int32)(modList.size() - 1);
     while ((start != -1) && !modList[start].active) {
         --start;
     }
@@ -861,15 +861,15 @@ bool32 RSDK::LoadMod(ModInfo *info, const std::string &modsPath, const std::stri
             if (saveCfg && info->config.size()) {
                 DrawStatus("Saving config...");
                 FileIO *cfg = fOpen((modDir + "/modConfig.cfg").c_str(), "wb");
-                uint8 ct    = info->config.size();
+                uint8 ct    = (uint8)info->config.size();
                 fWrite(&ct, 1, 1, cfg);
                 for (auto kv : info->config) {
                     if (!kv.first.length())
                         continue; // don't save no-categories
-                    uint8 len = kv.first.length();
+                    uint8 len = (uint8)kv.first.length();
                     fWrite(&len, 1, 1, cfg);
                     WriteText(cfg, kv.first.c_str());
-                    uint8 kt = kv.second.size();
+                    uint8 kt = (uint8)kv.second.size();
                     fWrite(&kt, 1, 1, cfg);
                     for (auto kkv : kv.second) {
                         uint8 len    = (uint8)(kkv.first.length()) & 0x7F;
@@ -886,7 +886,7 @@ bool32 RSDK::LoadMod(ModInfo *info, const std::string &modsPath, const std::stri
                         if (isint)
                             fWrite(&r, sizeof(int32), 1, cfg);
                         else {
-                            uint8 len = kkv.second.length();
+                            uint8 len = (uint8)kkv.second.length();
                             fWrite(&len, 1, 1, cfg);
                             WriteText(cfg, kkv.second.c_str());
                         }
@@ -1574,7 +1574,7 @@ void SuperInternal(RSDK::ObjectClass *super, RSDK::ModSuper callback, void *data
     if (HASH_MATCH_MD5(super->hash, super->inherited->hash)) {
         // entity override
         override = true;
-        for (int32 i = 0; i < superLevels[inheritLevel]; i++) {
+        for (uint32 i = 0; i < superLevels[inheritLevel]; i++) {
             if (!super->inherited)
                 break; // *do not* cap superLevel because if we do we'll break things even more than what we had to do to get here
             super = super->inherited;
@@ -1733,7 +1733,7 @@ void RSDK::ModRegisterObject_STD(Object **staticVars, Object **modStaticVars, co
     }
 
     if (inherited) {
-        if (inherit->entityClassSize > entityClassSize)
+        if ((uint32)inherit->entityClassSize > entityClassSize)
             entityClassSize = inherit->entityClassSize;
     }
 
