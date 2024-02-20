@@ -192,7 +192,9 @@ char RSDK::drawGroupNames[0x10][0x10] = {
     "Draw Group 8", "Draw Group 9", "Draw Group 10", "Draw Group 11", "Draw Group 12", "Draw Group 13", "Draw Group 14", "Draw Group 15",
 };
 
-#include "RSDK/Dev/DevFont.hpp"
+extern "C" {
+extern uint8 devTextStencil[0x2000];
+}
 
 // 50% alpha, but way faster
 #define setPixelBlend(pixel, frameBufferClr) frameBufferClr = ((pixel >> 1) & 0x7BEF) + ((frameBufferClr >> 1) & 0x7BEF)

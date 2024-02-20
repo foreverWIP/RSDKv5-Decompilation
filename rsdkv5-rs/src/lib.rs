@@ -1,3 +1,4 @@
+pub mod dev;
 pub mod engine_core;
 pub mod scene;
 
