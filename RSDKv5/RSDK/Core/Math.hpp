@@ -52,9 +52,6 @@ extern "C" {
     int32 RSDK_RandSeeded(int32 min, int32 max, int32 *randSeed);
 }
 
-namespace RSDK
-{
-
 // not "math" but works best here
 #define INT_TO_VOID(x) (void *)(size_t)(x)
 #define VOID_TO_INT(x) (int32)(size_t)(x)
@@ -76,9 +73,6 @@ struct Vector2 {
 
 #define MEM_ZERO(x) memset(&(x), 0, sizeof((x)))
 
-// Setup angles
-void CalculateTrigAngles();
-
 inline int32 Sin1024(int32 angle) { return RSDK_Sin1024(angle); }
 inline int32 Cos1024(int32 angle) { return RSDK_Cos1024(angle); }
 inline int32 Tan1024(int32 angle) { return RSDK_Tan1024(angle); }
@@ -97,12 +91,10 @@ inline int32 Tan256(int32 angle) { return RSDK_Tan256(angle); }
 inline int32 ASin256(int32 angle) { return RSDK_ASin256(angle); }
 inline int32 ACos256(int32 angle) { return RSDK_ACos256(angle); }
 
-uint8 ArcTanLookup(int32 x, int32 y);
-
 inline void SetRandSeed(int32 key) { return RSDK_SetRandSeed(key); }
 inline int32 Rand(int32 min, int32 max) { return RSDK_Rand(min, max); }
 inline int32 RandSeeded(int32 min, int32 max, int32 *randSeed) { return RSDK_RandSeeded(min, max, randSeed); }
-
-} // namespace RSDK
+inline void CalculateTrigAngles() { RSDK_CalculateTrigAngles(); }
+inline uint8 ArcTanLookup(int32 X, int32 Y) { return RSDK_ArcTanLookup(X, Y); }
 
 #endif // !MATH_H

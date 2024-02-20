@@ -21,7 +21,6 @@ set(RETRO_OUTPUT_NAME ${RETRO_NAME} CACHE STRING "The exported name of the execu
 set(RETRO_FILES
     RSDKv5/main.cpp
     RSDKv5/RSDK/Core/RetroEngine.cpp
-    RSDKv5/RSDK/Core/Math.cpp
     RSDKv5/RSDK/Core/Reader.cpp
     RSDKv5/RSDK/Core/Link.cpp
     RSDKv5/RSDK/Core/ModAPI.cpp
