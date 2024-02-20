@@ -56,6 +56,6 @@ extern "C" {
 
     extern int32 sinM7LookupTable[0x200];
     extern int32 cosM7LookupTable[0x200];
-}
 
-void CalculateTrigAnglesM7();
+    void CalculateTrigAnglesM7();
+}

@@ -5,18 +5,25 @@ use crate::*;
 // #define SET_BIT(value, set, pos) ((value) ^= (-(int32)(set) ^ (value)) & (1 << (pos)))
 // #define GET_BIT(b, pos)          ((b) >> (pos)&1)
 
-// #define TO_FIXED(x)   ((x) << 16)
 #[macro_export]
 macro_rules! TO_FIXED {
     ($x:expr) => {
         $x << 16
     };
 }
-// #define FROM_FIXED(x) ((x) >> 16)
+#[macro_export]
+macro_rules! FROM_FIXED {
+    ($x:expr) => {
+        $x >> 16
+    };
+}
 
 // floating point variants
 // #define TO_FIXED_F(x)   ((x)*65536.0)
 // #define FROM_FIXED_F(x) ((x) / 65536.0)
+
+// M_PI is *too* accurate, so use this instead
+pub const RSDK_PI: f32 = 3.1415927;
 
 #[repr(C)]
 pub struct Vector2 {
@@ -64,9 +71,6 @@ pub static mut arcTan256LookupTable: [u8; 0x100 * 0x100] = [0u8; 0x100 * 0x100];
 #[no_mangle]
 #[export_name = "RSDK_CalculateTrigAngles"]
 pub extern "C" fn calc_trig_angles() {
-    // M_PI is *too* accurate, so use this instead
-    const RSDK_PI: f32 = 3.1415927;
-
     unsafe {
         randSeed = SystemTime::now()
             .duration_since(UNIX_EPOCH)

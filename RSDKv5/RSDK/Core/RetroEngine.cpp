@@ -649,7 +649,7 @@ void RSDK::InitEngine()
             devMenu.state = DevMenu_MainMenu;
             SetupFunctionTables();
 
-            Legacy::CalculateTrigAnglesM7();
+            CalculateTrigAnglesM7();
 
             engine.gamePlatform      = (RETRO_DEVICETYPE == RETRO_STANDARD ? "STANDARD" : "MOBILE");
             engine.gameRenderType    = "SW_RENDERING";
@@ -686,7 +686,7 @@ void RSDK::InitEngine()
             devMenu.state = DevMenu_MainMenu;
             SetupFunctionTables();
 
-            Legacy::CalculateTrigAnglesM7();
+            CalculateTrigAnglesM7();
 
             engine.gamePlatform      = (RETRO_DEVICETYPE == RETRO_STANDARD ? "Standard" : "Mobile");
             engine.gameRenderType    = "SW_Rendering";
