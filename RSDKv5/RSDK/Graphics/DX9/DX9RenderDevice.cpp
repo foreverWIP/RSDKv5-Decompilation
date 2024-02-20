@@ -1149,7 +1149,7 @@ void RenderDevice::ProcessEvent(MSG Msg)
                 case VK_ESCAPE:
                     if (engine.devMenu) {
 #if RETRO_REV0U
-                        if (sceneInfo.state == ENGINESTATE_DEVMENU || RSDK::Legacy::gameMode == RSDK::Legacy::ENGINE_DEVMENU)
+                        if (sceneInfo.state == ENGINESTATE_DEVMENU || legacy_gameMode == RSDK::Legacy::ENGINE_DEVMENU)
 #else
                         if (sceneInfo.state == ENGINESTATE_DEVMENU)
 #endif

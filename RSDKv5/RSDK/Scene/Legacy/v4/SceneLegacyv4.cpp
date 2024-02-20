@@ -25,7 +25,7 @@ void RSDK::Legacy::v4::InitFirstStage(void)
     ClearAnimationData();
     activePalette = fullPalette[0];
     stageMode     = STAGEMODE_LOAD;
-    gameMode      = ENGINE_MAINGAME;
+    legacy_gameMode      = ENGINE_MAINGAME;
 }
 
 void RSDK::Legacy::v4::ProcessStage(void)
@@ -482,7 +482,7 @@ void RSDK::Legacy::v4::LoadStageFiles()
                     ReadString(&info, strBuffer);
                     ParseScriptFile(strBuffer, scriptID++);
 
-                    if (gameMode == ENGINE_SCRIPTERROR)
+                    if (legacy_gameMode == ENGINE_SCRIPTERROR)
                         return;
                 }
             }
@@ -502,7 +502,7 @@ void RSDK::Legacy::v4::LoadStageFiles()
                 SetObjectTypeName(modTypeNames[i], scriptID);
 
                 ParseScriptFile(modScriptPaths[i], scriptID++);
-                if (gameMode == ENGINE_SCRIPTERROR)
+                if (legacy_gameMode == ENGINE_SCRIPTERROR)
                     return;
             }
 #endif
@@ -575,7 +575,7 @@ void RSDK::Legacy::v4::LoadStageFiles()
                     ReadString(&info, strBuffer);
                     ParseScriptFile(strBuffer, scriptID + i);
 
-                    if (gameMode == ENGINE_SCRIPTERROR)
+                    if (legacy_gameMode == ENGINE_SCRIPTERROR)
                         return;
                 }
             }

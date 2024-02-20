@@ -12,21 +12,6 @@ namespace Legacy
 #include "v3/RetroEnginev3.cpp"
 #include "v4/RetroEnginev4.cpp"
 
-int32 gameMode       = ENGINE_MAINGAME;
-bool32 usingBytecode = false;
-
-bool32 trialMode     = false;
-int32 gamePlatformID = LEGACY_RETRO_WIN;
-int32 deviceType     = DEVICE_STANDARD;
-bool32 onlineActive  = false;
-int32 language       = LEGACY_LANGUAGE_EN;
-#if LEGACY_RETRO_USE_HAPTICS
-bool32 hapticsEnabled = false;
-#endif
-
-int32 sinM7LookupTable[0x200];
-int32 cosM7LookupTable[0x200];
-
 void CalculateTrigAnglesM7()
 {
     for (int32 i = 0; i < 0x200; ++i) {

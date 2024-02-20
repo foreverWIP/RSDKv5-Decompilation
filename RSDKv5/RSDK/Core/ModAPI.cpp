@@ -286,7 +286,7 @@ void RSDK::ApplyModChanges()
             globalVarsInitCB = NULL;
             LoadGameConfig();
             sceneInfo.state  = ENGINESTATE_DEVMENU;
-            Legacy::gameMode = Legacy::ENGINE_MAINGAME;
+            legacy_gameMode = Legacy::ENGINE_MAINGAME;
             break;
 
         case 4:
@@ -294,7 +294,7 @@ void RSDK::ApplyModChanges()
             strcpy(gameVerInfo.version, "Legacy v4 Mode");
 
             sceneInfo.state  = ENGINESTATE_NONE; // i think this is fine ??? lmk if otherwise // rmg seal of approval // WAIT THIS WAS ME
-            Legacy::gameMode = Legacy::ENGINE_DEVMENU;
+            legacy_gameMode = Legacy::ENGINE_DEVMENU;
             break;
 
         case 3:
@@ -302,7 +302,7 @@ void RSDK::ApplyModChanges()
             strcpy(gameVerInfo.version, "Legacy v3 Mode");
 
             sceneInfo.state  = ENGINESTATE_NONE;
-            Legacy::gameMode = Legacy::ENGINE_DEVMENU;
+            legacy_gameMode = Legacy::ENGINE_DEVMENU;
             break;
     }
     if (engine.version == devMenu.startingVersion) {

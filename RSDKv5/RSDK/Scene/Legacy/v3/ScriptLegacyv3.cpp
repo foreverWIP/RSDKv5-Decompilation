@@ -886,7 +886,7 @@ void RSDK::Legacy::v3::CheckAliasText(char *text)
 #if !RETRO_USE_ORIGINAL_CODE
     if (aliasCount >= LEGACY_v3_ALIAS_COUNT) {
         RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases\nFILE: %s", scriptFile);
-        gameMode = ENGINE_SCRIPTERROR;
+        legacy_gameMode = ENGINE_SCRIPTERROR;
         return;
     }
 #endif
@@ -1076,7 +1076,7 @@ void RSDK::Legacy::v3::ConvertFunctionText(char *text)
     if (opcode <= 0) {
         RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Opcode not found\nOPCODE: %s\nLINE: %d\nFILE: %s", funcName, lineID, scriptFile);
 
-        gameMode = ENGINE_SCRIPTERROR;
+        legacy_gameMode = ENGINE_SCRIPTERROR;
     }
     else {
         scriptCode[scriptCodePos++] = opcode;
@@ -1411,10 +1411,10 @@ void RSDK::Legacy::v3::ConvertFunctionText(char *text)
                         constant = i;
                 }
 
-                if (constant == -1 && gameMode != ENGINE_SCRIPTERROR) {
+                if (constant == -1 && legacy_gameMode != ENGINE_SCRIPTERROR) {
                     PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Operand not found\nOPERAND: %s\nLINE: %d\nFILE: %s", funcName, lineID, scriptFile);
 
-                    gameMode = ENGINE_SCRIPTERROR;
+                    legacy_gameMode = ENGINE_SCRIPTERROR;
                     constant = 0;
                 }
 
@@ -1801,7 +1801,7 @@ void RSDK::Legacy::v3::ParseScriptFile(char *scriptName, int32 scriptID)
                             if (!ReadSwitchCase(scriptText)) {
                                 ConvertFunctionText(scriptText);
 
-                                if (gameMode == ENGINE_SCRIPTERROR) {
+                                if (legacy_gameMode == ENGINE_SCRIPTERROR) {
                                     parseMode = PARSEMODE_ERROR;
                                 }
                             }
@@ -2689,25 +2689,25 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_FACEBUFFERCOLOR: scriptEng.operands[i] = faceBuffer[arrayVal].color; break;
                     case VAR_3DSCENEPROJECTIONX: scriptEng.operands[i] = projectionX; break;
                     case VAR_3DSCENEPROJECTIONY: scriptEng.operands[i] = projectionY; break;
-                    case VAR_ENGINESTATE: scriptEng.operands[i] = gameMode; break;
+                    case VAR_ENGINESTATE: scriptEng.operands[i] = legacy_gameMode; break;
                     case VAR_STAGEDEBUGMODE: scriptEng.operands[i] = debugMode; break;
                     case VAR_ENGINEMESSAGE: scriptEng.operands[i] = engineMessage; break;
                     case VAR_SAVERAM: scriptEng.operands[i] = saveRAM[arrayVal]; break;
-                    case VAR_ENGINELANGUAGE: scriptEng.operands[i] = language; break;
+                    case VAR_ENGINELANGUAGE: scriptEng.operands[i] = legacy_language; break;
                     case VAR_OBJECTSPRITESHEET: {
                         scriptEng.operands[i] = objectScriptList[objectEntityList[arrayVal].type].spriteSheetID;
                         break;
                     }
-                    case VAR_ENGINEONLINEACTIVE: scriptEng.operands[i] = onlineActive; break;
+                    case VAR_ENGINEONLINEACTIVE: scriptEng.operands[i] = legacy_onlineActive; break;
                     case VAR_ENGINEFRAMESKIPTIMER: break;
                     case VAR_ENGINEFRAMESKIPSETTING: break;
                     case VAR_ENGINESFXVOLUME: scriptEng.operands[i] = sfxVolume; break;
                     case VAR_ENGINEBGMVOLUME: scriptEng.operands[i] = bgmVolume; break;
-                    case VAR_ENGINEPLATFORMID: scriptEng.operands[i] = gamePlatformID; break;
-                    case VAR_ENGINETRIALMODE: scriptEng.operands[i] = trialMode; break;
+                    case VAR_ENGINEPLATFORMID: scriptEng.operands[i] = legacy_gamePlatformID; break;
+                    case VAR_ENGINETRIALMODE: scriptEng.operands[i] = legacy_trialMode; break;
                     case VAR_KEYPRESSANYSTART: scriptEng.operands[i] = anyPress; break;
 #if LEGACY_RETRO_USE_HAPTICS
-                    case VAR_ENGINEHAPTICSENABLED: scriptEng.operands[i] = hapticsEnabled; break;
+                    case VAR_ENGINEHAPTICSENABLED: scriptEng.operands[i] = legacy_hapticsEnabled; break;
 #endif
                 }
             }
@@ -4485,11 +4485,11 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_FACEBUFFERCOLOR: faceBuffer[arrayVal].color = scriptEng.operands[i]; break;
                     case VAR_3DSCENEPROJECTIONX: projectionX = scriptEng.operands[i]; break;
                     case VAR_3DSCENEPROJECTIONY: projectionY = scriptEng.operands[i]; break;
-                    case VAR_ENGINESTATE: gameMode = scriptEng.operands[i]; break;
+                    case VAR_ENGINESTATE: legacy_gameMode = scriptEng.operands[i]; break;
                     case VAR_STAGEDEBUGMODE: debugMode = scriptEng.operands[i]; break;
                     case VAR_ENGINEMESSAGE: break;
                     case VAR_SAVERAM: saveRAM[arrayVal] = scriptEng.operands[i]; break;
-                    case VAR_ENGINELANGUAGE: language = scriptEng.operands[i]; break;
+                    case VAR_ENGINELANGUAGE: legacy_language = scriptEng.operands[i]; break;
                     case VAR_OBJECTSPRITESHEET: {
                         objectScriptList[objectEntityList[arrayVal].type].spriteSheetID = scriptEng.operands[i];
                         break;
@@ -4509,7 +4509,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_ENGINETRIALMODE: break;
                     case VAR_KEYPRESSANYSTART: break;
 #if LEGACY_RETRO_USE_HAPTICS
-                    case VAR_ENGINEHAPTICSENABLED: hapticsEnabled = scriptEng.operands[i]; break;
+                    case VAR_ENGINEHAPTICSENABLED: legacy_hapticsEnabled = scriptEng.operands[i]; break;
 #endif
                 }
             }

@@ -1,12 +1,8 @@
-
+namespace RSDK {
 #include "v3/RetroEnginev3.hpp"
 #include "v4/RetroEnginev4.hpp"
 
-namespace Legacy
-{
-
-#define LEGACY_RETRO_USE_HAPTICS (1)
-
+namespace Legacy {
 enum RetroStates {
     ENGINE_DEVMENU     = 0,
     ENGINE_MAINGAME    = 1,
@@ -40,22 +36,26 @@ enum RetroLanguages {
     LEGACY_LANGUAGE_ZH = 9,
     LEGACY_LANGUAGE_ZS = 10
 };
+}
+}
 
-extern int32 gameMode;
-extern bool32 usingBytecode;
+#define LEGACY_RETRO_USE_HAPTICS (1)
 
-extern bool32 trialMode;
-extern int32 gamePlatformID;
-extern int32 deviceType;
-extern bool32 onlineActive;
-extern int32 language;
+extern "C" {
+    extern int32 legacy_gameMode;
+    extern bool32 legacy_usingBytecode;
+
+    extern bool32 legacy_trialMode;
+    extern int32 legacy_gamePlatformID;
+    extern int32 legacy_deviceType;
+    extern bool32 legacy_onlineActive;
+    extern int32 legacy_language;
 #if LEGACY_RETRO_USE_HAPTICS
-extern bool32 hapticsEnabled;
+    extern bool32 legacy_hapticsEnabled;
 #endif
 
-extern int32 sinM7LookupTable[0x200];
-extern int32 cosM7LookupTable[0x200];
+    extern int32 sinM7LookupTable[0x200];
+    extern int32 cosM7LookupTable[0x200];
+}
 
 void CalculateTrigAnglesM7();
-
-} // namespace Legacy

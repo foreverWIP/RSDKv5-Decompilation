@@ -178,7 +178,7 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
 #if RETRO_USE_MOD_LOADER
 #if RETRO_REV0U
                     if (((engine.version == 5 && sceneInfo.state != ENGINESTATE_DEVMENU)
-                         || (engine.version != 5 && RSDK::Legacy::gameMode != RSDK::Legacy::ENGINE_DEVMENU))
+                         || (engine.version != 5 && legacy_gameMode != RSDK::Legacy::ENGINE_DEVMENU))
                         && devMenu.modsChanged) {
                         engine.version = 0;
 #else
@@ -201,7 +201,7 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
                             engine.version = preVersion;
 
                         SceneInfo pre      = sceneInfo;
-                        int32 preGameMode  = RSDK::Legacy::gameMode;
+                        int32 preGameMode  = legacy_gameMode;
                         int32 preStageMode = RSDK::Legacy::stageMode;
 
                         // Clear some stuff
@@ -289,7 +289,7 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
                         if (tx <= 32 && ty <= 32) {
                             if (engine.devMenu) {
 #if RETRO_REV0U
-                                if (sceneInfo.state != ENGINESTATE_DEVMENU && RSDK::Legacy::gameMode != RSDK::Legacy::ENGINE_DEVMENU)
+                                if (sceneInfo.state != ENGINESTATE_DEVMENU && legacy_gameMode != RSDK::Legacy::ENGINE_DEVMENU)
 #else
                                 if (sceneInfo.state != ENGINESTATE_DEVMENU)
 #endif
@@ -657,15 +657,15 @@ void RSDK::InitEngine()
 #if !RETRO_USE_ORIGINAL_CODE
             engine.releaseType = (engine.gameReleaseID ? "USE_ORIGINS" : "USE_STANDALONE");
 
-            Legacy::deviceType = RETRO_DEVICETYPE;
+            legacy_deviceType = RETRO_DEVICETYPE;
             if (SKU::curSKU.language <= LANGUAGE_JP)
-                Legacy::language = SKU::curSKU.language;
+                legacy_language = SKU::curSKU.language;
             else {
                 switch (SKU::curSKU.language) {
-                    default: Legacy::language = Legacy::LEGACY_LANGUAGE_EN; break;
-                    case LANGUAGE_KO: Legacy::language = Legacy::LEGACY_LANGUAGE_KO; break;
-                    case LANGUAGE_SC: Legacy::language = Legacy::LEGACY_LANGUAGE_ZS; break;
-                    case LANGUAGE_TC: Legacy::language = Legacy::LEGACY_LANGUAGE_ZH; break;
+                    default: legacy_language = Legacy::LEGACY_LANGUAGE_EN; break;
+                    case LANGUAGE_KO: legacy_language = Legacy::LEGACY_LANGUAGE_KO; break;
+                    case LANGUAGE_SC: legacy_language = Legacy::LEGACY_LANGUAGE_ZS; break;
+                    case LANGUAGE_TC: legacy_language = Legacy::LEGACY_LANGUAGE_ZH; break;
                 }
             }
 #endif
@@ -694,21 +694,21 @@ void RSDK::InitEngine()
 #if !RETRO_USE_ORIGINAL_CODE
             engine.releaseType = (engine.gameReleaseID ? "Use_Origins" : "Use_Standalone");
 
-            Legacy::deviceType = RETRO_DEVICETYPE;
+            legacy_deviceType = RETRO_DEVICETYPE;
             switch (RETRO_PLATFORM) {
                 default:
-                case RETRO_WIN: Legacy::gamePlatformID = Legacy::LEGACY_RETRO_WIN; break;
-                case RETRO_OSX: Legacy::gamePlatformID = Legacy::LEGACY_RETRO_OSX; break;
-                case RETRO_iOS: Legacy::gamePlatformID = Legacy::LEGACY_RETRO_iOS; break;
-                case RETRO_XB1: Legacy::gamePlatformID = Legacy::LEGACY_RETRO_XBOX_360; break;
-                case RETRO_PS4: Legacy::gamePlatformID = Legacy::LEGACY_RETRO_PS3; break;
-                case RETRO_ANDROID: Legacy::gamePlatformID = Legacy::LEGACY_RETRO_ANDROID; break;
+                case RETRO_WIN: legacy_gamePlatformID = Legacy::LEGACY_RETRO_WIN; break;
+                case RETRO_OSX: legacy_gamePlatformID = Legacy::LEGACY_RETRO_OSX; break;
+                case RETRO_iOS: legacy_gamePlatformID = Legacy::LEGACY_RETRO_iOS; break;
+                case RETRO_XB1: legacy_gamePlatformID = Legacy::LEGACY_RETRO_XBOX_360; break;
+                case RETRO_PS4: legacy_gamePlatformID = Legacy::LEGACY_RETRO_PS3; break;
+                case RETRO_ANDROID: legacy_gamePlatformID = Legacy::LEGACY_RETRO_ANDROID; break;
             }
 
             if (SKU::curSKU.language <= LANGUAGE_JP)
-                Legacy::language = SKU::curSKU.language;
+                legacy_language = SKU::curSKU.language;
             else
-                Legacy::language = Legacy::LEGACY_LANGUAGE_EN;
+                legacy_language = Legacy::LEGACY_LANGUAGE_EN;
 #endif
 
             Legacy::v3::LoadGameConfig("Data/Game/GameConfig.bin");
@@ -1353,7 +1353,7 @@ void RSDK::ProcessDebugCommands()
 
     if (controller[CONT_P1].keySelect.press) {
 #if RETRO_REV0U
-        if (sceneInfo.state == ENGINESTATE_DEVMENU || RSDK::Legacy::gameMode == RSDK::Legacy::ENGINE_DEVMENU)
+        if (sceneInfo.state == ENGINESTATE_DEVMENU || legacy_gameMode == RSDK::Legacy::ENGINE_DEVMENU)
 #else
         if (sceneInfo.state == ENGINESTATE_DEVMENU)
 #endif

@@ -36,7 +36,7 @@ void RSDK::Legacy::v3::InitFirstStage()
 #endif
 
     stageMode = STAGEMODE_LOAD;
-    gameMode  = ENGINE_MAINGAME;
+    legacy_gameMode  = ENGINE_MAINGAME;
 }
 
 void RSDK::Legacy::v3::ProcessStage()
@@ -382,7 +382,7 @@ void RSDK::Legacy::v3::LoadStageFiles()
 
                     ParseScriptFile(strBuffer, scriptID++);
 
-                    if (gameMode == ENGINE_SCRIPTERROR)
+                    if (legacy_gameMode == ENGINE_SCRIPTERROR)
                         return;
                 }
             }
@@ -398,7 +398,7 @@ void RSDK::Legacy::v3::LoadStageFiles()
                 SetObjectTypeName(modTypeNames[i], scriptID);
 
                 ParseScriptFile(modScriptPaths[i], scriptID++);
-                if (gameMode == ENGINE_SCRIPTERROR)
+                if (legacy_gameMode == ENGINE_SCRIPTERROR)
                     return;
             }
 #endif
@@ -458,7 +458,7 @@ void RSDK::Legacy::v3::LoadStageFiles()
 
                     ParseScriptFile(strBuffer, scriptID + i);
 
-                    if (gameMode == ENGINE_SCRIPTERROR)
+                    if (legacy_gameMode == ENGINE_SCRIPTERROR)
                         return;
                 }
             }

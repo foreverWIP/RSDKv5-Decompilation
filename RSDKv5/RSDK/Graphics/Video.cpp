@@ -23,7 +23,7 @@ bool32 RSDK::LoadVideo(const char *filename, double startDelay, bool32 (*skipCal
     if (ENGINE_VERSION == 5 && sceneInfo.state == ENGINESTATE_VIDEOPLAYBACK)
         return false;
 #if RETRO_REV0U
-    if (ENGINE_VERSION == 3 && RSDK::Legacy::gameMode == RSDK::Legacy::v3::ENGINE_VIDEOWAIT)
+    if (ENGINE_VERSION == 3 && legacy_gameMode == RSDK::Legacy::v3::ENGINE_VIDEOWAIT)
         return false;
 #endif
 
@@ -153,7 +153,7 @@ bool32 RSDK::LoadVideo(const char *filename, double startDelay, bool32 (*skipCal
                     engine.storedState = sceneInfo.state;
 #if RETRO_REV0U
                 else if (ENGINE_VERSION == 3)
-                    engine.storedState = RSDK::Legacy::gameMode;
+                    engine.storedState = legacy_gameMode;
 #endif
                 engine.displayTime         = 0.0;
                 VideoManager::initializing = true;
@@ -180,7 +180,7 @@ bool32 RSDK::LoadVideo(const char *filename, double startDelay, bool32 (*skipCal
                     sceneInfo.state = ENGINESTATE_VIDEOPLAYBACK;
 #if RETRO_REV0U
                 else if (ENGINE_VERSION == 3)
-                    RSDK::Legacy::gameMode = RSDK::Legacy::v3::ENGINE_VIDEOWAIT;
+                    legacy_gameMode = RSDK::Legacy::v3::ENGINE_VIDEOWAIT;
 #endif
 
                 return true;
@@ -280,7 +280,7 @@ void RSDK::ProcessVideo()
             sceneInfo.state = engine.storedState;
 #if RETRO_REV0U
         else if (ENGINE_VERSION == 3)
-            RSDK::Legacy::gameMode = engine.storedState;
+            legacy_gameMode = engine.storedState;
 #endif
     }
 }

@@ -720,11 +720,11 @@ void ReleaseConsole();
 
 void SendQuitMsg();
 
+} // namespace RSDK
+
 #if RETRO_REV0U
 #include "Legacy/RetroEngineLegacy.hpp"
 #endif
-
-} // namespace RSDK
 
 #include "Link.hpp"
 

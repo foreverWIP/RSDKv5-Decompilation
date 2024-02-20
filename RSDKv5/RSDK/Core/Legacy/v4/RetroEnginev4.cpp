@@ -177,10 +177,10 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 
         SetGlobalVariableByName("game.hasPlusDLC", !RSDK_AUTOBUILD);
 
-        usingBytecode = false;
+        legacy_usingBytecode = false;
         InitFileInfo(&info);
         if (useDataPack && LoadFile(&info, "Bytecode/GlobalCode.bin", FMODE_RB)) {
-            usingBytecode = true;
+            legacy_usingBytecode = true;
             CloseFile(&info);
         }
     }
@@ -244,7 +244,7 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 
 void RSDK::Legacy::v4::ProcessEngine()
 {
-    switch (gameMode) {
+    switch (legacy_gameMode) {
         case ENGINE_DEVMENU:
             ProcessInput();
             currentScreen = &screens[0];
@@ -279,7 +279,7 @@ void RSDK::Legacy::v4::ProcessEngine()
             else if (controller[CONT_ANY].keyB.press) {
                 ResetCurrentStageFolder();
                 sceneInfo.activeCategory = 0;
-                gameMode                 = ENGINE_MAINGAME;
+                legacy_gameMode                 = ENGINE_MAINGAME;
                 stageMode                = STAGEMODE_LOAD;
                 sceneInfo.listPos        = 0;
             }
@@ -288,20 +288,20 @@ void RSDK::Legacy::v4::ProcessEngine()
 #if RETRO_USE_MOD_LOADER
                 RefreshModFolders();
 #endif
-                gameMode  = ENGINE_MAINGAME;
+                legacy_gameMode  = ENGINE_MAINGAME;
                 stageMode = STAGEMODE_LOAD;
             }
             break;
         }
 
         case ENGINE_INITPAUSE:
-        case ENGINE_EXITPAUSE: gameMode = ENGINE_MAINGAME; break;
+        case ENGINE_EXITPAUSE: legacy_gameMode = ENGINE_MAINGAME; break;
 
         case ENGINE_ENDGAME:
         case ENGINE_RESETGAME:
             sceneInfo.activeCategory = 0;
             sceneInfo.listPos        = 0;
-            gameMode                 = ENGINE_MAINGAME;
+            legacy_gameMode                 = ENGINE_MAINGAME;
             stageMode                = STAGEMODE_LOAD;
             break;
 

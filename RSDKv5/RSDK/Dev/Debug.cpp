@@ -69,8 +69,8 @@ void RSDK::PrintLog(int32 mode, const char *message, ...)
 
 #if RETRO_REV0U
             case PRINT_SCRIPTERR:
-                engine.storedState     = RSDK::Legacy::gameMode;
-                RSDK::Legacy::gameMode = RSDK::Legacy::ENGINE_SCRIPTERROR;
+                engine.storedState     = legacy_gameMode;
+                legacy_gameMode = RSDK::Legacy::ENGINE_SCRIPTERROR;
                 strcpy(RSDK::Legacy::scriptErrorMessage, outputString);
                 break;
 #endif
@@ -283,8 +283,8 @@ void RSDK::OpenDevMenu()
 
         case 4:
         case 3:
-            devMenu.sceneState     = RSDK::Legacy::gameMode;
-            RSDK::Legacy::gameMode = RSDK::Legacy::ENGINE_DEVMENU;
+            devMenu.sceneState     = legacy_gameMode;
+            legacy_gameMode = RSDK::Legacy::ENGINE_DEVMENU;
             break;
     }
 #if RETRO_USE_MOD_LOADER
@@ -309,7 +309,7 @@ void RSDK::CloseDevMenu()
             sceneInfo.state           = devMenu.sceneState;
             break;
         case 4:
-        case 3: RSDK::Legacy::gameMode = devMenu.sceneState; break;
+        case 3: legacy_gameMode = devMenu.sceneState; break;
     }
 #else
     videoSettings.screenCount = sceneInfo.state == ENGINESTATE_VIDEOPLAYBACK ? 0 : videoSettings.screenCount;
@@ -476,7 +476,7 @@ void RSDK::DevMenu_MainMenu()
 
                     case 4:
                     case 3:
-                        RSDK::Legacy::gameMode  = RSDK::Legacy::ENGINE_MAINGAME;
+                        legacy_gameMode  = RSDK::Legacy::ENGINE_MAINGAME;
                         RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD;
                         break;
                 }
@@ -805,7 +805,7 @@ void RSDK::DevMenu_SceneSelectMenu()
                         case 4: RSDK::Legacy::v4::playerListPos = devMenu.playerListPos; break;
                     }
 #endif
-                    RSDK::Legacy::gameMode  = RSDK::Legacy::ENGINE_MAINGAME;
+                    legacy_gameMode  = RSDK::Legacy::ENGINE_MAINGAME;
                     RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD;
                     break;
             }

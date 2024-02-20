@@ -172,13 +172,13 @@ bool32 RSDK::Legacy::v3::LoadGameConfig(const char *filepath)
         SetGlobalVariableByName("game.hasPlusDLC", !RSDK_AUTOBUILD);
 #endif
 
-        SetGlobalVariableByName("Engine.PlatformId", gamePlatformID);
-        SetGlobalVariableByName("Engine.DeviceType", deviceType);
+        SetGlobalVariableByName("Engine.PlatformId", legacy_gamePlatformID);
+        SetGlobalVariableByName("Engine.DeviceType", legacy_deviceType);
 
-        usingBytecode = false;
+        legacy_usingBytecode = false;
         InitFileInfo(&info);
         if (useDataPack && LoadFile(&info, "Data/Scripts/Bytecode/GlobalCode.bin", FMODE_RB)) {
-            usingBytecode = true;
+            legacy_usingBytecode = true;
             CloseFile(&info);
         }
     }
@@ -187,7 +187,7 @@ bool32 RSDK::Legacy::v3::LoadGameConfig(const char *filepath)
 }
 void RSDK::Legacy::v3::ProcessEngine()
 {
-    switch (gameMode) {
+    switch (legacy_gameMode) {
         case ENGINE_DEVMENU:
             ProcessInput();
             currentScreen = &screens[0];
@@ -220,7 +220,7 @@ void RSDK::Legacy::v3::ProcessEngine()
             else if (controller[CONT_ANY].keyB.press) {
                 ResetCurrentStageFolder();
                 sceneInfo.activeCategory = 0;
-                gameMode                 = ENGINE_MAINGAME;
+                legacy_gameMode                 = ENGINE_MAINGAME;
                 stageMode                = STAGEMODE_LOAD;
                 sceneInfo.listPos        = 0;
             }
@@ -229,14 +229,14 @@ void RSDK::Legacy::v3::ProcessEngine()
 #if RETRO_USE_MOD_LOADER
                 RefreshModFolders();
 #endif
-                gameMode  = ENGINE_MAINGAME;
+                legacy_gameMode  = ENGINE_MAINGAME;
                 stageMode = STAGEMODE_LOAD;
             }
             break;
         }
 
         case ENGINE_ENTER_HIRESMODE:
-        case ENGINE_EXIT_HIRESMODE: gameMode = ENGINE_MAINGAME; break;
+        case ENGINE_EXIT_HIRESMODE: legacy_gameMode = ENGINE_MAINGAME; break;
 
         case ENGINE_VIDEOWAIT:
             ProcessInput();
@@ -358,7 +358,7 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
         case CALLBACK_TIMEATTACK_NOTIFY_EXIT: PrintLog(PRINT_NORMAL, "Callback: Time Attack Notify Exit"); break;
         case CALLBACK_FINISHGAME_NOTIFY: PrintLog(PRINT_NORMAL, "Callback: Finish Game Notify"); break;
         case CALLBACK_RETURNSTORE_SELECTED:
-            gameMode = ENGINE_EXITGAME;
+            legacy_gameMode = ENGINE_EXITGAME;
             PrintLog(PRINT_NORMAL, "Callback: Return To Store Selected");
             break;
         case CALLBACK_RESTART_SELECTED:
@@ -371,13 +371,13 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
             stageMode                = STAGEMODE_LOAD;
             break;
         case CALLBACK_BUY_FULL_GAME_SELECTED:
-            gameMode = ENGINE_EXITGAME;
+            legacy_gameMode = ENGINE_EXITGAME;
             PrintLog(PRINT_NORMAL, "Callback: Buy Full Game Selected");
             break;
         case CALLBACK_TERMS_SELECTED: PrintLog(PRINT_NORMAL, "Callback: PC = How to play Menu, Mobile = Terms & Conditions Screen"); break;
         case CALLBACK_PRIVACY_SELECTED: PrintLog(PRINT_NORMAL, "Callback: PC = Controls Menu, Mobile = Privacy Screen"); break;
         case CALLBACK_TRIAL_ENDED:
-            if (trialMode) {
+            if (legacy_trialMode) {
                 PrintLog(PRINT_NORMAL, "Callback: Trial Ended Screen Requested");
             }
             else {
@@ -385,7 +385,7 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
             }
             break;
         case CALLBACK_SETTINGS_SELECTED:
-            if (trialMode)
+            if (legacy_trialMode)
                 PrintLog(PRINT_NORMAL, "Callback: Full Game Only Requested");
             else
                 PrintLog(PRINT_NORMAL, "Callback: Terms Requested");
@@ -433,7 +433,7 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
             PrintLog(PRINT_NORMAL, "NOTIFY: StatsMovie() -> %d", notifyParam1);
             sceneInfo.activeCategory = 0;
             sceneInfo.listPos        = 0;
-            gameMode                 = ENGINE_MAINGAME;
+            legacy_gameMode                 = ENGINE_MAINGAME;
             stageMode                = STAGEMODE_LOAD;
             break;
         case NOTIFY_STATS_PARAM_1: PrintLog(PRINT_NORMAL, "NOTIFY: StatsParam1() -> %d, %d, %d", notifyParam1, notifyParam2, notifyParam3); break;

@@ -145,7 +145,7 @@ void RSDK::Legacy::v4::NotifyCallback(int32 *callback, int32 *param1, int32 *par
             PrintLog(PRINT_NORMAL, "NOTIFY: StatsMovie() -> %d", *param1);
             sceneInfo.activeCategory = 0;
             sceneInfo.listPos        = 0;
-            gameMode                 = ENGINE_MAINGAME;
+            legacy_gameMode                 = ENGINE_MAINGAME;
             stageMode                = STAGEMODE_LOAD;
             break;
         case NOTIFY_STATS_PARAM_1: PrintLog(PRINT_NORMAL, "NOTIFY: StatsParam1() -> %d, %d, %d", *param1, *param2, *param3); break;
