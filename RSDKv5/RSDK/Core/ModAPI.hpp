@@ -366,13 +366,13 @@ inline uint8 *GetActivePaletteBuffer() { return gfxLineBuffer; }
 inline void GetRGB32To16Buffer(uint16 **rgb32To16_R, uint16 **rgb32To16_G, uint16 **rgb32To16_B)
 {
     if (rgb32To16_R)
-        *rgb32To16_R = RSDK::rgb32To16_R;
+        *rgb32To16_R = ::rgb32To16_R;
 
     if (rgb32To16_G)
-        *rgb32To16_G = RSDK::rgb32To16_G;
+        *rgb32To16_G = ::rgb32To16_G;
 
     if (rgb32To16_B)
-        *rgb32To16_B = RSDK::rgb32To16_B;
+        *rgb32To16_B = ::rgb32To16_B;
 }
 inline uint16 *GetBlendLookupTable() { return blendLookupTable; }
 inline uint16 *GetSubtractLookupTable() { return subtractLookupTable; }

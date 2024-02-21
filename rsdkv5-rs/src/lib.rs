@@ -1,5 +1,6 @@
 pub mod dev;
 pub mod engine_core;
+pub mod graphics;
 pub mod scene;
 pub mod storage;
 
@@ -35,6 +36,14 @@ impl From<bool32> for bool {
 }
 
 type color = u32;
+
+// -------------------------
+// CONSTANTS
+// -------------------------
+
+const SCREEN_XMAX: usize = 1280;
+const SCREEN_YSIZE: usize = 240;
+const SCREEN_CENTERY: usize = SCREEN_YSIZE / 2;
 
 // -------------------------
 // STRUCTS

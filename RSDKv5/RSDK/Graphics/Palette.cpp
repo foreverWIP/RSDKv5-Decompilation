@@ -6,26 +6,6 @@ using namespace RSDK;
 #include "Legacy/PaletteLegacy.cpp"
 #endif
 
-uint16 RSDK::rgb32To16_R[0x100];
-uint16 RSDK::rgb32To16_G[0x100];
-uint16 RSDK::rgb32To16_B[0x100];
-
-uint16 RSDK::globalPalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
-uint16 RSDK::activeGlobalRows[PALETTE_BANK_COUNT];
-uint16 RSDK::activeStageRows[PALETTE_BANK_COUNT];
-uint16 RSDK::stagePalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
-
-uint16 RSDK::fullPalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
-
-uint8 RSDK::gfxLineBuffer[SCREEN_YSIZE];
-
-int32 RSDK::maskColor = 0;
-#if RETRO_REV02
-uint16 *RSDK::tintLookupTable = NULL;
-#else
-uint16 RSDK::tintLookupTable[0x10000];
-#endif
-
 #if RETRO_REV02
 void RSDK::LoadPalette(uint8 bankID, const char *filename, uint16 disabledRows)
 {

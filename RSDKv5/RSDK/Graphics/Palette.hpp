@@ -1,9 +1,6 @@
 #ifndef PALETTE_H
 #define PALETTE_H
 
-namespace RSDK
-{
-
 #define PALETTE_BANK_COUNT (0x8)
 #define PALETTE_BANK_SIZE  (0x100)
 
@@ -12,26 +9,31 @@ union Color {
     uint32 color;
 };
 
-extern uint16 rgb32To16_R[0x100];
-extern uint16 rgb32To16_G[0x100];
-extern uint16 rgb32To16_B[0x100];
+extern "C" {
+    extern uint16 rgb32To16_R[0x100];
+    extern uint16 rgb32To16_G[0x100];
+    extern uint16 rgb32To16_B[0x100];
 
-extern uint16 globalPalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
-extern uint16 activeGlobalRows[PALETTE_BANK_COUNT];
-extern uint16 activeStageRows[PALETTE_BANK_COUNT];
-extern uint16 stagePalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
+    extern uint16 globalPalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
+    extern uint16 activeGlobalRows[PALETTE_BANK_COUNT];
+    extern uint16 activeStageRows[PALETTE_BANK_COUNT];
+    extern uint16 stagePalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
 
-extern uint16 fullPalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
+    extern uint16 fullPalette[PALETTE_BANK_COUNT][PALETTE_BANK_SIZE];
 
-extern uint8 gfxLineBuffer[SCREEN_YSIZE]; // Pointers to active palette
+    extern uint8 gfxLineBuffer[SCREEN_YSIZE]; // Pointers to active palette
 
-extern int32 maskColor;
+    extern int32 maskColor;
 
 #if RETRO_REV02
-extern uint16 *tintLookupTable;
+    extern uint16 *tintLookupTable;
 #else
-extern uint16 tintLookupTable[0x10000];
+    extern uint16 tintLookupTable[0x10000];
 #endif
+}
+
+namespace RSDK
+{
 
 #define RGB888_TO_RGB565(r, g, b) ((b) >> 3) | (((g) >> 2) << 5) | (((r) >> 3) << 11)
 
