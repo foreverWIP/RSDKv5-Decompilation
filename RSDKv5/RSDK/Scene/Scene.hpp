@@ -318,13 +318,14 @@ inline ScanlineInfo *GetScanlines() { return scanlines; }
 extern "C" {
     // Draw a layer with horizonal scrolling capabilities
     void DrawLayerHScroll(RSDK::TileLayer *layer);
+
+    // Draw a "basic" layer, no special capabilities, but it's the fastest to draw
+    void DrawLayerBasic(TileLayer *layer);
 }
 // Draw a layer with vertical scrolling capabilities
 void DrawLayerVScroll(TileLayer *layer);
 // Draw a layer with rotozoom (via scanline callback) capabilities
 void DrawLayerRotozoom(TileLayer *layer);
-// Draw a "basic" layer, no special capabilities, but it's the fastest to draw
-void DrawLayerBasic(TileLayer *layer);
 
 #if RETRO_REV0U
 #include "Legacy/SceneLegacy.hpp"
