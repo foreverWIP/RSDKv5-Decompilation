@@ -1,3 +1,16 @@
+# ABOUT THIS FORK:
+This fork aims to bring the codebase over to the [Rust](https://www.rust-lang.org/) programming language. Work is incomplete and the code is very unsafe, so **this fork is currently aimed at developers and not normal users**. Things have only been tested on Windows x64, with the default settings and the Game side built as a shared library/DLL, but should work for other desktop platforms as long as you compiled the C++ side of the engine and game with the same target ABI as your Rust toolchain setup.
+
+Building the project involves the same process as upstream, except Rust code currently requires manual compilation first. Navigate to the Rust project in your terminal and build it like so:
+```sh
+# Assuming your current directory is the root of the repository
+cd rsdkv5-rs
+cargo build --release
+```
+Then you can build the engine normally.
+
+## Original README
+
 ![header](header.png?raw=true)
 
 A complete decompilation of Retro Engine v5 and v5Ultimate.
