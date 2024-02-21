@@ -19,3 +19,4 @@ legacy_use_haptics = ["version_u"]
 
 [dependencies]
 cfg-if = "1.0.0"
+md5 = "0.7.0"

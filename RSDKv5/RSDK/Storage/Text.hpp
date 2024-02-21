@@ -1,6 +1,11 @@
 #ifndef TEXT_H
 #define TEXT_H
 
+extern "C" {
+    void GenerateHashMD5(uint32 *buffer, char *textBuffer, int32 textBufferLen);
+    void GenerateHashCRC(uint32 *id, char *inputString);
+}
+
 namespace RSDK
 {
 
@@ -132,8 +137,6 @@ inline void StringUpperCase(char *dest, const char *src)
 }
 
 extern char textBuffer[0x400];
-void GenerateHashMD5(uint32 *buffer, char *textBuffer, int32 textBufferLen);
-void GenerateHashCRC(uint32 *id, char *inputString);
 
 #define RETRO_HASH_MD5(name) uint32 name[4]
 #define HASH_SIZE_MD5        (4 * sizeof(uint32))

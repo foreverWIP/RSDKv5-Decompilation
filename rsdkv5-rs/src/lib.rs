@@ -1,6 +1,7 @@
 pub mod dev;
 pub mod engine_core;
 pub mod scene;
+pub mod storage;
 
 use std::mem::size_of;
 
