@@ -2,6 +2,8 @@ use std::{ffi::CStr, fs, io::Write};
 
 use crate::*;
 
+pub type HashMD5 = [u8; 0x10];
+
 #[no_mangle]
 #[export_name = "GenerateHashMD5"]
 pub extern "C" fn gen_hash_md5(buffer: *mut uint32, textBuffer: *const i8, textBufferLen: int32) {

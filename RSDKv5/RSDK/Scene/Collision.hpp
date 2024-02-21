@@ -89,10 +89,10 @@ void CopyCollisionMask(uint16 dst, uint16 src, uint8 cPlane, uint8 cMode);
 inline void GetCollisionInfo(CollisionMask **masks, TileInfo **tiles)
 {
     if (masks)
-        *masks = (RSDK::CollisionMask *)collisionMasks;
+        *masks = (CollisionMask *)collisionMasks;
 
     if (tiles)
-        *tiles = (RSDK::TileInfo *)tileInfo;
+        *tiles = (TileInfo *)tileInfo;
 }
 #endif
 

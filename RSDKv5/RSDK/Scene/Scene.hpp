@@ -1,9 +1,6 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-namespace RSDK
-{
-
 #define TILE_COUNT    (0x400)
 #define TILE_SIZE     (0x10)
 #define TILE_DATASIZE (TILE_SIZE * TILE_SIZE)
@@ -14,6 +11,9 @@ namespace RSDK
 #define RSDK_SIGNATURE_CFG (0x474643) // "CFG"
 #define RSDK_SIGNATURE_SCN (0x4E4353) // "SCN"
 #define RSDK_SIGNATURE_TIL (0x4C4954) // "TIL"
+
+namespace RSDK
+{
 
 enum LayerTypes {
     LAYER_HSCROLL,
@@ -146,7 +146,9 @@ struct TileInfo {
     uint8 flag;
 };
 
-extern ScanlineInfo *scanlines;
+extern "C" {
+    extern ScanlineInfo *scanlines;
+}
 extern TileLayer tileLayers[LAYER_COUNT];
 
 extern CollisionMask collisionMasks[CPATH_COUNT][TILE_COUNT * 4]; // 1024 * 1 per direction
@@ -163,7 +165,9 @@ extern uint8 currentSceneFilter;
 
 extern SceneInfo sceneInfo;
 
-extern uint8 tilesetPixels[TILESET_SIZE * 4];
+extern "C" {
+    extern uint8 tilesetPixels[TILESET_SIZE * 4];
+}
 
 void LoadSceneFolder();
 void LoadSceneAssets();
@@ -311,8 +315,10 @@ inline void CopyTile(uint16 dest, uint16 src, uint16 count)
 
 inline ScanlineInfo *GetScanlines() { return scanlines; }
 
-// Draw a layer with horizonal scrolling capabilities
-void DrawLayerHScroll(TileLayer *layer);
+extern "C" {
+    // Draw a layer with horizonal scrolling capabilities
+    void DrawLayerHScroll(RSDK::TileLayer *layer);
+}
 // Draw a layer with vertical scrolling capabilities
 void DrawLayerVScroll(TileLayer *layer);
 // Draw a layer with rotozoom (via scanline callback) capabilities

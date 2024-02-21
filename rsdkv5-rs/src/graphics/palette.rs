@@ -22,10 +22,10 @@ static mut stagePalette: [[uint16; PALETTE_BANK_SIZE]; PALETTE_BANK_COUNT] =
     [[0; PALETTE_BANK_SIZE]; PALETTE_BANK_COUNT];
 
 #[no_mangle]
-static mut fullPalette: [[uint16; PALETTE_BANK_SIZE]; PALETTE_BANK_COUNT] =
+pub static mut fullPalette: [[uint16; PALETTE_BANK_SIZE]; PALETTE_BANK_COUNT] =
     [[0; PALETTE_BANK_SIZE]; PALETTE_BANK_COUNT];
 #[no_mangle]
-static mut gfxLineBuffer: [uint8; SCREEN_YSIZE] = [0; SCREEN_YSIZE];
+pub static mut gfxLineBuffer: [uint8; SCREEN_YSIZE] = [0; SCREEN_YSIZE];
 #[no_mangle]
 static mut maskColor: int32 = 0;
 

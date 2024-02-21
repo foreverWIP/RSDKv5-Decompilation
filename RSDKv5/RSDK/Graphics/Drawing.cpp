@@ -156,7 +156,6 @@ float RSDK::dpi         = 1;
 int32 RSDK::cameraCount = 0;
 ScreenInfo RSDK::screens[SCREEN_COUNT];
 CameraInfo RSDK::cameras[CAMERA_COUNT];
-ScreenInfo *RSDK::currentScreen = NULL;
 
 int32 RSDK::shaderCount = 0;
 ShaderEntry RSDK::shaderList[SHADER_COUNT];

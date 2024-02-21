@@ -268,7 +268,9 @@ extern float dpi;
 extern int32 cameraCount;
 extern ScreenInfo screens[SCREEN_COUNT];
 extern CameraInfo cameras[CAMERA_COUNT];
-extern ScreenInfo *currentScreen;
+extern "C" {
+    extern ScreenInfo *currentScreen;
+}
 
 extern int32 shaderCount;
 extern ShaderEntry shaderList[SHADER_COUNT];
