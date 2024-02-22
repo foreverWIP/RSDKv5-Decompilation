@@ -1,10 +1,10 @@
+#![allow(non_snake_case, non_camel_case_types)]
+
 pub mod dev;
 pub mod engine_core;
 pub mod graphics;
 pub mod scene;
 pub mod storage;
-
-use std::mem::size_of;
 
 use engine_core::math::Vector2;
 
