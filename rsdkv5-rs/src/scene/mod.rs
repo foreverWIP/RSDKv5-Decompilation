@@ -565,3 +565,194 @@ pub extern "C" fn draw_layer_basic(layer: *const TileLayer) {
         }
     }
 }
+
+#[no_mangle]
+#[export_name = "DrawLayerVScroll"]
+pub extern "C" fn draw_layer_vscroll(layer: *const TileLayer) {
+    unsafe {
+        if ((*layer).xsize == 0 || (*layer).ysize == 0) {
+            return;
+        }
+
+        let lineTileCount: int32 = ((*currentScreen).size.y >> 4) - 1;
+        let mut frameBuffer: *mut uint16 = (*currentScreen)
+            .frameBuffer
+            .as_mut_ptr()
+            .wrapping_add((*currentScreen).clipBound_X1 as usize);
+        let mut scanline: *mut ScanlineInfo =
+            scanlines.wrapping_add((*currentScreen).clipBound_X1 as usize);
+        let activePalette: *const uint16 =
+            fullPalette.as_ptr().wrapping_add(gfxLineBuffer[0] as usize) as *const u16;
+
+        for cx in (*currentScreen).clipBound_X1..((*currentScreen).clipBound_X2 + 1) {
+            let mut x: int32 = (*scanline).position.x;
+            let mut y: int32 = (*scanline).position.y;
+            let mut ty: int32 = FROM_FIXED!(y);
+
+            if (ty >= (TILE_SIZE * (*layer).ysize as usize) as i32) {
+                y -= TO_FIXED!(TILE_SIZE * (*layer).ysize as usize) as i32;
+            } else if (ty < 0) {
+                y += TO_FIXED!(TILE_SIZE * (*layer).ysize as usize) as i32;
+            }
+
+            let mut tileRemain: int32 = (TILE_SIZE - (FROM_FIXED!(y) & 0xF) as usize) as i32;
+            let mut sheetX: int32 = FROM_FIXED!(x) & 0xF;
+            let mut sheetY: int32 = FROM_FIXED!(y) & 0xF;
+            let mut lineRemain: int32 = (*currentScreen).size.y;
+
+            let mut layout: *mut uint16 = (*layer)
+                .layout
+                .wrapping_add(((x >> 20) + ((y >> 20) << (*layer).widthShift)) as usize);
+            lineRemain -= tileRemain;
+
+            if (*layout >= 0xFFFF) {
+                frameBuffer =
+                    frameBuffer.wrapping_add(((*currentScreen).pitch * tileRemain) as usize);
+            } else {
+                let mut pixels: *mut uint8 = tilesetPixels.as_mut_ptr().wrapping_add(
+                    TILE_SIZE * (sheetY as usize + TILE_SIZE * (*layout & 0xFFF) as usize) as usize
+                        + sheetX as usize,
+                );
+                for y in 0..tileRemain {
+                    if (*pixels != 0) {
+                        *frameBuffer = *activePalette.wrapping_add(*pixels as usize);
+                    }
+                    pixels = pixels.wrapping_add(TILE_SIZE);
+                    frameBuffer = frameBuffer.wrapping_add((*currentScreen).pitch as usize);
+                }
+            }
+
+            ty = y >> 20;
+            for l in 0..lineTileCount {
+                layout = layout.wrapping_add((*layer).xsize as usize);
+
+                ty += 1;
+                if (ty == (*layer).ysize as i32) {
+                    ty = 0;
+                    layout = layout.wrapping_sub(((*layer).ysize << (*layer).widthShift) as usize);
+                }
+
+                if (*layout >= 0xFFFF) {
+                    frameBuffer =
+                        frameBuffer.wrapping_add(TILE_SIZE * (*currentScreen).pitch as usize);
+                } else {
+                    let pixels: *const uint8 = tilesetPixels
+                        .as_mut_ptr()
+                        .wrapping_add(TILE_DATASIZE * (*layout & 0xFFF) as usize + sheetX as usize);
+
+                    for i in 0..16 {
+                        let p = *pixels.wrapping_add(i << 8);
+                        if p != 0 {
+                            *frameBuffer.wrapping_add((*currentScreen).pitch as usize + i) =
+                                *activePalette.wrapping_add(p as usize);
+                        }
+                    }
+
+                    frameBuffer =
+                        frameBuffer.wrapping_add((*currentScreen).pitch as usize * TILE_SIZE);
+                }
+
+                lineRemain = lineRemain.wrapping_add(TILE_SIZE as i32);
+            }
+
+            while (lineRemain > 0) {
+                layout = layout.wrapping_add((*layer).xsize as usize);
+
+                ty += 1;
+                if ty == (*layer).ysize as i32 {
+                    ty = 0;
+                    layout = layout.wrapping_sub(((*layer).ysize << (*layer).widthShift) as usize);
+                }
+
+                tileRemain = if lineRemain >= TILE_SIZE as i32 {
+                    TILE_SIZE as i32
+                } else {
+                    lineRemain
+                };
+                if (*layout >= 0xFFFF) {
+                    frameBuffer =
+                        frameBuffer.wrapping_add(((*currentScreen).pitch * sheetY) as usize);
+                } else {
+                    let mut pixels: *mut uint8 = tilesetPixels
+                        .as_mut_ptr()
+                        .wrapping_add(TILE_DATASIZE * (*layout & 0xFFF) as usize + sheetX as usize);
+                    for y in 0..tileRemain {
+                        if (*pixels != 0) {
+                            *frameBuffer = *activePalette.wrapping_add(*pixels as usize);
+                        }
+
+                        pixels = pixels.wrapping_add(TILE_SIZE);
+                        frameBuffer = frameBuffer.wrapping_add((*currentScreen).pitch as usize);
+                    }
+                }
+
+                lineRemain = lineRemain.wrapping_sub(TILE_SIZE as i32);
+            }
+
+            frameBuffer = frameBuffer
+                .wrapping_sub(((*currentScreen).pitch * (*currentScreen).size.y) as usize);
+
+            scanline = scanline.wrapping_add(1);
+            frameBuffer = frameBuffer.wrapping_add(1);
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "DrawLayerRotozoom"]
+pub extern "C" fn draw_layer_rotozoom(layer: *const TileLayer) {
+    unsafe {
+        if ((*layer).xsize == 0 || (*layer).ysize == 0) {
+            return;
+        }
+
+        let mut layout: *mut uint16 = (*layer).layout;
+        let mut lineBuffer: *mut uint8 = gfxLineBuffer
+            .as_mut_ptr()
+            .wrapping_add((*currentScreen).clipBound_Y1 as usize);
+        let mut scanline: *mut ScanlineInfo =
+            scanlines.wrapping_add((*currentScreen).clipBound_Y1 as usize);
+        let mut frameBuffer: *mut uint16 = (*currentScreen).frameBuffer.as_mut_ptr().wrapping_add(
+            ((*currentScreen).clipBound_X1 + (*currentScreen).clipBound_Y1 * (*currentScreen).pitch)
+                as usize,
+        );
+
+        let width: int32 = ((TILE_SIZE << (*layer).widthShift) - 1) as i32;
+        let height: int32 = ((TILE_SIZE << (*layer).heightShift) - 1) as i32;
+        let lineSize: int32 = (*currentScreen).clipBound_X2 - (*currentScreen).clipBound_X1;
+
+        for cy in (*currentScreen).clipBound_Y1..((*currentScreen).clipBound_Y2 + 1) {
+            let mut posX: int32 = (*scanline).position.x;
+            let mut posY: int32 = (*scanline).position.y;
+
+            let activePalette: *const uint16 =
+                fullPalette.as_ptr().wrapping_add(*lineBuffer as usize) as *const u16;
+            lineBuffer = lineBuffer.wrapping_add(1);
+            let fbOffset: int32 = (*currentScreen).pitch - lineSize;
+
+            for cx in 0..lineSize {
+                let mut tx: int32 = posX >> 20;
+                let mut ty: int32 = posY >> 20;
+                let mut x: int32 = FROM_FIXED!(posX) & 0xF;
+                let mut y: int32 = FROM_FIXED!(posY) & 0xF;
+
+                let tile: uint16 = *layout.wrapping_add(
+                    (((width >> 4) & tx) + (((height >> 4) & ty) << (*layer).widthShift)) as usize,
+                ) & 0xFFF;
+                let idx: uint8 = tilesetPixels
+                    [TILE_SIZE * (y as usize + TILE_SIZE * tile as usize) + x as usize];
+
+                if (idx != 0) {
+                    *frameBuffer = *activePalette.wrapping_add(idx as usize);
+                }
+
+                posX += (*scanline).deform.x;
+                posY += (*scanline).deform.y;
+                frameBuffer = frameBuffer.wrapping_add(1);
+            }
+
+            frameBuffer = frameBuffer.wrapping_add(fbOffset as usize);
+            scanline = scanline.wrapping_add(1);
+        }
+    }
+}
