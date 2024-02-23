@@ -162,11 +162,12 @@ target_compile_definitions(RetroEngine PRIVATE
     DECOMP_VERSION="${DECOMP_VERSION}"
 )
 
+set(RUST_CONF $<$<CONFIG:Debug>:debug>$<$<CONFIG:Release>:release>)
 if(WIN32)
     target_link_libraries(RetroEngine ws2_32.dll userenv.dll bcrypt.dll ntdll.dll)
-    target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/release/rsdkv5rs.lib)
+    target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/${RUST_CONF}/rsdkv5rs.lib)
 else()
-    target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/release/librsdkv5rs.a)
+    target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/${RUST_CONF}/librsdkv5rs.a)
 endif()
 
 if(WITH_RSDK)

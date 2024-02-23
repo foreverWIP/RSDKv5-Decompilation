@@ -73,33 +73,28 @@ pub extern "C" fn draw_layer_hscroll(layer: *const TileLayer) {
         }
 
         let lineTileCount: int32 = ((*currentScreen).pitch >> 4) - 1;
-        let mut lineBuffer: *const uint8 = gfxLineBuffer
-            .as_ptr()
-            .wrapping_add((*currentScreen).clipBound_Y1 as usize);
-        let mut scanline: *mut ScanlineInfo =
-            scanlines.wrapping_add((*currentScreen).clipBound_Y1 as usize);
         let mut frameBuffer: *mut uint16 = (*currentScreen)
             .frameBuffer
             .as_mut_ptr()
             .wrapping_add(((*currentScreen).pitch * (*currentScreen).clipBound_Y1) as usize);
 
-        for _ in (*currentScreen).clipBound_Y1..((*currentScreen).clipBound_Y2 + 1) {
+        for draw_y in (*currentScreen).clipBound_Y1..(*currentScreen).clipBound_Y2 {
+            let scanline = scanlines.wrapping_add(draw_y as usize);
             let mut x: int32 = (*scanline).position.x;
             let y: int32 = (*scanline).position.y;
             let tileX: int32 = FROM_FIXED!(x);
-            let activePalette: *const uint16 =
-                (fullPalette.as_ptr() as *const uint16).wrapping_add(*lineBuffer as usize);
-            lineBuffer = lineBuffer.wrapping_add(1);
+            let lineBuffer = gfxLineBuffer[draw_y as usize];
+            let activePalette = &fullPalette[lineBuffer as usize];
 
             if (tileX as usize) >= TILE_SIZE * ((*layer).xsize as usize) {
-                x = TO_FIXED!(tileX - (TILE_SIZE * ((*layer).xsize as usize)) as i32);
+                x = TO_FIXED!(tileX - TILE_SIZE as i32 * (*layer).xsize as i32);
             } else if tileX < 0 {
-                x = TO_FIXED!(tileX + (TILE_SIZE * ((*layer).xsize as usize)) as i32);
+                x = TO_FIXED!(tileX + TILE_SIZE as i32 * (*layer).xsize as i32);
             }
 
-            let mut tileRemain: int32 = (TILE_SIZE - (FROM_FIXED!(x) & 0xF) as usize) as i32;
+            let mut tileRemain: int32 = TILE_SIZE as i32 - (FROM_FIXED!(x) & 0xF);
             let sheetX: int32 = FROM_FIXED!(x) & 0xF;
-            let sheetY: int32 = (TILE_SIZE * (FROM_FIXED!(y) & 0xF) as usize) as i32;
+            let sheetY: int32 = TILE_SIZE as i32 * (FROM_FIXED!(y) & 0xF);
             let mut lineRemain: int32 = (*currentScreen).pitch;
 
             let mut tx: int32 = x >> 20;
@@ -116,7 +111,7 @@ pub extern "C" fn draw_layer_hscroll(layer: *const TileLayer) {
                 );
                 for _ in 0..tileRemain {
                     if *pixels != 0 {
-                        *frameBuffer = *activePalette.wrapping_add(*pixels as usize);
+                        *frameBuffer = activePalette[*pixels as usize];
                     }
                     pixels = pixels.wrapping_add(1);
                     frameBuffer = frameBuffer.wrapping_add(1);
@@ -126,11 +121,10 @@ pub extern "C" fn draw_layer_hscroll(layer: *const TileLayer) {
             for _ in 0..lineTileCount {
                 layout = layout.wrapping_add(1);
 
+                tx += 1;
                 if tx == (*layer).xsize as i32 {
                     tx = 0;
                     layout = layout.wrapping_sub((*layer).xsize as usize);
-                } else {
-                    tx += 1;
                 }
 
                 if *layout < 0xFFFF {
@@ -141,8 +135,7 @@ pub extern "C" fn draw_layer_hscroll(layer: *const TileLayer) {
                     for p in 0..16 {
                         let index = *pixels.wrapping_add(p);
                         if index != 0 {
-                            *frameBuffer.wrapping_add(p) =
-                                *activePalette.wrapping_add(index as usize);
+                            *frameBuffer.wrapping_add(p) = activePalette[index as usize];
                         }
                     }
                 }
@@ -154,11 +147,10 @@ pub extern "C" fn draw_layer_hscroll(layer: *const TileLayer) {
             while lineRemain > 0 {
                 layout = layout.wrapping_add(1);
 
+                tx += 1;
                 if tx == (*layer).xsize as i32 {
                     tx = 0;
                     layout = layout.wrapping_sub((*layer).xsize as usize);
-                } else {
-                    tx += 1;
                 }
 
                 tileRemain = if lineRemain >= TILE_SIZE as i32 {
@@ -175,7 +167,7 @@ pub extern "C" fn draw_layer_hscroll(layer: *const TileLayer) {
                         .wrapping_add(TILE_DATASIZE * (*layout & 0xFFF) as usize + sheetY as usize);
                     for _ in 0..tileRemain {
                         if *pixels != 0 {
-                            *frameBuffer = *activePalette.wrapping_add(*pixels as usize);
+                            *frameBuffer = activePalette[*pixels as usize];
                         }
                         pixels = pixels.wrapping_add(1);
                         frameBuffer = frameBuffer.wrapping_add(1);
@@ -184,8 +176,6 @@ pub extern "C" fn draw_layer_hscroll(layer: *const TileLayer) {
 
                 lineRemain = lineRemain.wrapping_sub(TILE_SIZE as i32);
             }
-
-            scanline = scanline.wrapping_add(1);
         }
     }
 }
@@ -264,11 +254,10 @@ pub extern "C" fn draw_layer_basic(layer: *const TileLayer) {
                 }
 
                 layout = layout.wrapping_add(1);
+                tx += 1;
                 if tx == (*layer).xsize as i32 {
                     tx = 0;
                     layout = layout.wrapping_sub((*layer).xsize as usize);
-                } else {
-                    tx += 1;
                 }
 
                 for _ in 0..lineSize {
@@ -297,11 +286,10 @@ pub extern "C" fn draw_layer_basic(layer: *const TileLayer) {
                     }
 
                     layout = layout.wrapping_add(1);
+                    tx += 1;
                     if tx == (*layer).xsize as i32 {
                         tx = 0;
                         layout = layout.wrapping_sub((*layer).xsize as usize);
-                    } else {
-                        tx += 1;
                     }
                 }
 
@@ -379,11 +367,10 @@ pub extern "C" fn draw_layer_basic(layer: *const TileLayer) {
                     );
                 }
                 layout = layout.wrapping_add(1);
+                tx += 1;
                 if tx == (*layer).xsize as i32 {
                     tx = 0;
                     layout = layout.wrapping_sub((*layer).xsize as usize);
-                } else {
-                    tx += 1;
                 }
 
                 // Draw the bulk of the tiles on this line
@@ -414,11 +401,10 @@ pub extern "C" fn draw_layer_basic(layer: *const TileLayer) {
                     }
 
                     layout = layout.wrapping_add(1);
+                    tx += 1;
                     if tx == (*layer).xsize as int32 {
                         tx = 0;
                         layout = layout.wrapping_sub((*layer).xsize as usize);
-                    } else {
-                        tx += 1;
                     }
                 }
 
@@ -446,11 +432,10 @@ pub extern "C" fn draw_layer_basic(layer: *const TileLayer) {
                     }
                 }
                 layout = layout.wrapping_add(1);
+                tx += 1;
                 if tx == (*layer).xsize as i32 {
                     tx = 0;
                     layout = layout.wrapping_sub((*layer).xsize as usize);
-                } else {
-                    tx += 1
                 }
 
                 // We've drawn a single line, increase our variables
@@ -501,11 +486,10 @@ pub extern "C" fn draw_layer_basic(layer: *const TileLayer) {
                         .wrapping_add((tileRemainX - (*currentScreen).pitch * sheetY) as usize);
                 }
                 layout = layout.wrapping_add(1);
+                tx += 1;
                 if tx == (*layer).xsize as i32 {
                     tx = 0;
                     layout = layout.wrapping_sub((*layer).xsize as usize);
-                } else {
-                    tx += 1;
                 }
 
                 for _ in 0..lineSize {
@@ -533,11 +517,10 @@ pub extern "C" fn draw_layer_basic(layer: *const TileLayer) {
                     }
 
                     layout = layout.wrapping_sub(1);
+                    tx += 1;
                     if tx == (*layer).xsize as i32 {
                         tx = 0;
                         layout = layout.wrapping_sub((*layer).xsize as usize);
-                    } else {
-                        tx += 1;
                     }
                 }
 
