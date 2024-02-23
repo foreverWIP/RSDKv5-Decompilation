@@ -567,7 +567,7 @@ pub extern "C" fn draw_layer_vscroll(layer: *const TileLayer) {
         let activePalette: *const uint16 =
             fullPalette.as_ptr().wrapping_add(gfxLineBuffer[0] as usize) as *const u16;
 
-        for _ in (*currentScreen).clipBound_X1..((*currentScreen).clipBound_X2 + 1) {
+        for _ in (*currentScreen).clipBound_X1..(*currentScreen).clipBound_X2 {
             let x: int32 = (*scanline).position.x;
             let mut y: int32 = (*scanline).position.y;
             let mut ty: int32 = FROM_FIXED!(y);
@@ -704,7 +704,7 @@ pub extern "C" fn draw_layer_rotozoom(layer: *const TileLayer) {
         let height: int32 = ((TILE_SIZE << (*layer).heightShift) - 1) as i32;
         let lineSize: int32 = (*currentScreen).clipBound_X2 - (*currentScreen).clipBound_X1;
 
-        for _ in (*currentScreen).clipBound_Y1..((*currentScreen).clipBound_Y2 + 1) {
+        for _ in (*currentScreen).clipBound_Y1..(*currentScreen).clipBound_Y2 {
             let mut posX: int32 = (*scanline).position.x;
             let mut posY: int32 = (*scanline).position.y;
 
