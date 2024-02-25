@@ -22,7 +22,7 @@ type float = f32;
 
 #[repr(C)]
 #[derive(Clone, Copy)]
-enum bool32 {
+pub enum bool32 {
     False = 0,
     True = 1,
 }
@@ -34,6 +34,8 @@ impl From<bool32> for bool {
         }
     }
 }
+pub const false32: bool32 = bool32::False;
+pub const true32: bool32 = bool32::True;
 
 type color = u32;
 

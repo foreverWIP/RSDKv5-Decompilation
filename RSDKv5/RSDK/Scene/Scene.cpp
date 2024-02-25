@@ -6,18 +6,6 @@ using namespace RSDK;
 #include "Legacy/SceneLegacy.cpp"
 #endif
 
-TileLayer RSDK::tileLayers[LAYER_COUNT];
-CollisionMask RSDK::collisionMasks[CPATH_COUNT][TILE_COUNT * 4];
-TileInfo RSDK::tileInfo[CPATH_COUNT][TILE_COUNT * 4];
-
-#if RETRO_REV02
-bool32 RSDK::forceHardReset = false;
-#endif
-char RSDK::currentSceneFolder[0x10];
-char RSDK::currentSceneID[0x10];
-
-SceneInfo RSDK::sceneInfo;
-
 void RSDK::LoadSceneFolder()
 {
 #if RETRO_PLATFORM == RETRO_ANDROID

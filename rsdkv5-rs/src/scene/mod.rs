@@ -2,7 +2,7 @@ use crate::*;
 
 use self::{
     graphics::{
-        drawing::{currentScreen, CAMERA_COUNT},
+        drawing::{currentScreen, CAMERA_COUNT, LAYER_COUNT},
         palette::{fullPalette, gfxLineBuffer},
     },
     storage::text::HashMD5,
@@ -19,6 +19,7 @@ const RSDK_SIGNATURE_SCN: u32 = 0x4E4353; // "SCN"
 const RSDK_SIGNATURE_TIL: u32 = 0x4C4954; // "TIL"
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct ScrollInfo {
     tilePos: int32,
     parallaxFactor: int32,
@@ -26,6 +27,18 @@ pub struct ScrollInfo {
     scrollPos: int32,
     deform: uint8,
     unknown: uint8, // stored in the scene, but always 0, never referenced in-engine either...
+}
+impl ScrollInfo {
+    pub const fn new() -> Self {
+        Self {
+            tilePos: 0,
+            parallaxFactor: 0,
+            scrollSpeed: 0,
+            scrollPos: 0,
+            deform: 0,
+            unknown: 0,
+        }
+    }
 }
 
 #[repr(C)]
@@ -35,7 +48,8 @@ pub struct ScanlineInfo {
 }
 
 #[repr(C)]
-pub struct TileLayer<'linescroll> {
+#[derive(Clone, Copy)]
+pub struct TileLayer {
     type_: uint8,
     drawGroup: [uint8; CAMERA_COUNT],
     widthShift: uint8,
@@ -55,13 +69,169 @@ pub struct TileLayer<'linescroll> {
     scrollInfo: [ScrollInfo; 0x100],
     name: HashMD5,
     layout: *mut uint16,
-    lineScroll: &'linescroll mut [uint8],
+    lineScroll: *mut uint8,
 }
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct CollisionMask {
+    floorMasks: [uint8; TILE_SIZE],
+    lWallMasks: [uint8; TILE_SIZE],
+    rWallMasks: [uint8; TILE_SIZE],
+    roofMasks: [uint8; TILE_SIZE],
+}
+impl CollisionMask {
+    pub const fn new() -> Self {
+        Self {
+            floorMasks: [0; TILE_SIZE],
+            lWallMasks: [0; TILE_SIZE],
+            rWallMasks: [0; TILE_SIZE],
+            roofMasks: [0; TILE_SIZE],
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct TileInfo {
+    floorAngle: uint8,
+    lWallAngle: uint8,
+    rWallAngle: uint8,
+    roofAngle: uint8,
+    flag: uint8,
+}
+impl TileInfo {
+    pub const fn new() -> Self {
+        Self {
+            floorAngle: 0,
+            lWallAngle: 0,
+            rWallAngle: 0,
+            roofAngle: 0,
+            flag: 0,
+        }
+    }
+}
+
+#[repr(C)]
+pub struct SceneListInfo {
+    hash: HashMD5,
+    name: [i8; 0x20],
+    sceneOffsetStart: uint16,
+    sceneOffsetEnd: uint16,
+    sceneCount: uint8,
+}
+
+#[repr(C)]
+pub struct SceneListEntry {
+    hash: HashMD5,
+    name: [i8; 0x20],
+    folder: [i8; 0x10],
+    id: [i8; 0x08],
+    #[cfg(feature = "version_2")]
+    filter: u8,
+}
+
+#[repr(C)]
+pub struct SceneInfo {
+    entity: *mut Entity,
+    listData: *mut SceneListEntry,
+    listCategory: *mut SceneListInfo,
+    timeCounter: int32,
+    currentDrawGroup: int32,
+    currentScreenID: int32,
+    listPos: uint16,
+    entitySlot: uint16,
+    createSlot: uint16,
+    classCount: uint16,
+    inEditor: bool32,
+    effectGizmo: bool32,
+    debugMode: bool32,
+    useGlobalObjects: bool32,
+    timeEnabled: bool32,
+    activeCategory: uint8,
+    categoryCount: uint8,
+    state: uint8,
+    #[cfg(feature = "version_2")]
+    filter: uint8,
+    milliseconds: uint8,
+    seconds: uint8,
+    minutes: uint8,
+}
+impl SceneInfo {
+    pub const fn new() -> Self {
+        Self {
+            entity: std::ptr::null_mut(),
+            listData: std::ptr::null_mut(),
+            listCategory: std::ptr::null_mut(),
+            timeCounter: 0,
+            currentDrawGroup: 0,
+            currentScreenID: 0,
+            listPos: 0,
+            entitySlot: 0,
+            createSlot: 0,
+            classCount: 0,
+            inEditor: false32,
+            effectGizmo: false32,
+            debugMode: false32,
+            useGlobalObjects: false32,
+            timeEnabled: false32,
+            activeCategory: 0,
+            categoryCount: 0,
+            state: 0,
+            filter: 0,
+            milliseconds: 0,
+            seconds: 0,
+            minutes: 0,
+        }
+    }
+}
+
+extern "C" fn default_scanline_callback(_scanline_info: *mut ScanlineInfo) {}
 
 #[no_mangle]
 pub static mut scanlines: *mut ScanlineInfo = std::ptr::null_mut();
 #[no_mangle]
 pub static mut tilesetPixels: [uint8; TILESET_SIZE * 4] = [0; TILESET_SIZE * 4];
+
+#[no_mangle]
+pub static mut tileLayers: [TileLayer; LAYER_COUNT] = [TileLayer {
+    type_: 0,
+    drawGroup: [0; 4],
+    widthShift: 0,
+    heightShift: 0,
+    xsize: 0,
+    ysize: 0,
+    position: Vector2::new(),
+    parallaxFactor: 0,
+    scrollSpeed: 0,
+    scrollPos: 0,
+    deformationOffset: 0,
+    deformationOffsetW: 0,
+    deformationData: [0; 1024],
+    deformationDataW: [0; 1024],
+    scanlineCallback: default_scanline_callback,
+    scrollInfoCount: 0,
+    scrollInfo: [ScrollInfo::new(); 256],
+    name: [0; 16],
+    layout: std::ptr::null_mut(),
+    lineScroll: std::ptr::null_mut(),
+}; LAYER_COUNT];
+#[no_mangle]
+pub static mut collisionMasks: [[CollisionMask; TILE_COUNT * 4]; CPATH_COUNT] =
+    [[CollisionMask::new(); TILE_COUNT * 4]; CPATH_COUNT];
+#[no_mangle]
+pub static mut tileInfo: [[TileInfo; TILE_COUNT * 4]; CPATH_COUNT] =
+    [[TileInfo::new(); TILE_COUNT * 4]; CPATH_COUNT];
+
+#[cfg(feature = "version_2")]
+#[no_mangle]
+pub static mut forceHardReset: bool32 = false32;
+#[no_mangle]
+pub static mut currentSceneFolder: [i8; 0x10] = [0; 0x10];
+#[no_mangle]
+pub static mut currentSceneID: [i8; 0x10] = [0; 0x10];
+#[no_mangle]
+pub static mut sceneInfo: SceneInfo = SceneInfo::new();
 
 #[no_mangle]
 #[export_name = "DrawLayerHScroll"]

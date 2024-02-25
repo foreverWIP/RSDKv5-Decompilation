@@ -26,9 +26,15 @@ macro_rules! FROM_FIXED {
 pub const RSDK_PI: f32 = 3.1415927;
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct Vector2 {
     pub x: i32,
     pub y: i32,
+}
+impl Vector2 {
+    pub const fn new() -> Self {
+        Self { x: 0, y: 0 }
+    }
 }
 
 #[no_mangle]

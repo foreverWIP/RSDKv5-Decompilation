@@ -148,24 +148,22 @@ struct TileInfo {
 
 extern "C" {
     extern ScanlineInfo *scanlines;
-}
-extern TileLayer tileLayers[LAYER_COUNT];
+    extern TileLayer tileLayers[LAYER_COUNT];
 
-extern CollisionMask collisionMasks[CPATH_COUNT][TILE_COUNT * 4]; // 1024 * 1 per direction
-extern TileInfo tileInfo[CPATH_COUNT][TILE_COUNT * 4];            // 1024 * 1 per direction
+    extern CollisionMask collisionMasks[CPATH_COUNT][TILE_COUNT * 4]; // 1024 * 1 per direction
+    extern TileInfo tileInfo[CPATH_COUNT][TILE_COUNT * 4];            // 1024 * 1 per direction
 
 #if RETRO_REV02
-extern bool32 forceHardReset;
+    extern bool32 forceHardReset;
 #endif
-extern char currentSceneFolder[0x10];
-extern char currentSceneID[0x10];
+    extern char currentSceneFolder[0x10];
+    extern char currentSceneID[0x10];
 #if RETRO_REV02
-extern uint8 currentSceneFilter;
+    extern uint8 currentSceneFilter;
 #endif
 
-extern SceneInfo sceneInfo;
+    extern SceneInfo sceneInfo;
 
-extern "C" {
     extern uint8 tilesetPixels[TILESET_SIZE * 4];
 }
 
