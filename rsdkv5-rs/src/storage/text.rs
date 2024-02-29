@@ -4,6 +4,13 @@ use crate::*;
 
 pub type HashMD5 = [u8; 0x10];
 
+#[repr(C)]
+pub struct RetroString {
+    pub chars: *mut u16, // actual text
+    pub length: u16,     // length of text
+    pub size: u16,       // allocated size
+}
+
 #[no_mangle]
 #[export_name = "GenerateHashMD5"]
 pub extern "C" fn gen_hash_md5(buffer: *mut uint32, textBuffer: *const i8, textBufferLen: int32) {
@@ -84,4 +91,46 @@ pub extern "C" fn gen_hash_crc(id: *mut uint32, mut input_string: *mut u8) {
         }
         *id = !*id;
     }
+}
+
+#[no_mangle]
+#[export_name = "CompareStrings"]
+pub extern "C" fn compare_strings(
+    string1: &RetroString,
+    string2: &RetroString,
+    exactMatch: bool32,
+) -> bool32 {
+    if string1.length != string2.length {
+        return false32;
+    }
+
+    if exactMatch.into() {
+        // each character has to match
+        unsafe {
+            for i in 0..(string1.length as usize) {
+                if *string1.chars.wrapping_add(i) != *string2.chars.wrapping_add(i) {
+                    return false32;
+                }
+            }
+        }
+    } else {
+        // ignore case sensitivity when matching
+        if string1.length <= 0 {
+            return true32;
+        }
+
+        unsafe {
+            for i in 0..(string1.length as usize) {
+                if *string1.chars.wrapping_add(i) != *string2.chars.wrapping_add(i) {
+                    if *string1.chars.wrapping_add(i) != (*string2.chars.wrapping_add(i) + 0x20)
+                        && *string1.chars.wrapping_add(i) != (*string2.chars.wrapping_add(i) - 0x20)
+                    {
+                        return false32;
+                    }
+                }
+            }
+        }
+    }
+
+    return true32;
 }

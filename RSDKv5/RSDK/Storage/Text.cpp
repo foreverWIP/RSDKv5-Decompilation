@@ -6,8 +6,6 @@ using namespace RSDK;
 #include "Legacy/TextLegacy.cpp"
 #endif
 
-// From here: https://rosettacode.org/wiki/MD5#C
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -162,32 +160,6 @@ void RSDK::AppendString(String *string, String *appendString)
     int32 startOffset = string->length;
     string->length += appendString->length;
     for (int32 c = 0, pos = startOffset; pos < string->length; ++pos, ++c) string->chars[pos] = appendString->chars[c];
-}
-
-bool32 RSDK::CompareStrings(String *string1, String *string2, bool32 exactMatch)
-{
-    if (string1->length != string2->length)
-        return false;
-
-    if (exactMatch) { // each character has to match
-        for (int32 i = 0; i < string1->length; ++i) {
-            if (string1->chars[i] != string2->chars[i])
-                return false;
-        }
-    }
-    else { // ignore case sensitivity when matching
-        if (string1->length <= 0)
-            return true;
-
-        for (int32 i = 0; i < string1->length; ++i) {
-            if (string1->chars[i] != string2->chars[i]) {
-                if (string1->chars[i] != (string2->chars[i] + 0x20) && string1->chars[i] != (string2->chars[i] - 0x20))
-                    return false;
-            }
-        }
-    }
-
-    return true;
 }
 
 void RSDK::InitStringList(String *stringList, int32 size)

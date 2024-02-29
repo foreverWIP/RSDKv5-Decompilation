@@ -212,7 +212,9 @@ inline void GetCString(char *destChars, String *string)
 
 void AppendText(String *string, const char *appendText);
 void AppendString(String *string, String *appendString);
-bool32 CompareStrings(String *string1, String *string2, bool32 exactMatch);
+extern "C" {
+    bool32 CompareStrings(String *string1, String *string2, bool32 exactMatch);
+}
 
 void InitStringList(String *stringList, int32 size);
 void LoadStringList(String *stringList, const char *filePath, uint32 charSize);
