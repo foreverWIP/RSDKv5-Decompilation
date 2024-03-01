@@ -212,7 +212,7 @@ pub static mut tileLayers: [TileLayer; LAYER_COUNT] = [TileLayer {
     scanlineCallback: default_scanline_callback,
     scrollInfoCount: 0,
     scrollInfo: [ScrollInfo::new(); 256],
-    name: [0; 16],
+    name: [0; 4],
     layout: std::ptr::null_mut(),
     lineScroll: std::ptr::null_mut(),
 }; LAYER_COUNT];
@@ -691,7 +691,7 @@ pub extern "C" fn draw_layer_basic(layer: &TileLayer) {
 #[export_name = "DrawLayerVScroll"]
 pub extern "C" fn draw_layer_vscroll(layer: &TileLayer) {
     unsafe {
-        if layer.xsize == 0 || layer.ysize == 0 {
+        if layer.xsize == 0 || !layer.ysize == 0 {
             return;
         }
 
@@ -700,20 +700,20 @@ pub extern "C" fn draw_layer_vscroll(layer: &TileLayer) {
             &mut (*currentScreen).frameBuffer[(*currentScreen).clipBound_X1 as usize];
         let mut scanline: *const ScanlineInfo =
             scanlines.wrapping_add((*currentScreen).clipBound_X1 as usize);
-        let activePalette = fullPalette[gfxLineBuffer[0] as usize];
+        let activePalette = &fullPalette[gfxLineBuffer[0] as usize] as *const u16;
 
         for _ in (*currentScreen).clipBound_X1..(*currentScreen).clipBound_X2 {
             let x = (*scanline).position.x;
             let mut y = (*scanline).position.y;
             let mut ty = FROM_FIXED!(y);
 
-            if ty >= (TILE_SIZE * layer.ysize as usize) as i32 {
+            if ty >= (TILE_SIZE as u16 * layer.ysize) as i32 {
                 y -= TO_FIXED!(TILE_SIZE * layer.ysize as usize) as i32;
             } else if ty < 0 {
                 y += TO_FIXED!(TILE_SIZE * layer.ysize as usize) as i32;
             }
 
-            let mut tileRemain = (TILE_SIZE - (FROM_FIXED!(y) & 0xF) as usize) as i32;
+            let mut tileRemain = TILE_SIZE as i32 - (FROM_FIXED!(y) & 0xF);
             let sheetX = FROM_FIXED!(x) & 0xF;
             let sheetY = FROM_FIXED!(y) & 0xF;
             let mut lineRemain = (*currentScreen).size.y;
@@ -727,14 +727,14 @@ pub extern "C" fn draw_layer_vscroll(layer: &TileLayer) {
                 frameBuffer =
                     frameBuffer.wrapping_add(((*currentScreen).pitch * tileRemain) as usize);
             } else {
-                let pixels = &tilesetPixels[TILE_SIZE
-                    * (sheetY as usize + TILE_SIZE * (*layout & 0xFFF) as usize) as usize
-                    + sheetX as usize..];
-                for p in 0..tileRemain {
-                    let index = pixels[p as usize];
-                    if index != 0 {
-                        *frameBuffer = activePalette[TILE_SIZE * index as usize];
+                let mut pixels = &tilesetPixels[TILE_SIZE
+                    * (sheetY as usize + TILE_SIZE * (*layout & 0xFFF) as usize)
+                    + sheetX as usize] as *const u8;
+                for _ in 0..tileRemain {
+                    if *pixels != 0 {
+                        *frameBuffer = *activePalette.wrapping_add(*pixels as usize);
                     }
+                    pixels = pixels.wrapping_add(TILE_SIZE);
                     frameBuffer = frameBuffer.wrapping_add((*currentScreen).pitch as usize);
                 }
             }
@@ -754,13 +754,14 @@ pub extern "C" fn draw_layer_vscroll(layer: &TileLayer) {
                         frameBuffer.wrapping_add(TILE_SIZE * (*currentScreen).pitch as usize);
                 } else {
                     let pixels = &tilesetPixels
-                        [TILE_DATASIZE * (*layout & 0xFFF) as usize + sheetX as usize..];
+                        [TILE_DATASIZE * (*layout & 0xFFF) as usize + sheetX as usize]
+                        as *const u8;
 
-                    for i in 0..16 {
-                        let p = pixels[i << 8];
-                        if p != 0 {
-                            *frameBuffer.wrapping_add((*currentScreen).pitch as usize + i) =
-                                activePalette[p as usize];
+                    for mult in 0..16 {
+                        if *pixels.wrapping_add(0x10 * mult) != 0 {
+                            *frameBuffer.wrapping_add((*currentScreen).pitch as usize * mult) =
+                                *activePalette
+                                    .wrapping_add(*pixels.wrapping_add(0x10 * mult) as usize);
                         }
                     }
 
@@ -768,7 +769,7 @@ pub extern "C" fn draw_layer_vscroll(layer: &TileLayer) {
                         frameBuffer.wrapping_add((*currentScreen).pitch as usize * TILE_SIZE);
                 }
 
-                lineRemain = lineRemain.wrapping_add(TILE_SIZE as i32);
+                lineRemain -= TILE_SIZE as i32;
             }
 
             while lineRemain > 0 {
@@ -789,19 +790,20 @@ pub extern "C" fn draw_layer_vscroll(layer: &TileLayer) {
                     frameBuffer =
                         frameBuffer.wrapping_add(((*currentScreen).pitch * sheetY) as usize);
                 } else {
-                    let pixels = &tilesetPixels
-                        [TILE_DATASIZE * (*layout & 0xFFF) as usize + sheetX as usize..];
-                    for p in 0..tileRemain {
-                        let index = pixels[p as usize * TILE_SIZE];
-                        if index != 0 {
-                            *frameBuffer = activePalette[index as usize];
+                    let mut pixels = &tilesetPixels
+                        [TILE_DATASIZE * (*layout & 0xFFF) as usize + sheetX as usize]
+                        as *const u8;
+                    for _ in 0..tileRemain {
+                        if *pixels != 0 {
+                            *frameBuffer = *activePalette.wrapping_add(*pixels as usize);
                         }
 
+                        pixels = pixels.wrapping_add(TILE_SIZE);
                         frameBuffer = frameBuffer.wrapping_add((*currentScreen).pitch as usize);
                     }
                 }
 
-                lineRemain = lineRemain.wrapping_sub(TILE_SIZE as i32);
+                lineRemain -= TILE_SIZE as i32;
             }
 
             frameBuffer = frameBuffer

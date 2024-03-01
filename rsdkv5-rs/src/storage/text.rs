@@ -2,7 +2,7 @@ use std::{ffi::CStr, fs, io::Write};
 
 use crate::*;
 
-pub type HashMD5 = [u8; 0x10];
+pub type HashMD5 = [u32; 4];
 
 #[repr(C)]
 pub struct RetroString {
