@@ -21,7 +21,7 @@ type uint32 = u32;
 type float = f32;
 
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum bool32 {
     False = 0,
     True = 1,

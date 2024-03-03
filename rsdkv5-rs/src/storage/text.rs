@@ -11,18 +11,11 @@ pub struct RetroString {
     pub size: u16,       // allocated size
 }
 
-#[no_mangle]
-#[export_name = "GenerateHashMD5"]
-pub extern "C" fn gen_hash_md5(buffer: *mut uint32, textBuffer: *const i8, textBufferLen: int32) {
+pub fn gen_hash_md5(message: &str) -> HashMD5 {
     unsafe {
-        let c_str = {
-            assert!(!textBuffer.is_null());
-
-            CStr::from_ptr(textBuffer)
-        };
-        let r_str = c_str.to_str().unwrap();
-        let md5 = md5::compute(r_str);
-        let buffer_bytes = buffer as *mut u8;
+        let mut buffer = HashMD5::default();
+        let md5 = md5::compute(message);
+        let buffer_bytes = buffer.as_mut_ptr() as *mut u8;
 
         for i in 0..4 {
             *buffer_bytes.wrapping_add(i * 4 + 0) = md5.0[i * 4 + 0];
@@ -30,6 +23,24 @@ pub extern "C" fn gen_hash_md5(buffer: *mut uint32, textBuffer: *const i8, textB
             *buffer_bytes.wrapping_add(i * 4 + 2) = md5.0[i * 4 + 2];
             *buffer_bytes.wrapping_add(i * 4 + 3) = md5.0[i * 4 + 3];
         }
+        buffer
+    }
+}
+
+#[no_mangle]
+#[export_name = "GenerateHashMD5"]
+pub extern "C" fn gen_hash_md5_buf(
+    buffer: *mut uint32,
+    textBuffer: *const i8,
+    textBufferLen: int32,
+) {
+    unsafe {
+        let c_str = {
+            assert!(!textBuffer.is_null());
+
+            CStr::from_ptr(textBuffer)
+        };
+        buffer.copy_from(gen_hash_md5(c_str.to_str().unwrap()).as_ptr(), 4);
     }
 }
 
