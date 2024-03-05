@@ -119,8 +119,8 @@ void RSDK::Legacy::v4::DrawStageGFX()
         DrawObjectList(6);
     }
 
-    if (fadeMode > 0)
-        DrawRectangle(0, 0, SCREEN_XSIZE, SCREEN_YSIZE, fadeR, fadeG, fadeB, fadeA);
+    if (Legacy_fadeMode > 0)
+        DrawRectangle(0, 0, SCREEN_XSIZE, SCREEN_YSIZE, Legacy_fadeR, Legacy_fadeG, Legacy_fadeB, Legacy_fadeA);
 
 #if !RETRO_USE_ORIGINAL_CODE
     DrawDebugOverlays();

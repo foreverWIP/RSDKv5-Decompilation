@@ -1,23 +1,3 @@
-
-// Palettes (as RGB565 Colors)
-uint16 RSDK::Legacy::fullPalette[LEGACY_PALETTE_COUNT][LEGACY_PALETTE_COLOR_COUNT];
-uint16 *RSDK::Legacy::activePalette = fullPalette[0]; // Ptr to the 256 color set thats active
-
-uint8 RSDK::Legacy::gfxLineBuffer[SCREEN_YSIZE * 2]; // Pointers to active palette
-int32 RSDK::Legacy::GFX_LINESIZE          = 0;
-int32 RSDK::Legacy::GFX_LINESIZE_MINUSONE = 0;
-int32 RSDK::Legacy::GFX_LINESIZE_DOUBLE   = 0;
-int32 RSDK::Legacy::GFX_FRAMEBUFFERSIZE   = 0;
-int32 RSDK::Legacy::GFX_FBUFFERMINUSONE   = 0;
-
-int32 RSDK::Legacy::fadeMode = 0;
-uint8 RSDK::Legacy::fadeA    = 0;
-uint8 RSDK::Legacy::fadeR    = 0;
-uint8 RSDK::Legacy::fadeG    = 0;
-uint8 RSDK::Legacy::fadeB    = 0;
-
-int32 RSDK::Legacy::paletteMode = 1;
-
 void RSDK::Legacy::LoadPalette(const char *filePath, int32 paletteID, int32 startPaletteIndex, int32 startIndex, int32 endIndex)
 {
     char fullPath[0x80];
@@ -64,7 +44,7 @@ void RSDK::Legacy::SetPaletteFade(uint8 destPaletteID, uint8 srcPaletteA, uint8 
         return;
 
     uint32 blendA        = 0xFF - blendAmount;
-    uint16 *paletteColor = &fullPalette[destPaletteID][startIndex];
+    uint16 *paletteColor = &Legacy_fullPalette[destPaletteID][startIndex];
     for (int32 i = startIndex; i <= endIndex; ++i) {
         uint32 clrA = GetPaletteEntryPacked(srcPaletteA, i);
         uint32 clrB = GetPaletteEntryPacked(srcPaletteB, i);
@@ -84,8 +64,8 @@ void RSDK::Legacy::v3::SetLimitedFade(uint8 paletteID, uint8 R, uint8 G, uint8 B
     if (paletteID >= LEGACY_PALETTE_COUNT)
         return;
 
-    paletteMode   = 1;
-    activePalette = fullPalette[paletteID];
+    Legacy_paletteMode   = 1;
+    Legacy_activePalette = Legacy_fullPalette[paletteID];
 
     if (blendAmount >= 0x100)
         blendAmount = 0xFF;
@@ -94,7 +74,7 @@ void RSDK::Legacy::v3::SetLimitedFade(uint8 paletteID, uint8 R, uint8 G, uint8 B
         return;
 
     uint32 blendA        = 0xFF - blendAmount;
-    uint16 *paletteColor = &fullPalette[paletteID][startIndex];
+    uint16 *paletteColor = &Legacy_fullPalette[paletteID][startIndex];
     for (int32 i = startIndex; i <= endIndex; ++i) {
         uint32 clrA = GetPaletteEntryPacked(paletteID, i);
 

@@ -20,10 +20,10 @@ void RSDK::Legacy::v4::InitFirstStage(void)
     xScrollOffset = 0;
     yScrollOffset = 0;
     StopMusic();
-    fadeMode = 0;
+    Legacy_fadeMode = 0;
     ClearGraphicsData();
     ClearAnimationData();
-    activePalette = fullPalette[0];
+    Legacy_activePalette = Legacy_fullPalette[0];
     stageMode     = STAGEMODE_LOAD;
     legacy_gameMode      = ENGINE_MAINGAME;
 }
@@ -40,7 +40,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             gameMenu[0].visibleRowOffset = 0;
             gameMenu[1].visibleRowOffset = 0;
             videoSettings.dimLimit       = (5 * 60) * videoSettings.refreshRate;
-            fadeMode                     = 0;
+            Legacy_fadeMode                     = 0;
             InitCameras();
             cameraShift       = 0;
             cameraLockedY     = 0;
@@ -75,8 +75,8 @@ void RSDK::Legacy::v4::ProcessStage(void)
             break;
 
         case STAGEMODE_NORMAL:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -112,8 +112,8 @@ void RSDK::Legacy::v4::ProcessStage(void)
             break;
 
         case STAGEMODE_PAUSED:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -157,8 +157,8 @@ void RSDK::Legacy::v4::ProcessStage(void)
             break;
 
         case STAGEMODE_FROZEN:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -187,8 +187,8 @@ void RSDK::Legacy::v4::ProcessStage(void)
             break;
 
         case STAGEMODE_2P:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -229,8 +229,8 @@ void RSDK::Legacy::v4::ProcessStage(void)
             break;
 
         case STAGEMODE_NORMAL + STAGEMODE_STEPOVER:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -267,8 +267,8 @@ void RSDK::Legacy::v4::ProcessStage(void)
             break;
 
         case STAGEMODE_PAUSED + STAGEMODE_STEPOVER:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -308,8 +308,8 @@ void RSDK::Legacy::v4::ProcessStage(void)
             break;
 
         case STAGEMODE_FROZEN + STAGEMODE_STEPOVER:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -340,8 +340,8 @@ void RSDK::Legacy::v4::ProcessStage(void)
             break;
 
         case STAGEMODE_2P + STAGEMODE_STEPOVER:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;

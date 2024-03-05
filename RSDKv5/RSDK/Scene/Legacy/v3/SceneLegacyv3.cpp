@@ -26,10 +26,10 @@ void RSDK::Legacy::v3::InitFirstStage()
     xScrollOffset = 0;
     yScrollOffset = 0;
     StopMusic();
-    fadeMode = 0;
+    Legacy_fadeMode = 0;
     ClearGraphicsData();
     ClearAnimationData();
-    activePalette = fullPalette[0];
+    Legacy_activePalette = Legacy_fullPalette[0];
     LoadPalette("MasterPalette.act", 0, 0, 0, 256);
 #if RETRO_USE_MOD_LOADER
     LoadGameXML(true);
@@ -48,7 +48,7 @@ void RSDK::Legacy::v3::ProcessStage()
 
     switch (stageMode) {
         case STAGEMODE_LOAD: // Startup
-            fadeMode = 0;
+            Legacy_fadeMode = 0;
             SetActivePalette(0, 0, 256);
             InitCameras();
             videoSettings.dimLimit = (5 * 60) * videoSettings.refreshRate;
@@ -105,11 +105,11 @@ void RSDK::Legacy::v3::ProcessStage()
             break;
 
         case STAGEMODE_NORMAL:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
-            if (paletteMode > 0) {
-                paletteMode = 0;
+            if (Legacy_paletteMode > 0) {
+                Legacy_paletteMode = 0;
                 SetActivePalette(0, 0, 256);
             }
 
@@ -145,8 +145,8 @@ void RSDK::Legacy::v3::ProcessStage()
             break;
 
         case STAGEMODE_PAUSED:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -169,8 +169,8 @@ void RSDK::Legacy::v3::ProcessStage()
 
                 DrawStageGFX();
 
-                if (fadeMode)
-                    DrawRectangle(0, 0, SCREEN_XSIZE, SCREEN_YSIZE, fadeR, fadeG, fadeB, fadeA);
+                if (Legacy_fadeMode)
+                    DrawRectangle(0, 0, SCREEN_XSIZE, SCREEN_YSIZE, Legacy_fadeR, Legacy_fadeG, Legacy_fadeB, Legacy_fadeA);
             }
             else {
                 // Update
@@ -197,8 +197,8 @@ void RSDK::Legacy::v3::ProcessStage()
             break;
 
         case STAGEMODE_NORMAL + STAGEMODE_STEPOVER:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;
@@ -235,8 +235,8 @@ void RSDK::Legacy::v3::ProcessStage()
             break;
 
         case STAGEMODE_PAUSED + STAGEMODE_STEPOVER:
-            if (fadeMode > 0)
-                fadeMode--;
+            if (Legacy_fadeMode > 0)
+                Legacy_fadeMode--;
 
             lastXSize = -1;
             lastYSize = -1;

@@ -1,9 +1,29 @@
-
-namespace Legacy
-{
 #define LEGACY_PALETTE_COUNT       (0x8)
 #define LEGACY_PALETTE_COLOR_COUNT (0x100)
 
+extern "C" {
+    // Palettes (as RGB565 Colors)
+    extern uint16 Legacy_fullPalette[LEGACY_PALETTE_COUNT][LEGACY_PALETTE_COLOR_COUNT];
+    extern uint16 *Legacy_activePalette; // Pointers to the 256 color set thats active
+
+    extern uint8 Legacy_gfxLineBuffer[SCREEN_YSIZE * 2]; // Pointers to active palette
+    extern int32 Legacy_GFX_LINESIZE;
+    extern int32 Legacy_GFX_LINESIZE_MINUSONE;
+    extern int32 Legacy_GFX_LINESIZE_DOUBLE;
+    extern int32 Legacy_GFX_FRAMEBUFFERSIZE;
+    extern int32 Legacy_GFX_FBUFFERMINUSONE;
+
+    extern int32 Legacy_fadeMode;
+    extern uint8 Legacy_fadeA;
+    extern uint8 Legacy_fadeR;
+    extern uint8 Legacy_fadeG;
+    extern uint8 Legacy_fadeB;
+
+    extern int32 Legacy_paletteMode;
+}
+
+namespace Legacy
+{
 struct Color {
     uint8 r;
     uint8 g;
@@ -11,48 +31,29 @@ struct Color {
     uint8 a;
 };
 
-// Palettes (as RGB565 Colors)
-extern uint16 fullPalette[LEGACY_PALETTE_COUNT][LEGACY_PALETTE_COLOR_COUNT];
-extern uint16 *activePalette; // Pointers to the 256 color set thats active
-
-extern uint8 gfxLineBuffer[SCREEN_YSIZE * 2]; // Pointers to active palette
-extern int32 GFX_LINESIZE;
-extern int32 GFX_LINESIZE_MINUSONE;
-extern int32 GFX_LINESIZE_DOUBLE;
-extern int32 GFX_FRAMEBUFFERSIZE;
-extern int32 GFX_FBUFFERMINUSONE;
-
-extern int32 fadeMode;
-extern uint8 fadeA;
-extern uint8 fadeR;
-extern uint8 fadeG;
-extern uint8 fadeB;
-
-extern int32 paletteMode;
-
 void LoadPalette(const char *filePath, int32 paletteID, int32 startPaletteIndex, int32 startIndex, int32 endIndex);
 
 inline void SetActivePalette(uint8 newActivePal, int32 startLine, int32 endLine)
 {
     if (newActivePal < LEGACY_PALETTE_COUNT)
-        for (int32 l = startLine; l < endLine && l < SCREEN_YSIZE; l++) gfxLineBuffer[l] = newActivePal;
+        for (int32 l = startLine; l < endLine && l < SCREEN_YSIZE; l++) Legacy_gfxLineBuffer[l] = newActivePal;
 
-    activePalette = fullPalette[gfxLineBuffer[0]];
+    Legacy_activePalette = Legacy_fullPalette[Legacy_gfxLineBuffer[0]];
 }
 
 inline void SetPaletteEntry(uint8 paletteIndex, uint8 index, uint8 r, uint8 g, uint8 b)
 {
     if (paletteIndex != 0xFF) {
-        fullPalette[paletteIndex][index] = PACK_RGB888(r, g, b);
+        Legacy_fullPalette[paletteIndex][index] = PACK_RGB888(r, g, b);
     }
     else {
-        activePalette[index] = PACK_RGB888(r, g, b);
+        Legacy_activePalette[index] = PACK_RGB888(r, g, b);
     }
 }
 
 inline void SetPaletteEntryPacked(uint8 paletteIndex, uint8 index, uint32 color)
 {
-    fullPalette[paletteIndex][index] = PACK_RGB888((uint8)(color >> 16), (uint8)(color >> 8), (uint8)(color >> 0));
+    Legacy_fullPalette[paletteIndex][index] = PACK_RGB888((uint8)(color >> 16), (uint8)(color >> 8), (uint8)(color >> 0));
 }
 
 inline uint32 GetPaletteEntryPacked(uint8 bankID, uint8 index)
@@ -60,7 +61,7 @@ inline uint32 GetPaletteEntryPacked(uint8 bankID, uint8 index)
     // 0xF800 = 1111 1000 0000 0000 = R
     // 0x7E0  = 0000 0111 1110 0000 = G
     // 0x1F   = 0000 0000 0001 1111 = B
-    uint16 clr = fullPalette[bankID & 7][index];
+    uint16 clr = Legacy_fullPalette[bankID & 7][index];
 
     int32 R = (clr & 0xF800) << 8;
     int32 G = (clr & 0x7E0) << 5;
@@ -72,7 +73,7 @@ inline void CopyPalette(uint8 sourcePalette, uint8 srcPaletteStart, uint8 destin
 {
     if (sourcePalette < LEGACY_PALETTE_COUNT && destinationPalette < LEGACY_PALETTE_COUNT) {
         for (int32 i = 0; i < count; ++i) {
-            fullPalette[destinationPalette][destPaletteStart + i] = fullPalette[sourcePalette][srcPaletteStart + i];
+            Legacy_fullPalette[destinationPalette][destPaletteStart + i] = Legacy_fullPalette[sourcePalette][srcPaletteStart + i];
         }
     }
 }
@@ -80,28 +81,28 @@ inline void CopyPalette(uint8 sourcePalette, uint8 srcPaletteStart, uint8 destin
 inline void RotatePalette(int32 palID, uint8 startIndex, uint8 endIndex, bool right)
 {
     if (right) {
-        uint16 startClr = fullPalette[palID][endIndex];
+        uint16 startClr = Legacy_fullPalette[palID][endIndex];
         for (int32 i = endIndex; i > startIndex; --i) {
-            fullPalette[palID][i] = fullPalette[palID][i - 1];
+            Legacy_fullPalette[palID][i] = Legacy_fullPalette[palID][i - 1];
         }
-        fullPalette[palID][startIndex] = startClr;
+        Legacy_fullPalette[palID][startIndex] = startClr;
     }
     else {
-        uint16 startClr = fullPalette[palID][startIndex];
+        uint16 startClr = Legacy_fullPalette[palID][startIndex];
         for (int32 i = startIndex; i < endIndex; ++i) {
-            fullPalette[palID][i] = fullPalette[palID][i + 1];
+            Legacy_fullPalette[palID][i] = Legacy_fullPalette[palID][i + 1];
         }
-        fullPalette[palID][endIndex] = startClr;
+        Legacy_fullPalette[palID][endIndex] = startClr;
     }
 }
 
 inline void SetFade(uint8 R, uint8 G, uint8 B, uint16 A)
 {
-    fadeMode = 1;
-    fadeR    = R;
-    fadeG    = G;
-    fadeB    = B;
-    fadeA    = A > 0xFF ? 0xFF : A;
+    Legacy_fadeMode = 1;
+    Legacy_fadeR    = R;
+    Legacy_fadeG    = G;
+    Legacy_fadeB    = B;
+    Legacy_fadeA    = A > 0xFF ? 0xFF : A;
 }
 
 void SetPaletteFade(uint8 destPaletteID, uint8 srcPaletteA, uint8 srcPaletteB, uint16 blendAmount, int32 startIndex, int32 endIndex);
@@ -113,7 +114,7 @@ inline void CopyPalette(uint8 sourcePalette, uint8 destinationPalette)
 {
     if (sourcePalette < LEGACY_PALETTE_COUNT && destinationPalette < LEGACY_PALETTE_COUNT) {
         for (int32 i = 0; i < LEGACY_PALETTE_COLOR_COUNT; ++i) {
-            fullPalette[destinationPalette][i] = fullPalette[sourcePalette][i];
+            Legacy_fullPalette[destinationPalette][i] = Legacy_fullPalette[sourcePalette][i];
         }
     }
 }
@@ -121,18 +122,18 @@ inline void CopyPalette(uint8 sourcePalette, uint8 destinationPalette)
 inline void RotatePalette(uint8 startIndex, uint8 endIndex, bool right)
 {
     if (right) {
-        uint16 startClr = activePalette[endIndex];
+        uint16 startClr = Legacy_activePalette[endIndex];
         for (int32 i = endIndex; i > startIndex; --i) {
-            activePalette[i] = activePalette[i - 1];
+            Legacy_activePalette[i] = Legacy_activePalette[i - 1];
         }
-        activePalette[startIndex] = startClr;
+        Legacy_activePalette[startIndex] = startClr;
     }
     else {
-        uint16 startClr = activePalette[startIndex];
+        uint16 startClr = Legacy_activePalette[startIndex];
         for (int32 i = startIndex; i < endIndex; ++i) {
-            activePalette[i] = activePalette[i + 1];
+            Legacy_activePalette[i] = Legacy_activePalette[i + 1];
         }
-        activePalette[endIndex] = startClr;
+        Legacy_activePalette[endIndex] = startClr;
     }
 }
 

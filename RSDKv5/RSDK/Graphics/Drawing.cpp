@@ -403,11 +403,11 @@ void RSDK::SetScreenSize(uint8 screenID, uint16 width, uint16 height)
         RSDK::Legacy::OBJECT_BORDER_X2    = width + 0x80;
         RSDK::Legacy::OBJECT_BORDER_X4    = width + 0x20;
 
-        RSDK::Legacy::GFX_LINESIZE          = screen->pitch;
-        RSDK::Legacy::GFX_LINESIZE_MINUSONE = screen->pitch - 1;
-        RSDK::Legacy::GFX_LINESIZE_DOUBLE   = 2 * screen->pitch;
-        RSDK::Legacy::GFX_FRAMEBUFFERSIZE   = SCREEN_YSIZE * screen->pitch;
-        RSDK::Legacy::GFX_FBUFFERMINUSONE   = SCREEN_YSIZE * screen->pitch - 1;
+        Legacy_GFX_LINESIZE          = screen->pitch;
+        Legacy_GFX_LINESIZE_MINUSONE = screen->pitch - 1;
+        Legacy_GFX_LINESIZE_DOUBLE   = 2 * screen->pitch;
+        Legacy_GFX_FRAMEBUFFERSIZE   = SCREEN_YSIZE * screen->pitch;
+        Legacy_GFX_FBUFFERMINUSONE   = SCREEN_YSIZE * screen->pitch - 1;
 #endif
     }
 }
