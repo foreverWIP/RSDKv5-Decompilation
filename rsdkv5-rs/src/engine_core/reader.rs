@@ -18,6 +18,14 @@ pub enum Scopes {
     SCOPE_STAGE,
 }
 
+#[repr(C)]
+pub enum FileModes {
+    FMODE_NONE,
+    FMODE_RB,
+    FMODE_WB,
+    FMODE_RB_PLUS,
+}
+
 pub type FileIO = *const u8;
 
 extern "C" {
@@ -55,6 +63,22 @@ pub struct FileInfo {
     eKeyPosB: uint8,
     eKeyNo: uint8,
 }
+pub const DEFAULT_FILEINFO: FileInfo = FileInfo {
+    fileSize: 0,
+    externalFile: false32,
+    file: std::ptr::null(),
+    fileBuffer: std::ptr::null(),
+    readPos: 0,
+    fileOffset: 0,
+    usingFileBuffer: false,
+    encrypted: false,
+    eNybbleSwap: false,
+    encryptionKeyA: [0; 0x10],
+    encryptionKeyB: [0; 0x10],
+    eKeyPosA: 0,
+    eKeyPosB: 0,
+    eKeyNo: 0,
+};
 
 #[repr(C)]
 struct RSDKFileInfo {
@@ -71,6 +95,10 @@ struct RSDKContainer {
     name: [i8; 0x100],
     fileBuffer: *const uint8,
     fileCount: i32,
+}
+
+extern "C" {
+    pub fn LoadFile(info: &mut FileInfo, filename: *const i8, fileMode: uint8) -> bool32;
 }
 
 #[no_mangle]

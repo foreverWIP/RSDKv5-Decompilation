@@ -72,6 +72,10 @@ struct RSDKContainer {
     int32 fileCount;
 };
 
+extern "C" {
+    bool32 LoadFile(FileInfo *info, const char *filename, uint8 fileMode);
+}
+
 namespace RSDK
 {
 
@@ -95,7 +99,6 @@ enum FileModes { FMODE_NONE, FMODE_RB, FMODE_WB, FMODE_RB_PLUS };
 
 static const char *openModes[3] = { "rb", "wb", "rb+" };
 
-bool32 LoadFile(FileInfo *info, const char *filename, uint8 fileMode);
 
 
 extern "C" {

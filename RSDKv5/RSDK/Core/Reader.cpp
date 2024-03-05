@@ -232,7 +232,7 @@ bool32 RSDK::OpenDataFile(FileInfo *info, const char *filename)
     return false;
 }
 
-bool32 RSDK::LoadFile(FileInfo *info, const char *filename, uint8 fileMode)
+bool32 LoadFile(FileInfo *info, const char *filename, uint8 fileMode)
 {
     if (info->file)
         return false;

@@ -10,11 +10,12 @@ name = "rsdkv5rs"
 crate-type = ["staticlib"]
 
 [features]
-default = ["version_u", "mod_loader", "legacy_use_haptics"]
+default = ["version_u", "mod_loader_v2", "legacy_use_haptics"]
 original_code = []
 version_2 = []
 version_u = ["version_2"]
 mod_loader = ["original_code"]
+mod_loader_v2 = ["mod_loader"]
 legacy_use_haptics = ["version_u"]
 
 [dependencies]
