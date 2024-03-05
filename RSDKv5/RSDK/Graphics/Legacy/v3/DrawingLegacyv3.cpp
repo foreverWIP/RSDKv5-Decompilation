@@ -163,7 +163,7 @@ void RSDK::Legacy::v3::DrawDebugOverlays()
             int32 y = (SCREEN_YSIZE - (0x10 << 2));
 
             for (int32 c = 0; c < PALETTE_BANK_SIZE; ++c) {
-                uint32 clr = GetPaletteEntryPacked(p, c);
+                uint32 clr = Legacy_GetPaletteEntryPacked(p, c);
 
                 DrawRectangle(x + ((c & 0xF) << 1) + ((p % (LEGACY_PALETTE_COUNT / 2)) * (2 * 16)),
                               y + ((c >> 4) << 1) + ((p / (LEGACY_PALETTE_COUNT / 2)) * (2 * 16)), 2, 2, (clr >> 16) & 0xFF, (clr >> 8) & 0xFF,

@@ -3143,28 +3143,28 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             }
             case FUNC_LOADPALETTE:
                 opcodeSize = 0;
-                LoadPalette(scriptText, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4]);
+                Legacy_LoadPalette(scriptText, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4]);
                 break;
             case FUNC_ROTATEPALETTE:
                 opcodeSize = 0;
-                RotatePalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2]);
+                v3_RotatePalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2]);
                 break;
             case FUNC_SETSCREENFADE:
                 opcodeSize = 0;
-                SetFade(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]);
+                Legacy_SetFade(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]);
                 break;
             case FUNC_SETACTIVEPALETTE:
                 opcodeSize = 0;
-                SetActivePalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2]);
+                Legacy_SetActivePalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2]);
                 break;
             case FUNC_SETPALETTEFADE:
                 opcodeSize = 0;
-                SetLimitedFade(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4],
+                Legacy_SetLimitedFade(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4],
                                scriptEng.operands[5], scriptEng.operands[6]);
                 break;
             case FUNC_COPYPALETTE:
                 opcodeSize = 0;
-                CopyPalette(scriptEng.operands[0], scriptEng.operands[1]);
+                v3_CopyPalette(scriptEng.operands[0], scriptEng.operands[1]);
                 break;
             case FUNC_CLEARSCREEN:
                 opcodeSize = 0;

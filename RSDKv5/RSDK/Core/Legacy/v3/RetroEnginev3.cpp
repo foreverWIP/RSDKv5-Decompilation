@@ -612,7 +612,7 @@ void RSDK::Legacy::v3::LoadXMLPalettes(const tinyxml2::XMLElement *gameElement)
             if (bAttr)
                 clrB = bAttr->IntValue();
 
-            SetPaletteEntry(clrBank, clrInd, clrR, clrG, clrB);
+            Legacy_SetPaletteEntry(clrBank, clrInd, clrR, clrG, clrB);
         }
 
         for (const tinyxml2::XMLElement *clrsElement = paletteElement->FirstChildElement("colors"); clrsElement;
@@ -650,7 +650,7 @@ void RSDK::Legacy::v3::LoadXMLPalettes(const tinyxml2::XMLElement *gameElement)
                 g = std::stoi(match[start + 1].str(), nullptr, base);
                 b = std::stoi(match[start + 2].str(), nullptr, base);
 
-                SetPaletteEntry(bank, index++, r, g, b);
+                Legacy_SetPaletteEntry(bank, index++, r, g, b);
                 text = match.suffix();
             }
         }

@@ -311,7 +311,7 @@ void RSDK::Legacy::LoadStageGIFFile()
             uint8 red   = (tileset.palette[c] >> 0x10);
             uint8 green = (tileset.palette[c] >> 0x08);
             uint8 blue  = (tileset.palette[c] >> 0x00);
-            SetPaletteEntry(-1, c, red, green, blue);
+            Legacy_SetPaletteEntry(-1, c, red, green, blue);
         }
 
 #if RETRO_USE_ORIGINAL_CODE

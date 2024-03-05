@@ -4414,29 +4414,29 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             } break;
             case FUNC_LOADPALETTE:
                 opcodeSize = 0;
-                LoadPalette(scriptText, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4]);
+                Legacy_LoadPalette(scriptText, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4]);
                 break;
             case FUNC_ROTATEPALETTE:
                 opcodeSize = 0;
-                RotatePalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]);
+                v4_RotatePalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]);
                 break;
             case FUNC_SETSCREENFADE:
                 opcodeSize = 0;
-                SetFade(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]);
+                Legacy_SetFade(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]);
                 break;
             case FUNC_SETACTIVEPALETTE:
                 opcodeSize = 0;
-                SetActivePalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2]);
+                Legacy_SetActivePalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2]);
                 break;
             case FUNC_SETPALETTEFADE:
-                SetPaletteFade(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4],
+                Legacy_SetPaletteFade(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4],
                                scriptEng.operands[5]);
                 break;
-            case FUNC_SETPALETTEENTRY: SetPaletteEntryPacked(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2]); break;
-            case FUNC_GETPALETTEENTRY: scriptEng.operands[2] = GetPaletteEntryPacked(scriptEng.operands[0], scriptEng.operands[1]); break;
+            case FUNC_SETPALETTEENTRY: Legacy_SetPaletteEntryPacked(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2]); break;
+            case FUNC_GETPALETTEENTRY: scriptEng.operands[2] = Legacy_GetPaletteEntryPacked(scriptEng.operands[0], scriptEng.operands[1]); break;
             case FUNC_COPYPALETTE:
                 opcodeSize = 0;
-                CopyPalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4]);
+                v4_CopyPalette(scriptEng.operands[0], scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3], scriptEng.operands[4]);
                 break;
             case FUNC_CLEARSCREEN:
                 opcodeSize = 0;

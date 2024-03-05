@@ -30,7 +30,7 @@ void RSDK::Legacy::v3::InitFirstStage()
     ClearGraphicsData();
     ClearAnimationData();
     Legacy_activePalette = Legacy_fullPalette[0];
-    LoadPalette("MasterPalette.act", 0, 0, 0, 256);
+    Legacy_LoadPalette("MasterPalette.act", 0, 0, 0, 256);
 #if RETRO_USE_MOD_LOADER
     LoadGameXML(true);
 #endif
@@ -49,7 +49,7 @@ void RSDK::Legacy::v3::ProcessStage()
     switch (stageMode) {
         case STAGEMODE_LOAD: // Startup
             Legacy_fadeMode = 0;
-            SetActivePalette(0, 0, 256);
+            Legacy_SetActivePalette(0, 0, 256);
             InitCameras();
             videoSettings.dimLimit = (5 * 60) * videoSettings.refreshRate;
 
@@ -110,7 +110,7 @@ void RSDK::Legacy::v3::ProcessStage()
 
             if (Legacy_paletteMode > 0) {
                 Legacy_paletteMode = 0;
-                SetActivePalette(0, 0, 256);
+                Legacy_SetActivePalette(0, 0, 256);
             }
 
             lastXSize = -1;
@@ -318,7 +318,7 @@ void RSDK::Legacy::v3::LoadStageFiles()
         // Unload stage sfx & audio channels
         ClearStageSfx();
 
-        LoadPalette("MasterPalette.act", 0, 0, 0, 256);
+        Legacy_LoadPalette("MasterPalette.act", 0, 0, 0, 256);
 #if RETRO_USE_MOD_LOADER
         LoadGameXML(true);
 #endif
@@ -411,7 +411,7 @@ void RSDK::Legacy::v3::LoadStageFiles()
             for (int32 i = 96; i < 128; ++i) {
                 uint8 clr[3];
                 ReadBytes(&info, &clr, 3);
-                SetPaletteEntry(-1, i, clr[0], clr[1], clr[2]);
+                Legacy_SetPaletteEntry(-1, i, clr[0], clr[1], clr[2]);
             }
 
             uint8 stageObjectCount = ReadInt8(&info);

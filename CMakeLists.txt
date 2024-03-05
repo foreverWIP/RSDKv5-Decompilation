@@ -31,7 +31,6 @@ set(RETRO_FILES
     RSDKv5/RSDK/Graphics/Scene3D.cpp
     RSDKv5/RSDK/Graphics/Animation.cpp
     RSDKv5/RSDK/Graphics/Sprite.cpp
-    RSDKv5/RSDK/Graphics/Palette.cpp
     RSDKv5/RSDK/Graphics/Video.cpp
     RSDKv5/RSDK/Audio/Audio.cpp
     RSDKv5/RSDK/Input/Input.cpp

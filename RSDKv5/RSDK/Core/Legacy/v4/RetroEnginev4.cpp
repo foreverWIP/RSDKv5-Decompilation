@@ -21,7 +21,7 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
         uint8 buf[3];
         for (int32 c = 0; c < 0x60; ++c) {
             ReadBytes(&info, buf, 3);
-            SetPaletteEntry(-1, c, buf[0], buf[1], buf[2]);
+            Legacy_SetPaletteEntry(-1, c, buf[0], buf[1], buf[2]);
         }
 
         // Read Obect Names
@@ -417,7 +417,7 @@ void RSDK::Legacy::v4::LoadXMLPalettes(const tinyxml2::XMLElement *gameElement)
             if (bAttr)
                 clrB = bAttr->IntValue();
 
-            SetPaletteEntry(clrBank, clrInd, clrR, clrG, clrB);
+            Legacy_SetPaletteEntry(clrBank, clrInd, clrR, clrG, clrB);
         }
 
         for (const tinyxml2::XMLElement *clrsElement = paletteElement->FirstChildElement("colors"); clrsElement;
@@ -455,7 +455,7 @@ void RSDK::Legacy::v4::LoadXMLPalettes(const tinyxml2::XMLElement *gameElement)
                 g = std::stoi(match[start + 1].str(), nullptr, base);
                 b = std::stoi(match[start + 2].str(), nullptr, base);
 
-                SetPaletteEntry(bank, index++, r, g, b);
+                Legacy_SetPaletteEntry(bank, index++, r, g, b);
                 text = match.suffix();
             }
         }

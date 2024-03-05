@@ -36,7 +36,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
 
     switch (stageMode) {
         case STAGEMODE_LOAD: // Startup
-            SetActivePalette(0, 0, 256);
+            Legacy_SetActivePalette(0, 0, 256);
             gameMenu[0].visibleRowOffset = 0;
             gameMenu[1].visibleRowOffset = 0;
             videoSettings.dimLimit       = (5 * 60) * videoSettings.refreshRate;
@@ -444,7 +444,7 @@ void RSDK::Legacy::v4::LoadStageFiles()
             uint8 buf[3];
             for (int32 c = 0; c < 0x60; ++c) {
                 ReadBytes(&info, buf, 3);
-                SetPaletteEntry(-1, c, buf[0], buf[1], buf[2]);
+                Legacy_SetPaletteEntry(-1, c, buf[0], buf[1], buf[2]);
             }
 
             uint8 globalObjectCount = ReadInt8(&info);
@@ -515,7 +515,7 @@ void RSDK::Legacy::v4::LoadStageFiles()
             uint8 clr[3];
             for (int32 i = 0x60; i < 0x80; ++i) {
                 ReadBytes(&info, clr, 3);
-                SetPaletteEntry(-1, i, clr[0], clr[1], clr[2]);
+                Legacy_SetPaletteEntry(-1, i, clr[0], clr[1], clr[2]);
             }
 
             stageSFXCount = ReadInt8(&info);
