@@ -39,37 +39,44 @@ struct DebugHitboxInfo {
 
 enum DebugHitboxTypes { H_TYPE_TOUCH, H_TYPE_CIRCLE, H_TYPE_BOX, H_TYPE_PLAT, H_TYPE_HAMMER };
 
-extern bool32 showHitboxes;
-extern int32 debugHitboxCount;
-extern DebugHitboxInfo debugHitboxList[DEBUG_HITBOX_COUNT];
+extern "C" {
+    extern bool32 showHitboxes;
+    extern int32 debugHitboxCount;
+    extern DebugHitboxInfo debugHitboxList[DEBUG_HITBOX_COUNT];
+}
 
 int32 AddDebugHitbox(uint8 type, uint8 dir, Entity *entity, Hitbox *hitbox);
 #endif
 
-extern int32 collisionTolerance;
+extern "C" {
+    extern int32 collisionTolerance;
 #if RETRO_REV0U
-extern bool32 useCollisionOffset;
+    extern bool32 useCollisionOffset;
 #else
-extern int32 collisionOffset;
+    extern int32 collisionOffset;
 #endif
-extern int32 collisionMaskAir;
+    extern int32 collisionMaskAir;
 
-extern Hitbox collisionOuter;
-extern Hitbox collisionInner;
+    extern Hitbox collisionOuter;
+    extern Hitbox collisionInner;
 
-extern Entity *collisionEntity;
+    extern Entity *collisionEntity;
 
-extern CollisionSensor sensors[6];
+    extern CollisionSensor sensors[6];
 
 #if RETRO_REV0U
-extern int32 collisionMinimumDistance;
+    extern int32 collisionMinimumDistance;
 
-extern uint8 lowCollisionTolerance;
-extern uint8 highCollisionTolerance;
+    extern uint8 lowCollisionTolerance;
+    extern uint8 highCollisionTolerance;
 
-extern uint8 floorAngleTolerance;
-extern uint8 wallAngleTolerance;
-extern uint8 roofAngleTolerance;
+    extern uint8 floorAngleTolerance;
+    extern uint8 wallAngleTolerance;
+    extern uint8 roofAngleTolerance;
+#endif
+}
+
+#if RETRO_REV0U
 
 inline void SetupCollisionConfig(int32 minDistance, uint8 lowTolerance, uint8 highTolerance, uint8 floorAngleTolerance, uint8 wallAngleTolerance,
                                  uint8 roofAngleTolerance)

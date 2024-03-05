@@ -17,36 +17,7 @@ using namespace RSDK;
 #define COLLISION_OFFSET (TO_FIXED(4))
 #endif
 
-int32 RSDK::collisionTolerance = 0;
-#if RETRO_REV0U
-bool32 RSDK::useCollisionOffset = false;
-#else
-int32 RSDK::collisionOffset = 0;
-#endif
-int32 RSDK::collisionMaskAir = 0;
-
-Hitbox RSDK::collisionOuter = { 0, 0, 0, 0 };
-Hitbox RSDK::collisionInner = { 0, 0, 0, 0 };
-
-Entity *RSDK::collisionEntity = NULL;
-
-CollisionSensor RSDK::sensors[6];
-
-#if RETRO_REV0U
-#if RETRO_USE_ORIGINAL_CODE
-// not sure why it's 24 here... it was 14 in all prev RSDK versions, maybe a mistake???
-int32 RSDK::collisionMinimumDistance = TO_FIXED(24);
-#else
-int32 RSDK::collisionMinimumDistance = TO_FIXED(14);
-#endif
-
-uint8 RSDK::lowCollisionTolerance  = 8;
-uint8 RSDK::highCollisionTolerance = 14;
-
-uint8 RSDK::floorAngleTolerance = 0x20;
-uint8 RSDK::wallAngleTolerance  = 0x20;
-uint8 RSDK::roofAngleTolerance  = 0x20;
-#else
+#if !RETRO_REV0U
 #define collisionMinimumDistance (14)
 
 #define lowCollisionTolerance  (8)
@@ -58,11 +29,6 @@ uint8 RSDK::roofAngleTolerance  = 0x20;
 #endif
 
 #if !RETRO_USE_ORIGINAL_CODE
-bool32 RSDK::showHitboxes = false;
-
-int32 RSDK::debugHitboxCount = 0;
-DebugHitboxInfo RSDK::debugHitboxList[DEBUG_HITBOX_COUNT];
-
 int32 RSDK::AddDebugHitbox(uint8 type, uint8 dir, Entity *entity, Hitbox *hitbox)
 {
     int32 i = 0;
