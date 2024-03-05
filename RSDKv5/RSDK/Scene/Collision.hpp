@@ -134,7 +134,9 @@ uint8 CheckObjectCollisionBox(Entity *thisEntity, Hitbox *thisHitbox, Entity *ot
 bool32 CheckObjectCollisionPlatform(Entity *thisEntity, Hitbox *thisHitbox, Entity *otherEntity, Hitbox *otherHitbox, bool32 setValues);
 
 bool32 ObjectTileCollision(Entity *entity, uint16 cLayers, uint8 cMode, uint8 cPlane, int32 xOffset, int32 yOffset, bool32 setPos);
-bool32 ObjectTileGrip(Entity *entity, uint16 cLayers, uint8 cMode, uint8 cPlane, int32 xOffset, int32 yOffset, int32 tolerance);
+extern "C" {
+    bool32 ObjectTileGrip(Entity *entity, uint16 cLayers, uint8 cMode, uint8 cPlane, int32 xOffset, int32 yOffset, int32 tolerance);
+}
 
 void ProcessObjectMovement(Entity *entity, Hitbox *outerBox, Hitbox *innerBox);
 
@@ -154,7 +156,9 @@ void FindRWallPosition(CollisionSensor *sensor);
 void FloorCollision(CollisionSensor *sensor);
 void LWallCollision(CollisionSensor *sensor);
 void RoofCollision(CollisionSensor *sensor);
-void RWallCollision(CollisionSensor *sensor);
+extern "C" {
+    void RWallCollision(CollisionSensor *sensor);
+}
 
 #if RETRO_REV0U
 #include "Legacy/CollisionLegacy.hpp"

@@ -1,5 +1,9 @@
 use crate::*;
 
+use self::graphics::drawing::LAYER_COUNT;
+
+use super::{collisionMasks, tileInfo, tileLayers, TILE_SIZE};
+
 #[repr(C)]
 enum TileCollisionModes {
     TILECOLLISION_NONE, // no tile collisions
@@ -18,7 +22,7 @@ enum CSides {
 }
 
 #[repr(C)]
-struct CollisionSensor {
+pub struct CollisionSensor {
     position: Vector2,
     collided: bool32,
     angle: uint8,
@@ -28,6 +32,14 @@ const DEFAULT_COLLISIONSENSOR: CollisionSensor = CollisionSensor {
     collided: false32,
     angle: 0,
 };
+
+#[repr(C)]
+enum CollisionModes {
+    CMODE_FLOOR,
+    CMODE_LWALL,
+    CMODE_ROOF,
+    CMODE_RWALL,
+}
 
 #[repr(C)]
 struct Hitbox {
@@ -125,5 +137,286 @@ cfg_if::cfg_if! {
         const floorAngleTolerance: u8 = 0x20;
         const wallAngleTolerance: u8 =  0x20;
         const roofAngleTolerance: u8 =  0x20;
+    }
+}
+
+#[no_mangle]
+#[export_name = "ObjectTileGrip"]
+pub extern "C" fn object_tile_grip(
+    entity: &mut Entity,
+    cLayers: uint16,
+    cMode: CollisionModes,
+    cPlane: uint8,
+    xOffset: int32,
+    yOffset: int32,
+    tolerance: int32,
+) -> bool32 {
+    let mut layerID: int32 = 1;
+    let mut collided: bool32 = false32;
+    let mut posX: int32 = FROM_FIXED!(xOffset + entity.position.x);
+    let mut posY: int32 = FROM_FIXED!(yOffset + entity.position.y);
+
+    let mut solid: int32 = 0;
+    unsafe {
+        match cMode {
+            CollisionModes::CMODE_FLOOR => {
+                solid = if cPlane != 0 { (1 << 14) } else { (1 << 12) };
+
+                // for (int32 l = 0; l < LAYER_COUNT; ++l, layerID <<= 1) {
+                for l in 0..LAYER_COUNT {
+                    if (cLayers & layerID as u16) != 0 {
+                        let layer = &tileLayers[l];
+                        let colX: int32 = posX - layer.position.x;
+                        let mut colY: int32 = posY - layer.position.y;
+                        let mut cy: int32 = (colY & -(TILE_SIZE as i32)) - TILE_SIZE as i32;
+                        if (colX >= 0 && colX < TILE_SIZE as i32 * layer.xsize as i32) {
+                            for mut i in 0..3 {
+                                if (cy >= 0 && cy < TILE_SIZE as i32 * layer.ysize as i32) {
+                                    let tile: uint16 = *layer.layout.wrapping_add(
+                                        ((colX >> 4)
+                                            + ((cy / TILE_SIZE as i32) << layer.widthShift))
+                                            as usize,
+                                    );
+                                    if (tile < 0xFFFF && (tile & solid as u16) != 0) {
+                                        let mask: int32 = collisionMasks[cPlane as usize]
+                                            [(tile & 0xFFF) as usize]
+                                            .floorMasks
+                                            [(colX & 0xF) as usize]
+                                            as i32;
+                                        let ty: int32 = cy + mask;
+                                        if (mask < 0xFF) {
+                                            if (i32::abs(colY - ty) <= tolerance) {
+                                                collided = true32;
+                                                colY = ty;
+                                            }
+                                            i = 3;
+                                        }
+                                    }
+                                }
+                                cy += TILE_SIZE as i32;
+                            }
+                        }
+                        posX = layer.position.x + colX;
+                        posY = layer.position.y + colY;
+                    }
+
+                    layerID <<= 1;
+                }
+
+                if (collided == true32) {
+                    entity.position.y = TO_FIXED!(posY) - yOffset;
+                }
+                return collided;
+            }
+            CollisionModes::CMODE_LWALL => {
+                solid = if cPlane != 0 { (1 << 15) } else { (1 << 13) };
+
+                for l in 0..LAYER_COUNT {
+                    if (cLayers & layerID as u16) != 0 {
+                        let layer = &tileLayers[l];
+                        let mut colX: int32 = posX - layer.position.x;
+                        let colY: int32 = posY - layer.position.y;
+                        let mut cx: int32 = (colX & -(TILE_SIZE as i32)) - TILE_SIZE as i32;
+                        if (colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32) {
+                            for mut i in 0..3 {
+                                if (cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32) {
+                                    let tile: uint16 = *layer.layout.wrapping_add(
+                                        ((cx >> 4)
+                                            + ((colY / TILE_SIZE as i32) << layer.widthShift))
+                                            as usize,
+                                    );
+                                    if (tile < 0xFFFF && (tile & solid as u16) != 0) {
+                                        let mask: int32 = collisionMasks[cPlane as usize]
+                                            [(tile & 0xFFF) as usize]
+                                            .lWallMasks
+                                            [(colY & 0xF) as usize]
+                                            as i32;
+                                        let tx: int32 = cx + mask;
+                                        if (mask < 0xFF) {
+                                            if (i32::abs(colX - tx) <= tolerance) {
+                                                collided = true32;
+                                                colX = tx;
+                                            }
+                                            i = 3;
+                                        }
+                                    }
+                                }
+                                cx += TILE_SIZE as i32;
+                            }
+                        }
+                        posX = layer.position.x + colX;
+                        posY = layer.position.y + colY;
+                    }
+
+                    layerID <<= 1;
+                }
+
+                if (collided == true32) {
+                    entity.position.x = TO_FIXED!(posX) - xOffset;
+                }
+                return collided;
+            }
+            CollisionModes::CMODE_ROOF => {
+                solid = if cPlane != 0 { (1 << 15) } else { (1 << 13) };
+
+                for l in 0..LAYER_COUNT {
+                    if (cLayers & layerID as u16) != 0 {
+                        let layer = &tileLayers[l];
+                        let colX: int32 = posX - layer.position.x;
+                        let mut colY: int32 = posY - layer.position.y;
+                        let mut cy: int32 = (colY & -(TILE_SIZE as i32)) + TILE_SIZE as i32;
+                        if (colX >= 0 && colX < TILE_SIZE as i32 * layer.xsize as i32) {
+                            for mut i in 0..3 {
+                                if (cy >= 0 && cy < TILE_SIZE as i32 * layer.ysize as i32) {
+                                    let tile: uint16 = *layer.layout.wrapping_add(
+                                        ((colX >> 4)
+                                            + ((cy / TILE_SIZE as i32) << layer.widthShift))
+                                            as usize,
+                                    );
+                                    if (tile < 0xFFFF && (tile & solid as u16) != 0) {
+                                        let mask: int32 = collisionMasks[cPlane as usize]
+                                            [(tile & 0xFFF) as usize]
+                                            .roofMasks
+                                            [(colX & 0xF) as usize]
+                                            as i32;
+                                        let ty: int32 = cy + mask;
+                                        if (mask < 0xFF) {
+                                            if (i32::abs(colY - ty) <= tolerance) {
+                                                collided = true32;
+                                                colY = ty;
+                                            }
+                                            i = 3;
+                                        }
+                                    }
+                                }
+                                cy -= TILE_SIZE as i32;
+                            }
+                        }
+                        posX = layer.position.x + colX;
+                        posY = layer.position.y + colY;
+                    }
+
+                    layerID <<= 1;
+                }
+
+                if (collided == true32) {
+                    entity.position.y = TO_FIXED!(posY) - yOffset;
+                }
+                return collided;
+            }
+            CollisionModes::CMODE_RWALL => {
+                solid = if cPlane != 0 { (1 << 15) } else { (1 << 13) };
+
+                for l in 0..LAYER_COUNT {
+                    if (cLayers & layerID as u16) != 0 {
+                        let layer = &tileLayers[l];
+                        let mut colX: int32 = posX - layer.position.x;
+                        let colY: int32 = posY - layer.position.y;
+                        let mut cx: int32 = (colX & -(TILE_SIZE as i32)) + TILE_SIZE as i32;
+                        if (colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32) {
+                            for mut i in 0..3 {
+                                if (cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32) {
+                                    let tile: uint16 = *layer.layout.wrapping_add(
+                                        ((cx >> 4)
+                                            + ((colY / TILE_SIZE as i32) << layer.widthShift))
+                                            as usize,
+                                    );
+                                    if (tile < 0xFFFF && (tile & solid as u16) != 0) {
+                                        let mask: int32 = collisionMasks[cPlane as usize]
+                                            [(tile & 0xFFF) as usize]
+                                            .rWallMasks
+                                            [(colY & 0xF) as usize]
+                                            as i32;
+                                        let tx: int32 = cx + mask;
+                                        if (mask < 0xFF) {
+                                            if (i32::abs(colX - tx) <= tolerance) {
+                                                collided = true32;
+                                                colX = tx;
+                                            }
+                                            i = 3;
+                                        }
+                                    }
+                                }
+                                cx -= TILE_SIZE as i32;
+                            }
+                        }
+                        posX = layer.position.x + colX;
+                        posY = layer.position.y + colY;
+                    }
+
+                    layerID <<= 1;
+                }
+
+                if (collided == true32) {
+                    entity.position.x = TO_FIXED!(posX) - xOffset;
+                }
+                return collided;
+            }
+            _ => {
+                return false32;
+            }
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "RWallCollision"]
+pub extern "C" fn r_wall_collision(sensor: &mut CollisionSensor) {
+    let mut posX: int32 = FROM_FIXED!(sensor.position.x);
+    let mut posY: int32 = FROM_FIXED!(sensor.position.y);
+
+    unsafe {
+        let solid: int32 = if (*collisionEntity).collisionPlane != 0 {
+            1 << 15
+        } else {
+            1 << 13
+        };
+
+        // for (int32 l = 0, layerID = 1; l < LAYER_COUNT; ++l, layerID <<= 1) {
+        let mut layerID = 1;
+        for l in 0..LAYER_COUNT {
+            if ((*collisionEntity).collisionLayers & layerID) != 0 {
+                let layer = &tileLayers[l];
+                let colX: int32 = posX - layer.position.x;
+                let colY: int32 = posY - layer.position.y;
+                let mut cx: int32 = (colX & -(TILE_SIZE as i32)) + TILE_SIZE as i32;
+
+                if colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32 {
+                    for mut i in 0..3 {
+                        if cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32 {
+                            let tile: uint16 = *layer.layout.wrapping_add(
+                                (cx as usize / TILE_SIZE)
+                                    + ((colY as usize / TILE_SIZE) << layer.widthShift),
+                            );
+
+                            if tile < 0xFFFF && (tile & solid as u16) != 0 {
+                                let mask: int32 = collisionMasks
+                                    [(*collisionEntity).collisionPlane as usize]
+                                    [(tile & 0xFFF) as usize]
+                                    .rWallMasks[(colY & 0xF) as usize]
+                                    as i32;
+                                let tx: int32 = cx + mask;
+                                if mask < 0xFF && colX <= tx && i32::abs(colX - tx) <= 14 {
+                                    sensor.collided = true32;
+                                    sensor.angle = tileInfo
+                                        [(*collisionEntity).collisionPlane as usize]
+                                        [(tile & 0xFFF) as usize]
+                                        .rWallAngle;
+                                    sensor.position.x = TO_FIXED!(tx + layer.position.x);
+                                    i = 3;
+                                }
+                            }
+                        }
+
+                        cx -= TILE_SIZE as i32;
+                    }
+                }
+
+                posX = layer.position.x + colX;
+                posY = layer.position.y + colY;
+
+                layerID <<= 1;
+            }
+        }
     }
 }
