@@ -155,8 +155,8 @@ void FindRWallPosition(CollisionSensor *sensor);
 
 void FloorCollision(CollisionSensor *sensor);
 void LWallCollision(CollisionSensor *sensor);
-void RoofCollision(CollisionSensor *sensor);
 extern "C" {
+    void RoofCollision(CollisionSensor *sensor);
     void RWallCollision(CollisionSensor *sensor);
 }
 

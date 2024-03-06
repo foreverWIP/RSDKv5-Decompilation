@@ -34,7 +34,7 @@ const DEFAULT_COLLISIONSENSOR: CollisionSensor = CollisionSensor {
 };
 
 #[repr(C)]
-enum CollisionModes {
+pub enum CollisionModes {
     CMODE_FLOOR,
     CMODE_LWALL,
     CMODE_ROOF,
@@ -360,6 +360,126 @@ pub extern "C" fn object_tile_grip(
 }
 
 #[no_mangle]
+#[export_name = "RoofCollision"]
+pub extern "C" fn roof_collision(sensor: &mut CollisionSensor) {
+    let mut posX: int32 = FROM_FIXED!(sensor.position.x);
+    let mut posY: int32 = FROM_FIXED!(sensor.position.y);
+
+    let mut solid: int32 = 0;
+    unsafe {
+        if cfg!(feature = "version_u") {
+            if ((*collisionEntity).tileCollisions == TileCollisionModes::TILECOLLISION_DOWN as i32)
+            {
+                solid = if (*collisionEntity).collisionPlane != 0 {
+                    (1 << 15)
+                } else {
+                    (1 << 13)
+                };
+            } else {
+                solid = if (*collisionEntity).collisionPlane != 0 {
+                    (1 << 14)
+                } else {
+                    (1 << 12)
+                };
+            }
+        } else {
+            solid = if (*collisionEntity).collisionPlane != 0 {
+                (1 << 15)
+            } else {
+                (1 << 13)
+            };
+        }
+
+        let mut collideAngle: int32 = 0;
+        let mut collidePos: int32 = -1;
+
+        let mut layerID: i32 = 1;
+        for l in 0..LAYER_COUNT {
+            if ((*collisionEntity).collisionLayers & layerID as u8) != 0 {
+                let layer = &tileLayers[l];
+                let colX: int32 = posX - layer.position.x;
+                let colY: int32 = posY - layer.position.y;
+                let mut cy: int32 = (colY & -(TILE_SIZE as i32)) + TILE_SIZE as i32;
+
+                if (colX >= 0 && colX < TILE_SIZE as i32 * layer.xsize as i32) {
+                    let stepCount: int32 = if cfg!(feature = "version_u") { 2 } else { 3 };
+                    for mut i in 0..stepCount {
+                        let mut step: int32 = -(TILE_SIZE as i32);
+
+                        if (cy >= 0 && cy < TILE_SIZE as i32 * layer.ysize as i32) {
+                            let tileX: int32 = (colX / TILE_SIZE as i32);
+                            let tileY: int32 = (cy / TILE_SIZE as i32);
+                            let tile: uint16 = *layer
+                                .layout
+                                .wrapping_add((tileX + (tileY << layer.widthShift)) as usize);
+
+                            if (tile < 0xFFFF && (tile & solid as u16) != 0) {
+                                let mask: int32 = collisionMasks
+                                    [(*collisionEntity).collisionPlane as usize]
+                                    [tile as usize & 0xFFF]
+                                    .roofMasks[colX as usize & 0xF]
+                                    as i32;
+                                let ty: int32 = if cfg!(feature = "version_u") {
+                                    layer.position.y + cy + mask
+                                } else {
+                                    cy + mask
+                                };
+                                if (mask < 0xFF) {
+                                    if cfg!(feature = "version_u") {
+                                        step = TILE_SIZE as i32;
+                                        if (colY > collidePos) {
+                                            collideAngle = tileInfo
+                                                [(*collisionEntity).collisionPlane as usize]
+                                                [tile as usize & 0xFFF]
+                                                .roofAngle
+                                                as i32;
+                                            collidePos = ty as i32;
+                                            i = stepCount;
+                                        }
+                                    } else {
+                                        if (colY < ty) {
+                                            if (i32::abs(colY - ty) <= collisionMinimumDistance) {
+                                                sensor.collided = true32;
+                                                sensor.angle = tileInfo
+                                                    [(*collisionEntity).collisionPlane as usize]
+                                                    [tile as usize & 0xFFF]
+                                                    .roofAngle
+                                                    as u8;
+                                                sensor.position.y =
+                                                    TO_FIXED!(ty + layer.position.y);
+                                                i = stepCount;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        cy += step;
+                    }
+                }
+
+                posX = layer.position.x + colX;
+                posY = layer.position.y + colY;
+            }
+
+            layerID <<= 1;
+        }
+
+        if cfg!(feature = "version_u") {
+            if (collidePos >= 0
+                && sensor.position.y <= TO_FIXED!(collidePos)
+                && sensor.position.y - TO_FIXED!(collidePos) >= -collisionMinimumDistance)
+            {
+                sensor.angle = collideAngle as u8;
+                sensor.position.y = TO_FIXED!(collidePos);
+                sensor.collided = true32;
+            }
+        }
+    }
+}
+
+#[no_mangle]
 #[export_name = "RWallCollision"]
 pub extern "C" fn r_wall_collision(sensor: &mut CollisionSensor) {
     let mut posX: int32 = FROM_FIXED!(sensor.position.x);
@@ -372,7 +492,6 @@ pub extern "C" fn r_wall_collision(sensor: &mut CollisionSensor) {
             1 << 13
         };
 
-        // for (int32 l = 0, layerID = 1; l < LAYER_COUNT; ++l, layerID <<= 1) {
         let mut layerID = 1;
         for l in 0..LAYER_COUNT {
             if ((*collisionEntity).collisionLayers & layerID) != 0 {
