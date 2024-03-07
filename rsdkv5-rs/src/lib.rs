@@ -7,6 +7,7 @@ pub mod scene;
 pub mod storage;
 
 use engine_core::math::Vector2;
+use scene::collision::{CollisionModes, TileCollisionModes};
 
 // -------------------------
 // STANDARD TYPES
@@ -82,7 +83,7 @@ pub struct Entity {
     classID: uint16,
     inRange: bool32,
     isPermanent: bool32,
-    tileCollisions: int32,
+    tileCollisions: TileCollisionModes,
     interaction: bool32,
     onGround: bool32,
     active: uint8,
@@ -92,7 +93,7 @@ pub struct Entity {
     drawGroup: uint8,
     collisionLayers: uint8,
     collisionPlane: uint8,
-    collisionMode: uint8,
+    collisionMode: CollisionModes,
     drawFX: uint8,
     inkEffect: uint8,
     visible: uint8,

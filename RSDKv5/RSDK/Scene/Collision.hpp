@@ -1,12 +1,23 @@
 #ifndef COLLISION_H
 #define COLLISION_H
 
+struct CollisionSensor {
+    Vector2 position;
+    bool32 collided;
+    uint8 angle;
+};
+
 extern "C" {
     void ProcessPathGrip();
     void ProcessAirCollision_Down();
 #if RETRO_REV0U
     void ProcessAirCollision_Up();
 #endif
+    void SetPathGripSensors(CollisionSensor *cSensors);
+    void FindFloorPosition(CollisionSensor *sensor);
+    void FindRoofPosition(CollisionSensor *sensor);
+    void FindLWallPosition(CollisionSensor *sensor);
+    void FindRWallPosition(CollisionSensor *sensor);
 }
 
 namespace RSDK
@@ -26,12 +37,6 @@ enum CSides {
     C_LEFT,
     C_RIGHT,
     C_BOTTOM,
-};
-
-struct CollisionSensor {
-    Vector2 position;
-    bool32 collided;
-    uint8 angle;
 };
 
 #if !RETRO_USE_ORIGINAL_CODE
@@ -147,17 +152,9 @@ extern "C" {
     void ProcessObjectMovement(Entity *entity, Hitbox *outerBox, Hitbox *innerBox);
 }
 
-
-void SetPathGripSensors(CollisionSensor *cSensors);
-
-void FindFloorPosition(CollisionSensor *sensor);
-void FindLWallPosition(CollisionSensor *sensor);
-void FindRoofPosition(CollisionSensor *sensor);
-void FindRWallPosition(CollisionSensor *sensor);
-
-void FloorCollision(CollisionSensor *sensor);
-void LWallCollision(CollisionSensor *sensor);
 extern "C" {
+    void FloorCollision(CollisionSensor *sensor);
+    void LWallCollision(CollisionSensor *sensor);
     void RoofCollision(CollisionSensor *sensor);
     void RWallCollision(CollisionSensor *sensor);
 }

@@ -8,14 +8,19 @@ use self::{
 use super::{collisionMasks, tileInfo, tileLayers, TILE_SIZE};
 
 extern "C" {
-    fn ProcessPathGrip();
     fn ProcessAirCollision_Down();
     #[cfg(feature = "version_u")]
     fn ProcessAirCollision_Up();
+    fn SetPathGripSensors(cSensors: *mut CollisionSensor);
+    fn FindFloorPosition(sensor: &CollisionSensor);
+    fn FindRoofPosition(sensor: &CollisionSensor);
+    fn FindLWallPosition(sensor: &CollisionSensor);
+    fn FindRWallPosition(sensor: &CollisionSensor);
 }
 
-#[repr(C)]
-enum TileCollisionModes {
+#[repr(i32)]
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub enum TileCollisionModes {
     TILECOLLISION_NONE, // no tile collisions
     TILECOLLISION_DOWN, // downwards tile collisions
     #[cfg(feature = "version_u")]
@@ -43,7 +48,8 @@ const DEFAULT_COLLISIONSENSOR: CollisionSensor = CollisionSensor {
     angle: 0,
 };
 
-#[repr(C)]
+#[repr(u8)]
+#[derive(Clone, Copy)]
 pub enum CollisionModes {
     CMODE_FLOOR,
     CMODE_LWALL,
@@ -172,7 +178,6 @@ pub extern "C" fn object_tile_grip(
             CollisionModes::CMODE_FLOOR => {
                 solid = if cPlane != 0 { (1 << 14) } else { (1 << 12) };
 
-                // for (int32 l = 0; l < LAYER_COUNT; ++l, layerID <<= 1) {
                 for l in 0..LAYER_COUNT {
                     if (cLayers & layerID as u16) != 0 {
                         let layer = &tileLayers[l];
@@ -380,7 +385,7 @@ pub extern "C" fn process_object_movement(
         && !(outerBox as *mut Hitbox).is_null()
         && !(innerBox as *mut Hitbox).is_null())
     {
-        if (entity.tileCollisions != 0) {
+        if (entity.tileCollisions as i32 != 0) {
             entity.angle &= 0xFF;
 
             unsafe {
@@ -407,8 +412,7 @@ pub extern "C" fn process_object_movement(
 
                     if (entity.onGround == true32) {
                         // true = normal, false = flipped
-                        if (entity.tileCollisions == TileCollisionModes::TILECOLLISION_DOWN as i32)
-                        {
+                        if (entity.tileCollisions == TileCollisionModes::TILECOLLISION_DOWN) {
                             useCollisionOffset = (entity.angle == 0x00).into();
                         } else {
                             useCollisionOffset = (entity.angle == 0x80).into();
@@ -420,12 +424,11 @@ pub extern "C" fn process_object_movement(
                             useCollisionOffset = false32;
                         }
 
-                        ProcessPathGrip();
+                        process_path_grip();
                     } else {
                         useCollisionOffset = false32;
                         // true = normal, false = flipped
-                        if (entity.tileCollisions == TileCollisionModes::TILECOLLISION_DOWN as i32)
-                        {
+                        if (entity.tileCollisions == TileCollisionModes::TILECOLLISION_DOWN) {
                             ProcessAirCollision_Down();
                         } else {
                             ProcessAirCollision_Up();
@@ -465,6 +468,567 @@ pub extern "C" fn process_object_movement(
 }
 
 #[no_mangle]
+#[export_name = "ProcessPathGrip"]
+pub extern "C" fn process_path_grip() {
+    let mut xVel: int32 = 0;
+    let mut yVel: int32 = 0;
+
+    unsafe {
+        sensors[4].position.x = (*collisionEntity).position.x;
+        sensors[4].position.y = (*collisionEntity).position.y;
+        for i in 0..6 {
+            sensors[i].angle = (*collisionEntity).angle as u8;
+            sensors[i].collided = false32;
+        }
+        SetPathGripSensors(sensors.as_mut_ptr());
+
+        let mut absSpeed: int32 = (*collisionEntity).groundVel.abs();
+        let mut checkDist: int32 = absSpeed >> 18;
+        absSpeed &= 0x3FFFF;
+        while (checkDist > -1) {
+            if (checkDist >= 1) {
+                xVel = cos_256((*collisionEntity).angle) << 10;
+                yVel = sin_256((*collisionEntity).angle) << 10;
+                checkDist -= 1;
+            } else {
+                xVel = absSpeed * cos_256((*collisionEntity).angle) >> 8;
+                yVel = absSpeed * sin_256((*collisionEntity).angle) >> 8;
+                checkDist = -1;
+            }
+
+            if ((*collisionEntity).groundVel < 0) {
+                xVel = -xVel;
+                yVel = -yVel;
+            }
+
+            sensors[0].collided = false32;
+            sensors[1].collided = false32;
+            sensors[2].collided = false32;
+            sensors[4].position.x += xVel;
+            sensors[4].position.y += yVel;
+            let mut tileDistance: int32 = -1;
+
+            match ((*collisionEntity).collisionMode) {
+                CollisionModes::CMODE_FLOOR => {
+                    sensors[3].position.x += xVel;
+                    sensors[3].position.y += yVel;
+
+                    if ((*collisionEntity).groundVel > 0) {
+                        l_wall_collision(&mut sensors[3]);
+                        if cfg!(feature = "version_u") {
+                            if (sensors[3].collided == true32) {
+                                sensors[2].position.x = sensors[3].position.x - TO_FIXED!(2);
+                            }
+                        }
+                    }
+
+                    if ((*collisionEntity).groundVel < 0) {
+                        r_wall_collision(&mut sensors[3]);
+                        if cfg!(feature = "version_u") {
+                            if (sensors[3].collided == true32) {
+                                sensors[0].position.x = sensors[3].position.x + TO_FIXED!(2);
+                            }
+                        }
+                    }
+
+                    if (sensors[3].collided == true32) {
+                        xVel = 0;
+                        checkDist = -1;
+                    }
+
+                    for i in 0..3 {
+                        sensors[i].position.x += xVel;
+                        sensors[i].position.y += yVel;
+                        FindFloorPosition(&sensors[i]);
+                    }
+
+                    tileDistance = -1;
+                    for i in 0..3 {
+                        if (tileDistance > -1) {
+                            if (sensors[i].collided == true32) {
+                                if (sensors[i].position.y
+                                    < sensors[tileDistance as usize].position.y)
+                                {
+                                    tileDistance = i as i32;
+                                }
+
+                                if (sensors[i].position.y
+                                    == sensors[tileDistance as usize].position.y
+                                    && (sensors[i].angle < 0x08 || sensors[i].angle > 0xF8))
+                                {
+                                    tileDistance = i as i32;
+                                }
+                            }
+                        } else if (sensors[i].collided == true32) {
+                            tileDistance = i as i32;
+                        }
+                    }
+
+                    if (tileDistance <= -1) {
+                        checkDist = -1;
+                    } else {
+                        sensors[0].position.y = sensors[tileDistance as usize].position.y;
+                        sensors[0].angle = sensors[tileDistance as usize].angle;
+
+                        sensors[1].position.y = sensors[0].position.y;
+                        sensors[1].angle = sensors[0].angle;
+
+                        sensors[2].position.y = sensors[0].position.y;
+                        sensors[2].angle = sensors[0].angle;
+
+                        sensors[4].position.x = sensors[1].position.x;
+                        sensors[4].position.y =
+                            sensors[0].position.y - TO_FIXED!(collisionOuter.bottom);
+                    }
+
+                    if (sensors[0].angle < 0xDE && sensors[0].angle > 0x80) {
+                        (*collisionEntity).collisionMode = CollisionModes::CMODE_LWALL;
+                    }
+                    if (sensors[0].angle > 0x22 && sensors[0].angle < 0x80) {
+                        (*collisionEntity).collisionMode = CollisionModes::CMODE_RWALL;
+                    }
+                }
+
+                CollisionModes::CMODE_LWALL => {
+                    sensors[3].position.x += xVel;
+                    sensors[3].position.y += yVel;
+
+                    if ((*collisionEntity).groundVel > 0) {
+                        roof_collision(&mut sensors[3]);
+                    }
+
+                    if ((*collisionEntity).groundVel < 0) {
+                        floor_collision(&mut sensors[3]);
+                    }
+
+                    if (sensors[3].collided == true32) {
+                        yVel = 0;
+                        checkDist = -1;
+                    }
+
+                    for i in 0..3 {
+                        sensors[i].position.x += xVel;
+                        sensors[i].position.y += yVel;
+                        FindLWallPosition(&sensors[i]);
+                    }
+
+                    tileDistance = -1;
+                    for i in 0..3 {
+                        if (tileDistance > -1) {
+                            if (sensors[i].position.x < sensors[tileDistance as usize].position.x
+                                && sensors[i].collided == true32)
+                            {
+                                tileDistance = i as i32;
+                            }
+                        } else if (sensors[i].collided == true32) {
+                            tileDistance = i as i32;
+                        }
+                    }
+
+                    if (tileDistance <= -1) {
+                        checkDist = -1;
+                    } else {
+                        sensors[0].position.x = sensors[tileDistance as usize].position.x;
+                        sensors[0].angle = sensors[tileDistance as usize].angle;
+
+                        sensors[1].position.x = sensors[0].position.x;
+                        sensors[1].angle = sensors[0].angle;
+
+                        sensors[2].position.x = sensors[0].position.x;
+                        sensors[2].angle = sensors[0].angle;
+
+                        sensors[4].position.x =
+                            sensors[1].position.x - TO_FIXED!(collisionOuter.bottom);
+                        sensors[4].position.y = sensors[1].position.y;
+                    }
+
+                    if (sensors[0].angle > 0xE2) {
+                        (*collisionEntity).collisionMode = CollisionModes::CMODE_FLOOR;
+                    }
+
+                    if (sensors[0].angle < 0x9E) {
+                        (*collisionEntity).collisionMode = CollisionModes::CMODE_ROOF;
+                    }
+                }
+
+                CollisionModes::CMODE_ROOF => {
+                    sensors[3].position.x += xVel;
+                    sensors[3].position.y += yVel;
+
+                    if ((*collisionEntity).groundVel > 0) {
+                        r_wall_collision(&mut sensors[3]);
+                        if cfg!(feature = "version_u") {
+                            if (sensors[3].collided == true32) {
+                                sensors[2].position.x = sensors[3].position.x + TO_FIXED!(2);
+                            }
+                        }
+                    }
+
+                    if ((*collisionEntity).groundVel < 0) {
+                        l_wall_collision(&mut sensors[3]);
+                        if cfg!(feature = "version_u") {
+                            if (sensors[3].collided == true32) {
+                                sensors[0].position.x = sensors[3].position.x - TO_FIXED!(2);
+                            }
+                        }
+                    }
+
+                    if (sensors[3].collided == true32) {
+                        xVel = 0;
+                        checkDist = -1;
+                    }
+
+                    for i in 0..3 {
+                        sensors[i].position.x += xVel;
+                        sensors[i].position.y += yVel;
+                        FindRoofPosition(&sensors[i]);
+                    }
+
+                    tileDistance = -1;
+                    for i in 0..3 {
+                        if (tileDistance > -1) {
+                            if (sensors[i].position.y > sensors[tileDistance as usize].position.y
+                                && sensors[i].collided == true32)
+                            {
+                                tileDistance = i as i32;
+                            }
+                        } else if (sensors[i].collided == true32) {
+                            tileDistance = i as i32;
+                        }
+                    }
+
+                    if (tileDistance <= -1) {
+                        checkDist = -1;
+                    } else {
+                        sensors[0].position.y = sensors[tileDistance as usize].position.y;
+                        sensors[0].angle = sensors[tileDistance as usize].angle;
+
+                        sensors[1].position.y = sensors[0].position.y;
+                        sensors[1].angle = sensors[0].angle;
+
+                        sensors[2].position.y = sensors[0].position.y;
+                        sensors[2].angle = sensors[0].angle;
+
+                        sensors[4].position.x = sensors[1].position.x;
+                        sensors[4].position.y =
+                            sensors[0].position.y + TO_FIXED!(collisionOuter.bottom) + TO_FIXED!(1);
+                    }
+
+                    if (sensors[0].angle > 0xA2) {
+                        (*collisionEntity).collisionMode = CollisionModes::CMODE_LWALL;
+                    }
+                    if (sensors[0].angle < 0x5E) {
+                        (*collisionEntity).collisionMode = CollisionModes::CMODE_RWALL;
+                    }
+                }
+
+                CollisionModes::CMODE_RWALL => {
+                    sensors[3].position.x += xVel;
+                    sensors[3].position.y += yVel;
+
+                    if ((*collisionEntity).groundVel > 0) {
+                        floor_collision(&mut sensors[3]);
+                    }
+
+                    if ((*collisionEntity).groundVel < 0) {
+                        roof_collision(&mut sensors[3]);
+                    }
+
+                    if (sensors[3].collided == true32) {
+                        yVel = 0;
+                        checkDist = -1;
+                    }
+
+                    for i in 0..3 {
+                        sensors[i].position.x += xVel;
+                        sensors[i].position.y += yVel;
+                        FindRWallPosition(&sensors[i]);
+                    }
+
+                    tileDistance = -1;
+                    for i in 0..3 {
+                        if (tileDistance > -1) {
+                            if (sensors[i].position.x > sensors[tileDistance as usize].position.x
+                                && sensors[i].collided == true32)
+                            {
+                                tileDistance = i as i32;
+                            }
+                        } else if (sensors[i].collided == true32) {
+                            tileDistance = i as i32;
+                        }
+                    }
+
+                    if (tileDistance <= -1) {
+                        checkDist = -1;
+                    } else {
+                        sensors[0].position.x = sensors[tileDistance as usize].position.x;
+                        sensors[0].angle = sensors[tileDistance as usize].angle;
+
+                        sensors[1].position.x = sensors[0].position.x;
+                        sensors[1].angle = sensors[0].angle;
+
+                        sensors[2].position.x = sensors[0].position.x;
+                        sensors[2].angle = sensors[0].angle;
+
+                        sensors[4].position.x =
+                            sensors[1].position.x + TO_FIXED!(collisionOuter.bottom) + TO_FIXED!(1);
+                        sensors[4].position.y = sensors[1].position.y;
+                    }
+
+                    if (sensors[0].angle < 0x1E) {
+                        (*collisionEntity).collisionMode = CollisionModes::CMODE_FLOOR;
+                    }
+                    if (sensors[0].angle > 0x62) {
+                        (*collisionEntity).collisionMode = CollisionModes::CMODE_ROOF;
+                    }
+                }
+            }
+
+            if (tileDistance != -1) {
+                (*collisionEntity).angle = sensors[0].angle as i32;
+            }
+
+            if (sensors[3].collided == false32) {
+                SetPathGripSensors(sensors.as_mut_ptr());
+            } else {
+                checkDist = -2;
+            }
+        }
+
+        let newCollisionMode = if cfg!(feature = "version_u") {
+            if (*collisionEntity).tileCollisions == TileCollisionModes::TILECOLLISION_DOWN {
+                CollisionModes::CMODE_FLOOR
+            } else {
+                CollisionModes::CMODE_ROOF
+            }
+        } else {
+            CollisionModes::CMODE_FLOOR
+        };
+        let newAngle: int32 = (newCollisionMode as i32) << 6;
+
+        match ((*collisionEntity).collisionMode) {
+            CollisionModes::CMODE_FLOOR => {
+                if (sensors[0].collided == true32
+                    || sensors[1].collided == true32
+                    || sensors[2].collided == true32)
+                {
+                    (*collisionEntity).angle = sensors[0].angle as i32;
+
+                    if (sensors[3].collided == false32) {
+                        (*collisionEntity).position.x = sensors[4].position.x;
+                    } else {
+                        if ((*collisionEntity).groundVel > 0) {
+                            (*collisionEntity).position.x =
+                                sensors[3].position.x - TO_FIXED!(collisionOuter.right);
+                        }
+
+                        if ((*collisionEntity).groundVel < 0) {
+                            (*collisionEntity).position.x = sensors[3].position.x
+                                - TO_FIXED!(collisionOuter.left)
+                                + TO_FIXED!(1);
+                        }
+
+                        (*collisionEntity).groundVel = 0;
+                        (*collisionEntity).velocity.x = 0;
+                    }
+
+                    (*collisionEntity).position.y = sensors[4].position.y;
+                } else {
+                    (*collisionEntity).onGround = false32;
+                    (*collisionEntity).collisionMode = newCollisionMode;
+                    (*collisionEntity).velocity.x =
+                        cos_256((*collisionEntity).angle) * (*collisionEntity).groundVel >> 8;
+                    (*collisionEntity).velocity.y =
+                        sin_256((*collisionEntity).angle) * (*collisionEntity).groundVel >> 8;
+                    if ((*collisionEntity).velocity.y < -TO_FIXED!(16)) {
+                        (*collisionEntity).velocity.y = -TO_FIXED!(16);
+                    }
+
+                    if ((*collisionEntity).velocity.y > TO_FIXED!(16)) {
+                        (*collisionEntity).velocity.y = TO_FIXED!(16);
+                    }
+
+                    (*collisionEntity).groundVel = (*collisionEntity).velocity.x;
+                    (*collisionEntity).angle = newAngle;
+                    if (sensors[3].collided == false32) {
+                        (*collisionEntity).position.x += (*collisionEntity).velocity.x;
+                    } else {
+                        if ((*collisionEntity).groundVel > 0) {
+                            (*collisionEntity).position.x =
+                                sensors[3].position.x - TO_FIXED!(collisionOuter.right);
+                        }
+                        if ((*collisionEntity).groundVel < 0) {
+                            (*collisionEntity).position.x = sensors[3].position.x
+                                - TO_FIXED!(collisionOuter.left)
+                                + TO_FIXED!(1);
+                        }
+
+                        (*collisionEntity).groundVel = 0;
+                        (*collisionEntity).velocity.x = 0;
+                    }
+
+                    (*collisionEntity).position.y += (*collisionEntity).velocity.y;
+                }
+            }
+
+            CollisionModes::CMODE_LWALL => {
+                if (sensors[0].collided == true32
+                    || sensors[1].collided == true32
+                    || sensors[2].collided == true32)
+                {
+                    (*collisionEntity).angle = sensors[0].angle as i32;
+                } else {
+                    (*collisionEntity).onGround = false32;
+                    (*collisionEntity).collisionMode = newCollisionMode;
+                    (*collisionEntity).velocity.x =
+                        cos_256((*collisionEntity).angle) * (*collisionEntity).groundVel >> 8;
+                    (*collisionEntity).velocity.y =
+                        sin_256((*collisionEntity).angle) * (*collisionEntity).groundVel >> 8;
+
+                    if ((*collisionEntity).velocity.y < -TO_FIXED!(16)) {
+                        (*collisionEntity).velocity.y = -TO_FIXED!(16);
+                    }
+
+                    if ((*collisionEntity).velocity.y > TO_FIXED!(16)) {
+                        (*collisionEntity).velocity.y = TO_FIXED!(16);
+                    }
+
+                    (*collisionEntity).groundVel = (*collisionEntity).velocity.x;
+                    (*collisionEntity).angle = newAngle;
+                }
+
+                if (sensors[3].collided == false32) {
+                    (*collisionEntity).position.x = sensors[4].position.x;
+                    (*collisionEntity).position.y = sensors[4].position.y;
+                } else {
+                    if ((*collisionEntity).groundVel > 0) {
+                        (*collisionEntity).position.y =
+                            sensors[3].position.y + TO_FIXED!(collisionOuter.right) + TO_FIXED!(1);
+                    }
+
+                    if ((*collisionEntity).groundVel < 0) {
+                        (*collisionEntity).position.y =
+                            sensors[3].position.y - TO_FIXED!(collisionOuter.left);
+                    }
+
+                    (*collisionEntity).groundVel = 0;
+                    (*collisionEntity).position.x = sensors[4].position.x;
+                }
+            }
+
+            CollisionModes::CMODE_ROOF => {
+                if (sensors[0].collided == true32
+                    || sensors[1].collided == true32
+                    || sensors[2].collided == true32)
+                {
+                    (*collisionEntity).angle = sensors[0].angle as i32;
+
+                    if (sensors[3].collided == false32) {
+                        (*collisionEntity).position.x = sensors[4].position.x;
+                    } else {
+                        if ((*collisionEntity).groundVel > 0) {
+                            (*collisionEntity).position.x =
+                                sensors[3].position.x + TO_FIXED!(collisionOuter.right);
+                        }
+
+                        if ((*collisionEntity).groundVel < 0) {
+                            (*collisionEntity).position.x = sensors[3].position.x
+                                + TO_FIXED!(collisionOuter.left)
+                                - TO_FIXED!(1);
+                        }
+
+                        (*collisionEntity).groundVel = 0;
+                    }
+                } else {
+                    (*collisionEntity).onGround = false32;
+                    (*collisionEntity).collisionMode = newCollisionMode;
+                    (*collisionEntity).velocity.x =
+                        cos_256((*collisionEntity).angle) * (*collisionEntity).groundVel >> 8;
+                    (*collisionEntity).velocity.y =
+                        sin_256((*collisionEntity).angle) * (*collisionEntity).groundVel >> 8;
+
+                    if ((*collisionEntity).velocity.y < -TO_FIXED!(16)) {
+                        (*collisionEntity).velocity.y = -TO_FIXED!(16);
+                    }
+
+                    if ((*collisionEntity).velocity.y > TO_FIXED!(16)) {
+                        (*collisionEntity).velocity.y = TO_FIXED!(16);
+                    }
+
+                    (*collisionEntity).angle = newAngle;
+                    (*collisionEntity).groundVel = (*collisionEntity).velocity.x;
+
+                    if (sensors[3].collided == false32) {
+                        (*collisionEntity).position.x += (*collisionEntity).velocity.x;
+                    } else {
+                        if ((*collisionEntity).groundVel > 0) {
+                            (*collisionEntity).position.x =
+                                sensors[3].position.x - TO_FIXED!(collisionOuter.right);
+                        }
+
+                        if ((*collisionEntity).groundVel < 0) {
+                            (*collisionEntity).position.x = sensors[3].position.x
+                                - TO_FIXED!(collisionOuter.left)
+                                + TO_FIXED!(1);
+                        }
+
+                        (*collisionEntity).groundVel = 0;
+                    }
+                }
+                (*collisionEntity).position.y = sensors[4].position.y;
+            }
+
+            CollisionModes::CMODE_RWALL => {
+                if (sensors[0].collided == true32
+                    || sensors[1].collided == true32
+                    || sensors[2].collided == true32)
+                {
+                    (*collisionEntity).angle = sensors[0].angle as i32;
+                } else {
+                    (*collisionEntity).onGround = false32;
+                    (*collisionEntity).collisionMode = newCollisionMode;
+                    (*collisionEntity).velocity.x =
+                        cos_256((*collisionEntity).angle) * (*collisionEntity).groundVel >> 8;
+                    (*collisionEntity).velocity.y =
+                        sin_256((*collisionEntity).angle) * (*collisionEntity).groundVel >> 8;
+
+                    if ((*collisionEntity).velocity.y < -TO_FIXED!(16)) {
+                        (*collisionEntity).velocity.y = -TO_FIXED!(16);
+                    }
+
+                    if ((*collisionEntity).velocity.y > TO_FIXED!(16)) {
+                        (*collisionEntity).velocity.y = TO_FIXED!(16);
+                    }
+
+                    (*collisionEntity).groundVel = (*collisionEntity).velocity.x;
+                    (*collisionEntity).angle = newAngle;
+                }
+
+                if (sensors[3].collided == false32) {
+                    (*collisionEntity).position.x = sensors[4].position.x;
+                    (*collisionEntity).position.y = sensors[4].position.y;
+                } else {
+                    if ((*collisionEntity).groundVel > 0) {
+                        (*collisionEntity).position.y =
+                            sensors[3].position.y - TO_FIXED!(collisionOuter.right);
+                    }
+
+                    if ((*collisionEntity).groundVel < 0) {
+                        (*collisionEntity).position.y =
+                            sensors[3].position.y - TO_FIXED!(collisionOuter.left) + TO_FIXED!(1);
+                    }
+
+                    (*collisionEntity).groundVel = 0;
+                    (*collisionEntity).position.x = sensors[4].position.x;
+                }
+            }
+
+            _ => {}
+        }
+    }
+}
+
+#[no_mangle]
 #[export_name = "RoofCollision"]
 pub extern "C" fn roof_collision(sensor: &mut CollisionSensor) {
     let mut posX: int32 = FROM_FIXED!(sensor.position.x);
@@ -473,8 +1037,7 @@ pub extern "C" fn roof_collision(sensor: &mut CollisionSensor) {
     let mut solid: int32 = 0;
     unsafe {
         if cfg!(feature = "version_u") {
-            if ((*collisionEntity).tileCollisions == TileCollisionModes::TILECOLLISION_DOWN as i32)
-            {
+            if ((*collisionEntity).tileCollisions == TileCollisionModes::TILECOLLISION_DOWN) {
                 solid = if (*collisionEntity).collisionPlane != 0 {
                     (1 << 15)
                 } else {
@@ -580,6 +1143,185 @@ pub extern "C" fn roof_collision(sensor: &mut CollisionSensor) {
                 sensor.position.y = TO_FIXED!(collidePos);
                 sensor.collided = true32;
             }
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "FloorCollision"]
+pub extern "C" fn floor_collision(sensor: &mut CollisionSensor) {
+    let mut posX: int32 = FROM_FIXED!(sensor.position.x);
+    let mut posY: int32 = FROM_FIXED!(sensor.position.y);
+
+    let mut solid: int32 = 0;
+    unsafe {
+        if cfg!(feature = "version_u") {
+            if ((*collisionEntity).tileCollisions == TileCollisionModes::TILECOLLISION_DOWN) {
+                solid = if (*collisionEntity).collisionPlane != 0 {
+                    (1 << 14)
+                } else {
+                    (1 << 12)
+                };
+            } else {
+                solid = if (*collisionEntity).collisionPlane != 0 {
+                    (1 << 15)
+                } else {
+                    (1 << 13)
+                };
+            }
+        } else {
+            solid = if (*collisionEntity).collisionPlane != 0 {
+                (1 << 14)
+            } else {
+                (1 << 12)
+            };
+        }
+
+        let mut collideAngle: int32 = 0;
+        let mut collidePos: int32 = 0x7FFFFFFF;
+
+        let mut layerID = 1;
+        for l in 0..LAYER_COUNT {
+            if ((*collisionEntity).collisionLayers & layerID) != 0 {
+                let layer = &tileLayers[l];
+                let colX: int32 = posX - layer.position.x;
+                let colY: int32 = posY - layer.position.y;
+                let mut cy: int32 = (colY & -(TILE_SIZE as i32)) - TILE_SIZE as i32;
+
+                if (colX >= 0 && colX < TILE_SIZE as i32 * layer.xsize as i32) {
+                    let stepCount: i32 = if cfg!(feature = "version_u") { 2 } else { 3 };
+                    for mut i in 0..stepCount {
+                        let mut step: int32 = TILE_SIZE as i32;
+
+                        if (cy >= 0 && cy < TILE_SIZE as i32 * layer.ysize as i32) {
+                            let tile: uint16 = *layer.layout.wrapping_add(
+                                (colX as usize / TILE_SIZE)
+                                    + ((cy as usize / TILE_SIZE) << layer.widthShift),
+                            );
+                            if (tile < 0xFFFF && (tile & solid as u16) != 0) {
+                                let mask: int32 = collisionMasks
+                                    [(*collisionEntity).collisionPlane as usize]
+                                    [tile as usize & 0xFFF]
+                                    .floorMasks[colX as usize & 0xF]
+                                    as i32;
+                                let ty: i32 = if cfg!(feature = "version_u") {
+                                    layer.position.y + cy + mask
+                                } else {
+                                    cy + mask
+                                };
+                                if (mask < 0xFF) {
+                                    if cfg!(feature = "version_u") {
+                                        step = -(TILE_SIZE as i32);
+                                        if (colY < collidePos) {
+                                            collideAngle = tileInfo
+                                                [(*collisionEntity).collisionPlane as usize]
+                                                [tile as usize & 0xFFF]
+                                                .floorAngle
+                                                as i32;
+                                            collidePos = ty;
+                                            i = stepCount;
+                                        }
+                                    } else {
+                                        if (colY >= ty) {
+                                            if (i32::abs(colY - ty) <= collisionMinimumDistance) {
+                                                sensor.collided = true32;
+                                                sensor.angle = tileInfo
+                                                    [(*collisionEntity).collisionPlane as usize]
+                                                    [tile as usize & 0xFFF]
+                                                    .floorAngle;
+                                                sensor.position.y =
+                                                    TO_FIXED!(ty + layer.position.y);
+                                                i = stepCount;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        cy += step;
+                    }
+                }
+
+                posX = layer.position.x + colX;
+                posY = layer.position.y + colY;
+            }
+
+            layerID <<= 1;
+        }
+
+        if cfg!(feature = "version_u") {
+            if (collidePos != 0x7FFFFFFF) {
+                let collideDist: int32 = sensor.position.y - TO_FIXED!(collidePos);
+                if (sensor.position.y >= TO_FIXED!(collidePos)
+                    && collideDist <= collisionMinimumDistance)
+                {
+                    sensor.angle = collideAngle as u8;
+                    sensor.position.y = TO_FIXED!(collidePos);
+                    sensor.collided = true32;
+                }
+            }
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "LWallCollision"]
+pub extern "C" fn l_wall_collision(sensor: &mut CollisionSensor) {
+    let mut posX: int32 = FROM_FIXED!(sensor.position.x);
+    let mut posY: int32 = FROM_FIXED!(sensor.position.y);
+
+    unsafe {
+        let solid: int32 = if (*collisionEntity).collisionPlane != 0 {
+            (1 << 15)
+        } else {
+            (1 << 13)
+        };
+
+        let mut layerID = 1;
+        for l in 0..LAYER_COUNT {
+            if ((*collisionEntity).collisionLayers & layerID) != 0 {
+                let layer = &tileLayers[l];
+                let colX: int32 = posX - layer.position.x;
+                let colY: int32 = posY - layer.position.y;
+                let mut cx: int32 = (colX & -(TILE_SIZE as i32)) - TILE_SIZE as i32;
+
+                if (colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32) {
+                    for mut i in 0..3 {
+                        if (cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32) {
+                            let tile: uint16 = *layer.layout.wrapping_add(
+                                (cx as usize / TILE_SIZE)
+                                    + ((colY as usize / TILE_SIZE) << layer.widthShift),
+                            );
+
+                            if (tile < 0xFFFF && (tile & solid as u16) != 0) {
+                                let mask: int32 = collisionMasks
+                                    [(*collisionEntity).collisionPlane as usize]
+                                    [tile as usize & 0xFFF]
+                                    .lWallMasks[colY as usize & 0xF]
+                                    as i32;
+                                let tx: int32 = cx + mask;
+                                if (mask < 0xFF && colX >= tx && i32::abs(colX - tx) <= 14) {
+                                    sensor.collided = true32;
+                                    sensor.angle = tileInfo
+                                        [(*collisionEntity).collisionPlane as usize]
+                                        [tile as usize & 0xFFF]
+                                        .lWallAngle;
+                                    sensor.position.x = TO_FIXED!(tx + layer.position.x);
+                                    i = 3;
+                                }
+                            }
+                        }
+
+                        cx += TILE_SIZE as i32;
+                    }
+                }
+
+                posX = layer.position.x + colX;
+                posY = layer.position.y + colY;
+            }
+
+            layerID <<= 1;
         }
     }
 }

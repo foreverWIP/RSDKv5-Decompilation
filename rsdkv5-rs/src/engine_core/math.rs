@@ -8,13 +8,13 @@ use crate::*;
 #[macro_export]
 macro_rules! TO_FIXED {
     ($x:expr) => {
-        $x << 16
+        (($x) as i32) << 16
     };
 }
 #[macro_export]
 macro_rules! FROM_FIXED {
     ($x:expr) => {
-        $x >> 16
+        (($x) as i32) >> 16
     };
 }
 
