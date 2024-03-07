@@ -26,9 +26,17 @@ pub enum bool32 {
     False = 0,
     True = 1,
 }
-impl From<bool32> for bool {
-    fn from(value: bool32) -> Self {
-        match value {
+impl Into<bool32> for bool {
+    fn into(self) -> bool32 {
+        match self {
+            true => true32,
+            false => false32,
+        }
+    }
+}
+impl Into<bool> for bool32 {
+    fn into(self) -> bool {
+        match self {
             bool32::False => false,
             bool32::True => true,
         }

@@ -727,88 +727,7 @@ bool32 RSDK::ObjectTileCollision(Entity *entity, uint16 cLayers, uint8 cMode, ui
     }
 }
 
-void RSDK::ProcessObjectMovement(Entity *entity, Hitbox *outerBox, Hitbox *innerBox)
-{
-    if (entity && outerBox && innerBox) {
-        if (entity->tileCollisions) {
-            entity->angle &= 0xFF;
-
-            collisionTolerance = highCollisionTolerance;
-            if (abs(entity->groundVel) < TO_FIXED(6) && entity->angle == 0)
-                collisionTolerance = lowCollisionTolerance;
-
-            collisionOuter.left   = outerBox->left;
-            collisionOuter.top    = outerBox->top;
-            collisionOuter.right  = outerBox->right;
-            collisionOuter.bottom = outerBox->bottom;
-
-            collisionInner.left   = innerBox->left;
-            collisionInner.top    = innerBox->top;
-            collisionInner.right  = innerBox->right;
-            collisionInner.bottom = innerBox->bottom;
-
-            collisionEntity = entity;
-
-#if RETRO_REV0U
-            collisionMaskAir = collisionOuter.bottom >= 14 ? 19 : 17;
-
-            if (entity->onGround) {
-                // true = normal, false = flipped
-                if (entity->tileCollisions == TILECOLLISION_DOWN)
-                    useCollisionOffset = entity->angle == 0x00;
-                else
-                    useCollisionOffset = entity->angle == 0x80;
-
-#if !RETRO_USE_ORIGINAL_CODE
-                // fixes some clipping issues as chibi sonic (& using small hitboxes)
-                // shouldn't effect anything else :)
-                if (collisionOuter.bottom < 14)
-                    useCollisionOffset = false;
-#endif
-
-                ProcessPathGrip();
-            }
-            else {
-                useCollisionOffset = false;
-                // true = normal, false = flipped
-                if (entity->tileCollisions == TILECOLLISION_DOWN)
-                    ProcessAirCollision_Down();
-                else
-                    ProcessAirCollision_Up();
-            }
-#else
-            if (collisionOuter.bottom >= 14) {
-                collisionOffset  = COLLISION_OFFSET;
-                collisionMaskAir = 19;
-            }
-            else {
-                collisionOffset    = 0;
-                collisionTolerance = 15;
-                collisionMaskAir   = 17;
-            }
-
-            if (entity->onGround)
-                ProcessPathGrip();
-            else
-                ProcessAirCollision_Down();
-#endif
-
-            if (entity->onGround) {
-                entity->velocity.x = entity->groundVel * cos256LookupTable[entity->angle & 0xFF] >> 8;
-                entity->velocity.y = entity->groundVel * sin256LookupTable[entity->angle & 0xFF] >> 8;
-            }
-            else {
-                entity->groundVel = entity->velocity.x;
-            }
-        }
-        else {
-            entity->position.x += entity->velocity.x;
-            entity->position.y += entity->velocity.y;
-        }
-    }
-}
-
-void RSDK::ProcessAirCollision_Down()
+void ProcessAirCollision_Down()
 {
     uint8 movingDown  = 0;
     uint8 movingUp    = 0;
@@ -1107,7 +1026,7 @@ void RSDK::ProcessAirCollision_Down()
     }
 }
 #if RETRO_REV0U
-void RSDK::ProcessAirCollision_Up()
+void ProcessAirCollision_Up()
 {
     uint8 movingDown  = 0;
     uint8 movingUp    = 0;
@@ -1401,7 +1320,7 @@ void RSDK::ProcessAirCollision_Up()
     }
 }
 #endif
-void RSDK::ProcessPathGrip()
+void ProcessPathGrip()
 {
     int32 xVel = 0;
     int32 yVel = 0;

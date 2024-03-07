@@ -1,6 +1,14 @@
 #ifndef COLLISION_H
 #define COLLISION_H
 
+extern "C" {
+    void ProcessPathGrip();
+    void ProcessAirCollision_Down();
+#if RETRO_REV0U
+    void ProcessAirCollision_Up();
+#endif
+}
+
 namespace RSDK
 {
 
@@ -136,15 +144,9 @@ bool32 CheckObjectCollisionPlatform(Entity *thisEntity, Hitbox *thisHitbox, Enti
 bool32 ObjectTileCollision(Entity *entity, uint16 cLayers, uint8 cMode, uint8 cPlane, int32 xOffset, int32 yOffset, bool32 setPos);
 extern "C" {
     bool32 ObjectTileGrip(Entity *entity, uint16 cLayers, uint8 cMode, uint8 cPlane, int32 xOffset, int32 yOffset, int32 tolerance);
+    void ProcessObjectMovement(Entity *entity, Hitbox *outerBox, Hitbox *innerBox);
 }
 
-void ProcessObjectMovement(Entity *entity, Hitbox *outerBox, Hitbox *innerBox);
-
-void ProcessPathGrip();
-void ProcessAirCollision_Down();
-#if RETRO_REV0U
-void ProcessAirCollision_Up();
-#endif
 
 void SetPathGripSensors(CollisionSensor *cSensors);
 

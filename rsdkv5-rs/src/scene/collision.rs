@@ -1,8 +1,18 @@
 use crate::*;
 
-use self::graphics::drawing::LAYER_COUNT;
+use self::{
+    engine_core::math::{cos_256, sin_256},
+    graphics::drawing::LAYER_COUNT,
+};
 
 use super::{collisionMasks, tileInfo, tileLayers, TILE_SIZE};
+
+extern "C" {
+    fn ProcessPathGrip();
+    fn ProcessAirCollision_Down();
+    #[cfg(feature = "version_u")]
+    fn ProcessAirCollision_Up();
+}
 
 #[repr(C)]
 enum TileCollisionModes {
@@ -360,6 +370,101 @@ pub extern "C" fn object_tile_grip(
 }
 
 #[no_mangle]
+#[export_name = "ProcessObjectMovement"]
+pub extern "C" fn process_object_movement(
+    entity: &mut Entity,
+    outerBox: &mut Hitbox,
+    innerBox: &mut Hitbox,
+) {
+    if (!(entity as *mut Entity).is_null()
+        && !(outerBox as *mut Hitbox).is_null()
+        && !(innerBox as *mut Hitbox).is_null())
+    {
+        if (entity.tileCollisions != 0) {
+            entity.angle &= 0xFF;
+
+            unsafe {
+                collisionTolerance = highCollisionTolerance as i32;
+                if (entity.groundVel.abs() < TO_FIXED!(6) && entity.angle == 0) {
+                    collisionTolerance = lowCollisionTolerance as i32;
+                }
+
+                collisionOuter.left = outerBox.left;
+                collisionOuter.top = outerBox.top;
+                collisionOuter.right = outerBox.right;
+                collisionOuter.bottom = outerBox.bottom;
+
+                collisionInner.left = innerBox.left;
+                collisionInner.top = innerBox.top;
+                collisionInner.right = innerBox.right;
+                collisionInner.bottom = innerBox.bottom;
+
+                collisionEntity = entity;
+
+                #[cfg(feature = "version_u")]
+                {
+                    collisionMaskAir = if collisionOuter.bottom >= 14 { 19 } else { 17 };
+
+                    if (entity.onGround == true32) {
+                        // true = normal, false = flipped
+                        if (entity.tileCollisions == TileCollisionModes::TILECOLLISION_DOWN as i32)
+                        {
+                            useCollisionOffset = (entity.angle == 0x00).into();
+                        } else {
+                            useCollisionOffset = (entity.angle == 0x80).into();
+                        }
+
+                        // fixes some clipping issues as chibi sonic (& using small hitboxes)
+                        // shouldn't effect anything else :)
+                        if (collisionOuter.bottom < 14) {
+                            useCollisionOffset = false32;
+                        }
+
+                        ProcessPathGrip();
+                    } else {
+                        useCollisionOffset = false32;
+                        // true = normal, false = flipped
+                        if (entity.tileCollisions == TileCollisionModes::TILECOLLISION_DOWN as i32)
+                        {
+                            ProcessAirCollision_Down();
+                        } else {
+                            ProcessAirCollision_Up();
+                        }
+                    }
+                }
+                #[cfg(not(feature = "version_u"))]
+                {
+                    if (collisionOuter.bottom >= 14) {
+                        collisionOffset = COLLISION_OFFSET;
+                        collisionMaskAir = 19;
+                    } else {
+                        collisionOffset = 0;
+                        collisionTolerance = 15;
+                        collisionMaskAir = 17;
+                    }
+
+                    if (entity.onGround) {
+                        ProcessPathGrip();
+                    } else {
+                        ProcessAirCollision_Down();
+                    }
+                }
+            }
+
+            if (entity.onGround == true32) {
+                entity.velocity.x = entity.groundVel * cos_256(entity.angle) >> 8;
+                entity.velocity.y = entity.groundVel * sin_256(entity.angle) >> 8;
+            } else {
+                entity.groundVel = entity.velocity.x;
+            }
+        } else {
+            entity.position.x += entity.velocity.x;
+            entity.position.y += entity.velocity.y;
+        }
+    }
+}
+
+#[no_mangle]
 #[export_name = "RoofCollision"]
 pub extern "C" fn roof_collision(sensor: &mut CollisionSensor) {
     let mut posX: int32 = FROM_FIXED!(sensor.position.x);
@@ -487,9 +592,9 @@ pub extern "C" fn r_wall_collision(sensor: &mut CollisionSensor) {
 
     unsafe {
         let solid: int32 = if (*collisionEntity).collisionPlane != 0 {
-            1 << 15
+            (1 << 15)
         } else {
-            1 << 13
+            (1 << 13)
         };
 
         let mut layerID = 1;
@@ -500,26 +605,26 @@ pub extern "C" fn r_wall_collision(sensor: &mut CollisionSensor) {
                 let colY: int32 = posY - layer.position.y;
                 let mut cx: int32 = (colX & -(TILE_SIZE as i32)) + TILE_SIZE as i32;
 
-                if colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32 {
+                if (colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32) {
                     for mut i in 0..3 {
-                        if cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32 {
+                        if (cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32) {
                             let tile: uint16 = *layer.layout.wrapping_add(
                                 (cx as usize / TILE_SIZE)
                                     + ((colY as usize / TILE_SIZE) << layer.widthShift),
                             );
 
-                            if tile < 0xFFFF && (tile & solid as u16) != 0 {
+                            if (tile < 0xFFFF && (tile & solid as u16) != 0) {
                                 let mask: int32 = collisionMasks
                                     [(*collisionEntity).collisionPlane as usize]
-                                    [(tile & 0xFFF) as usize]
-                                    .rWallMasks[(colY & 0xF) as usize]
+                                    [tile as usize & 0xFFF]
+                                    .rWallMasks[colY as usize & 0xF]
                                     as i32;
                                 let tx: int32 = cx + mask;
-                                if mask < 0xFF && colX <= tx && i32::abs(colX - tx) <= 14 {
+                                if (mask < 0xFF && colX <= tx && i32::abs(colX - tx) <= 14) {
                                     sensor.collided = true32;
                                     sensor.angle = tileInfo
                                         [(*collisionEntity).collisionPlane as usize]
-                                        [(tile & 0xFFF) as usize]
+                                        [tile as usize & 0xFFF]
                                         .rWallAngle;
                                     sensor.position.x = TO_FIXED!(tx + layer.position.x);
                                     i = 3;
@@ -533,9 +638,9 @@ pub extern "C" fn r_wall_collision(sensor: &mut CollisionSensor) {
 
                 posX = layer.position.x + colX;
                 posY = layer.position.y + colY;
-
-                layerID <<= 1;
             }
+
+            layerID <<= 1;
         }
     }
 }

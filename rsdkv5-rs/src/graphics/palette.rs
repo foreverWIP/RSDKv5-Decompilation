@@ -160,13 +160,14 @@ pub extern "C" fn rotate_palette(bankID: uint8, startIndex: uint8, endIndex: uin
     unsafe {
         if (right == true32) {
             let startClr: uint16 = fullPalette[bankID][endIndex];
+            // for (int32 i = endIndex; i > startIndex; --i)
             let mut i = endIndex;
             loop {
-                if i > startIndex {
-                    break;
-                }
                 fullPalette[bankID][i] = fullPalette[bankID][i - 1];
                 i -= 1;
+                if i <= startIndex {
+                    break;
+                }
             }
             fullPalette[bankID][startIndex] = startClr;
         } else {
