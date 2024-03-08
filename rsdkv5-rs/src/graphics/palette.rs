@@ -285,11 +285,11 @@ pub extern "C" fn set_palette_fade(
         return;
     }
 
-    let blendA: uint32 = 0xFF - blendAmount as u32;
+    let blendA: uint32 = (0xFF - blendAmount) as u32;
     unsafe {
         let mut paletteColor: *mut uint16 =
             &mut fullPalette[destBankID as usize][startIndex as usize];
-        for i in startIndex..endIndex {
+        for i in startIndex..(endIndex + 1) {
             let clrA: uint32 = get_palette_entry(srcBankA, i as u8);
             let clrB: uint32 = get_palette_entry(srcBankB, i as u8);
 
