@@ -73,6 +73,9 @@ struct RSDKContainer {
 };
 
 extern "C" {
+    extern uint8 dataPackCount;
+    extern RSDKContainer dataPacks[DATAPACK_COUNT];
+
     bool32 LoadFile(FileInfo *info, const char *filename, uint8 fileMode);
 }
 
@@ -80,9 +83,7 @@ namespace RSDK
 {
 
 extern RSDKFileInfo dataFileList[DATAFILE_COUNT];
-extern RSDKContainer dataPacks[DATAPACK_COUNT];
 
-extern uint8 dataPackCount;
 extern uint16 dataFileListCount;
 
 extern char gameLogicName[0x200];

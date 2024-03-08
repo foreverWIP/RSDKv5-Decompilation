@@ -3,9 +3,9 @@
 using namespace RSDK;
 
 RSDKFileInfo RSDK::dataFileList[DATAFILE_COUNT];
-RSDKContainer RSDK::dataPacks[DATAPACK_COUNT];
+RSDKContainer dataPacks[DATAPACK_COUNT];
 
-uint8 RSDK::dataPackCount      = 0;
+uint8 dataPackCount      = 0;
 uint16 RSDK::dataFileListCount = 0;
 
 char RSDK::gameLogicName[0x200];

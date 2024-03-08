@@ -91,13 +91,16 @@ struct RSDKFileInfo {
 }
 
 #[repr(C)]
-struct RSDKContainer {
-    name: [i8; 0x100],
-    fileBuffer: *const uint8,
-    fileCount: i32,
+pub struct RSDKContainer {
+    pub name: [i8; 0x100],
+    pub fileBuffer: *const uint8,
+    pub fileCount: i32,
 }
 
 extern "C" {
+    pub static mut dataPacks: [RSDKContainer; DATAPACK_COUNT];
+    pub static mut dataPackCount: uint8;
+
     pub fn LoadFile(info: &mut FileInfo, filename: *const i8, fileMode: uint8) -> bool32;
 }
 

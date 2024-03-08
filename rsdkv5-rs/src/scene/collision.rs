@@ -1386,3 +1386,76 @@ pub extern "C" fn r_wall_collision(sensor: &mut CollisionSensor) {
         }
     }
 }
+
+#[no_mangle]
+#[export_name = "FindRWallPosition"]
+pub extern "C" fn find_r_wall_position(sensor: &mut CollisionSensor) {
+    let mut posX: int32 = FROM_FIXED!(sensor.position.x);
+    let mut posY: int32 = FROM_FIXED!(sensor.position.y);
+
+    unsafe {
+        let solid: int32 = if (*collisionEntity).collisionPlane != 0 {
+            ((1 << 14) | (1 << 15))
+        } else {
+            ((1 << 12) | (1 << 13))
+        };
+
+        let mut startX: int32 = posX;
+
+        let mut layerID = 1;
+        for l in 0..LAYER_COUNT {
+            if ((*collisionEntity).collisionLayers & layerID) != 0 {
+                let layer = &tileLayers[l];
+                let colX: int32 = posX - layer.position.x;
+                let colY: int32 = posY - layer.position.y;
+                let mut cx: int32 = (colX & -(TILE_SIZE as i32)) + TILE_SIZE as i32;
+
+                if (colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32) {
+                    for mut i in 0..3 {
+                        if (cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32) {
+                            let tile: uint16 = *layer.layout.wrapping_add(
+                                (cx as usize / TILE_SIZE)
+                                    + ((colY as usize / TILE_SIZE) << layer.widthShift),
+                            );
+
+                            if (tile < 0xFFFF && (tile & solid as u16) != 0) {
+                                let mask: int32 = collisionMasks
+                                    [(*collisionEntity).collisionPlane as usize]
+                                    [tile as usize & 0xFFF]
+                                    .rWallMasks[colY as usize & 0xF]
+                                    as i32;
+                                let tx: int32 = cx + mask;
+                                let tileAngle: int32 =
+                                    tileInfo[(*collisionEntity).collisionPlane as usize]
+                                        [tile as usize & 0xFFF]
+                                        .rWallAngle as i32;
+
+                                if (mask < 0xFF) {
+                                    if (sensor.collided == false32 || startX <= tx) {
+                                        if (i32::abs(colX - tx) <= collisionTolerance
+                                            && i32::abs(sensor.angle as i32 - tileAngle)
+                                                <= wallAngleTolerance as i32)
+                                        {
+                                            sensor.collided = true32;
+                                            sensor.angle = tileAngle as u8;
+                                            sensor.position.x = TO_FIXED!(tx + layer.position.x);
+                                            startX = tx;
+                                            i = 3;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        cx -= TILE_SIZE as i32;
+                    }
+                }
+
+                posX = layer.position.x + colX;
+                posY = layer.position.y + colY;
+            }
+
+            layerID <<= 1;
+        }
+    }
+}

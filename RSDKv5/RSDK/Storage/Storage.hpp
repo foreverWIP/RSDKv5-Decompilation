@@ -99,16 +99,17 @@ public:
     inline int32 Count() { return count; }
 };
 
-extern DataStorage dataStorage[DATASET_MAX];
+extern "C" {
+    extern DataStorage dataStorage[DATASET_MAX];
 
-bool32 InitStorage();
-void ReleaseStorage();
-
-void AllocateStorage(void **dataPtr, uint32 size, StorageDataSets dataSet, bool32 clear);
-void DefragmentAndGarbageCollectStorage(StorageDataSets set);
-void RemoveStorageEntry(void **dataPtr);
-void CopyStorage(uint32 **src, uint32 **dst);
-void GarbageCollectStorage(StorageDataSets dataSet);
+    bool32 InitStorage();
+    void ReleaseStorage();
+    void AllocateStorage(void **dataPtr, uint32 size, StorageDataSets dataSet, bool32 clear);
+    void RemoveStorageEntry(void **dataPtr);
+    void DefragmentAndGarbageCollectStorage(StorageDataSets set);
+    void CopyStorage(uint32 **src, uint32 **dst);
+    void GarbageCollectStorage(StorageDataSets dataSet);
+}
 
 #if RETRO_REV0U
 #include "Legacy/UserStorageLegacy.hpp"
