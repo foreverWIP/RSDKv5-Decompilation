@@ -77,7 +77,9 @@ struct Animator {
     uint8 rotationStyle;
 };
 
-extern SpriteAnimation spriteAnimationList[SPRFILE_COUNT];
+extern "C" {
+    extern SpriteAnimation spriteAnimationList[SPRFILE_COUNT];
+}
 
 uint16 LoadSpriteAnimation(const char *filename, uint8 scope);
 uint16 CreateSpriteAnimation(const char *filename, uint32 frameCount, uint32 animCount, uint8 scope);
@@ -128,35 +130,9 @@ inline int16 GetFrameID(Animator *animator)
     return 0;
 }
 
-void ProcessAnimation(Animator *animator);
-
-inline void SetSpriteAnimation(uint16 aniFrames, uint16 animationID, Animator *animator, bool32 forceApply, int32 frameID)
-{
-    if (aniFrames >= SPRFILE_COUNT || !animator) {
-        if (animator)
-            animator->frames = NULL;
-        return;
-    }
-
-    SpriteAnimation *spr = &spriteAnimationList[aniFrames];
-    if (animationID >= spr->animCount)
-        return;
-
-    SpriteAnimationEntry *anim = &spr->animations[animationID];
-    SpriteFrame *frames        = &spr->frames[anim->frameListOffset];
-    if (animator->frames == frames && !forceApply)
-        return;
-
-    animator->frames          = frames;
-    animator->timer           = 0;
-    animator->frameID         = frameID;
-    animator->frameCount      = anim->frameCount;
-    animator->frameDuration   = animator->frames[frameID].duration;
-    animator->speed           = anim->animationSpeed;
-    animator->rotationStyle   = anim->rotationStyle;
-    animator->loopIndex       = anim->loopIndex;
-    animator->prevAnimationID = animator->animationID;
-    animator->animationID     = animationID;
+extern "C" {
+    void ProcessAnimation(Animator *animator);
+    void SetSpriteAnimation(uint16 aniFrames, uint16 animationID, Animator *animator, bool32 forceApply, int32 frameID);
 }
 
 inline void EditSpriteAnimation(uint16 aniFrames, uint16 animID, const char *name, int32 frameOffset, uint16 frameCount, int16 animSpeed,
@@ -176,8 +152,10 @@ inline void EditSpriteAnimation(uint16 aniFrames, uint16 animID, const char *nam
     }
 }
 
-int32 GetStringWidth(uint16 aniFrames, uint16 animID, String *string, int32 startIndex, int32 length, int32 spacing);
-void SetSpriteString(uint16 aniFrames, uint16 animID, String *string);
+extern "C" {
+    int32 GetStringWidth(uint16 aniFrames, uint16 animID, String *string, int32 startIndex, int32 length, int32 spacing);
+    void SetSpriteString(uint16 aniFrames, uint16 animID, String *string);
+}
 
 inline void ClearSpriteAnimations()
 {

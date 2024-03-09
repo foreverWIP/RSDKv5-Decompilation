@@ -58,7 +58,7 @@ pub enum CollisionModes {
 }
 
 #[repr(C)]
-struct Hitbox {
+pub struct Hitbox {
     left: int16,
     top: int16,
     right: int16,
@@ -167,210 +167,133 @@ pub extern "C" fn object_tile_grip(
     yOffset: int32,
     tolerance: int32,
 ) -> bool32 {
-    let mut layerID: int32 = 1;
-    let mut collided: bool32 = false32;
-    let mut posX: int32 = FROM_FIXED!(xOffset + entity.position.x);
-    let mut posY: int32 = FROM_FIXED!(yOffset + entity.position.y);
-
-    let mut solid: int32 = 0;
     unsafe {
-        match cMode {
+        let solid_flags = match cMode {
             CollisionModes::CMODE_FLOOR => {
-                solid = if cPlane != 0 { (1 << 14) } else { (1 << 12) };
-
-                for l in 0..LAYER_COUNT {
-                    if (cLayers & layerID as u16) != 0 {
-                        let layer = &tileLayers[l];
-                        let colX: int32 = posX - layer.position.x;
-                        let mut colY: int32 = posY - layer.position.y;
-                        let mut cy: int32 = (colY & -(TILE_SIZE as i32)) - TILE_SIZE as i32;
-                        if (colX >= 0 && colX < TILE_SIZE as i32 * layer.xsize as i32) {
-                            for mut i in 0..3 {
-                                if (cy >= 0 && cy < TILE_SIZE as i32 * layer.ysize as i32) {
-                                    let tile: uint16 = *layer.layout.wrapping_add(
-                                        ((colX >> 4)
-                                            + ((cy / TILE_SIZE as i32) << layer.widthShift))
-                                            as usize,
-                                    );
-                                    if (tile < 0xFFFF && (tile & solid as u16) != 0) {
-                                        let mask: int32 = collisionMasks[cPlane as usize]
-                                            [(tile & 0xFFF) as usize]
-                                            .floorMasks
-                                            [(colX & 0xF) as usize]
-                                            as i32;
-                                        let ty: int32 = cy + mask;
-                                        if (mask < 0xFF) {
-                                            if (i32::abs(colY - ty) <= tolerance) {
-                                                collided = true32;
-                                                colY = ty;
-                                            }
-                                            i = 3;
-                                        }
-                                    }
-                                }
-                                cy += TILE_SIZE as i32;
-                            }
-                        }
-                        posX = layer.position.x + colX;
-                        posY = layer.position.y + colY;
-                    }
-
-                    layerID <<= 1;
+                if cPlane != 0 {
+                    1 << 14
+                } else {
+                    1 << 12
                 }
-
-                if (collided == true32) {
-                    entity.position.y = TO_FIXED!(posY) - yOffset;
-                }
-                return collided;
-            }
-            CollisionModes::CMODE_LWALL => {
-                solid = if cPlane != 0 { (1 << 15) } else { (1 << 13) };
-
-                for l in 0..LAYER_COUNT {
-                    if (cLayers & layerID as u16) != 0 {
-                        let layer = &tileLayers[l];
-                        let mut colX: int32 = posX - layer.position.x;
-                        let colY: int32 = posY - layer.position.y;
-                        let mut cx: int32 = (colX & -(TILE_SIZE as i32)) - TILE_SIZE as i32;
-                        if (colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32) {
-                            for mut i in 0..3 {
-                                if (cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32) {
-                                    let tile: uint16 = *layer.layout.wrapping_add(
-                                        ((cx >> 4)
-                                            + ((colY / TILE_SIZE as i32) << layer.widthShift))
-                                            as usize,
-                                    );
-                                    if (tile < 0xFFFF && (tile & solid as u16) != 0) {
-                                        let mask: int32 = collisionMasks[cPlane as usize]
-                                            [(tile & 0xFFF) as usize]
-                                            .lWallMasks
-                                            [(colY & 0xF) as usize]
-                                            as i32;
-                                        let tx: int32 = cx + mask;
-                                        if (mask < 0xFF) {
-                                            if (i32::abs(colX - tx) <= tolerance) {
-                                                collided = true32;
-                                                colX = tx;
-                                            }
-                                            i = 3;
-                                        }
-                                    }
-                                }
-                                cx += TILE_SIZE as i32;
-                            }
-                        }
-                        posX = layer.position.x + colX;
-                        posY = layer.position.y + colY;
-                    }
-
-                    layerID <<= 1;
-                }
-
-                if (collided == true32) {
-                    entity.position.x = TO_FIXED!(posX) - xOffset;
-                }
-                return collided;
-            }
-            CollisionModes::CMODE_ROOF => {
-                solid = if cPlane != 0 { (1 << 15) } else { (1 << 13) };
-
-                for l in 0..LAYER_COUNT {
-                    if (cLayers & layerID as u16) != 0 {
-                        let layer = &tileLayers[l];
-                        let colX: int32 = posX - layer.position.x;
-                        let mut colY: int32 = posY - layer.position.y;
-                        let mut cy: int32 = (colY & -(TILE_SIZE as i32)) + TILE_SIZE as i32;
-                        if (colX >= 0 && colX < TILE_SIZE as i32 * layer.xsize as i32) {
-                            for mut i in 0..3 {
-                                if (cy >= 0 && cy < TILE_SIZE as i32 * layer.ysize as i32) {
-                                    let tile: uint16 = *layer.layout.wrapping_add(
-                                        ((colX >> 4)
-                                            + ((cy / TILE_SIZE as i32) << layer.widthShift))
-                                            as usize,
-                                    );
-                                    if (tile < 0xFFFF && (tile & solid as u16) != 0) {
-                                        let mask: int32 = collisionMasks[cPlane as usize]
-                                            [(tile & 0xFFF) as usize]
-                                            .roofMasks
-                                            [(colX & 0xF) as usize]
-                                            as i32;
-                                        let ty: int32 = cy + mask;
-                                        if (mask < 0xFF) {
-                                            if (i32::abs(colY - ty) <= tolerance) {
-                                                collided = true32;
-                                                colY = ty;
-                                            }
-                                            i = 3;
-                                        }
-                                    }
-                                }
-                                cy -= TILE_SIZE as i32;
-                            }
-                        }
-                        posX = layer.position.x + colX;
-                        posY = layer.position.y + colY;
-                    }
-
-                    layerID <<= 1;
-                }
-
-                if (collided == true32) {
-                    entity.position.y = TO_FIXED!(posY) - yOffset;
-                }
-                return collided;
-            }
-            CollisionModes::CMODE_RWALL => {
-                solid = if cPlane != 0 { (1 << 15) } else { (1 << 13) };
-
-                for l in 0..LAYER_COUNT {
-                    if (cLayers & layerID as u16) != 0 {
-                        let layer = &tileLayers[l];
-                        let mut colX: int32 = posX - layer.position.x;
-                        let colY: int32 = posY - layer.position.y;
-                        let mut cx: int32 = (colX & -(TILE_SIZE as i32)) + TILE_SIZE as i32;
-                        if (colY >= 0 && colY < TILE_SIZE as i32 * layer.ysize as i32) {
-                            for mut i in 0..3 {
-                                if (cx >= 0 && cx < TILE_SIZE as i32 * layer.xsize as i32) {
-                                    let tile: uint16 = *layer.layout.wrapping_add(
-                                        ((cx >> 4)
-                                            + ((colY / TILE_SIZE as i32) << layer.widthShift))
-                                            as usize,
-                                    );
-                                    if (tile < 0xFFFF && (tile & solid as u16) != 0) {
-                                        let mask: int32 = collisionMasks[cPlane as usize]
-                                            [(tile & 0xFFF) as usize]
-                                            .rWallMasks
-                                            [(colY & 0xF) as usize]
-                                            as i32;
-                                        let tx: int32 = cx + mask;
-                                        if (mask < 0xFF) {
-                                            if (i32::abs(colX - tx) <= tolerance) {
-                                                collided = true32;
-                                                colX = tx;
-                                            }
-                                            i = 3;
-                                        }
-                                    }
-                                }
-                                cx -= TILE_SIZE as i32;
-                            }
-                        }
-                        posX = layer.position.x + colX;
-                        posY = layer.position.y + colY;
-                    }
-
-                    layerID <<= 1;
-                }
-
-                if (collided == true32) {
-                    entity.position.x = TO_FIXED!(posX) - xOffset;
-                }
-                return collided;
             }
             _ => {
-                return false32;
+                if cPlane != 0 {
+                    1 << 15
+                } else {
+                    1 << 13
+                }
+            }
+        };
+
+        let mut collided: bool32 = false32;
+        let mut posX: int32 = FROM_FIXED!(xOffset + entity.position.x);
+        let mut posY: int32 = FROM_FIXED!(yOffset + entity.position.y);
+        let mut layerID = 1;
+
+        const TILE_SIZE: i32 = self::TILE_SIZE as i32;
+        // check each tile layer to collide with (using a bitmask)
+        for l in 0..LAYER_COUNT {
+            // if we found a tile layer...
+            if (cLayers & layerID) != 0 {
+                let layer = &tileLayers[l];
+                let mut colX = posX - layer.position.x;
+                let mut colY = posY - layer.position.y;
+                let colPrimaryAxis = match cMode {
+                    CollisionModes::CMODE_FLOOR => colX,
+                    CollisionModes::CMODE_LWALL => colY,
+                    CollisionModes::CMODE_ROOF => colX,
+                    CollisionModes::CMODE_RWALL => colY,
+                };
+                let colSecondaryAxis = match cMode {
+                    CollisionModes::CMODE_FLOOR => &mut colY,
+                    CollisionModes::CMODE_LWALL => &mut colX,
+                    CollisionModes::CMODE_ROOF => &mut colY,
+                    CollisionModes::CMODE_RWALL => &mut colX,
+                };
+                let layerSizePrimaryAxis = match cMode {
+                    CollisionModes::CMODE_FLOOR => layer.xsize,
+                    CollisionModes::CMODE_LWALL => layer.ysize,
+                    CollisionModes::CMODE_ROOF => layer.xsize,
+                    CollisionModes::CMODE_RWALL => layer.ysize,
+                };
+                let layerSizeSecondaryAxis = match cMode {
+                    CollisionModes::CMODE_FLOOR => layer.ysize,
+                    CollisionModes::CMODE_LWALL => layer.xsize,
+                    CollisionModes::CMODE_ROOF => layer.ysize,
+                    CollisionModes::CMODE_RWALL => layer.xsize,
+                };
+                let mut cAxis = (*colSecondaryAxis & -TILE_SIZE)
+                    + match cMode {
+                        CollisionModes::CMODE_FLOOR => -TILE_SIZE,
+                        CollisionModes::CMODE_LWALL => TILE_SIZE,
+                        CollisionModes::CMODE_ROOF => -TILE_SIZE,
+                        CollisionModes::CMODE_RWALL => TILE_SIZE,
+                    };
+                if colPrimaryAxis >= 0 && colPrimaryAxis < TILE_SIZE * layerSizePrimaryAxis as i32 {
+                    for i in 0..3 {
+                        if cAxis >= 0 && cAxis < TILE_SIZE * layerSizeSecondaryAxis as i32 {
+                            let tile = *layer.layout.wrapping_add(
+                                ((colPrimaryAxis >> 4) + ((cAxis / TILE_SIZE) << layer.widthShift))
+                                    as usize,
+                            );
+                            if tile < u16::MAX && (tile & solid_flags) != 0 {
+                                let mask = match cMode {
+                                    CollisionModes::CMODE_FLOOR => {
+                                        collisionMasks[cPlane as usize][tile as usize & 0xFFF]
+                                            .floorMasks
+                                    }
+                                    CollisionModes::CMODE_LWALL => {
+                                        collisionMasks[cPlane as usize][tile as usize & 0xFFF]
+                                            .lWallMasks
+                                    }
+                                    CollisionModes::CMODE_ROOF => {
+                                        collisionMasks[cPlane as usize][tile as usize & 0xFFF]
+                                            .roofMasks
+                                    }
+                                    CollisionModes::CMODE_RWALL => {
+                                        collisionMasks[cPlane as usize][tile as usize & 0xFFF]
+                                            .rWallMasks
+                                    }
+                                }[colPrimaryAxis as usize & 0xf]
+                                    as i32;
+                                let tAxis = cAxis + mask;
+                                if mask < 0xff {
+                                    if i32::abs(*colSecondaryAxis - tAxis) <= tolerance {
+                                        collided = true32;
+                                        *colSecondaryAxis = tAxis;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        cAxis += TILE_SIZE;
+                    }
+                }
+                posX = layer.position.x + colX;
+                posY = layer.position.y + colY;
+            }
+
+            layerID <<= 1;
+        }
+
+        if collided == true32 {
+            match cMode {
+                CollisionModes::CMODE_FLOOR => {
+                    entity.position.y = TO_FIXED!(posY) - yOffset;
+                }
+                CollisionModes::CMODE_LWALL => {
+                    entity.position.x = TO_FIXED!(posX) - xOffset;
+                }
+                CollisionModes::CMODE_ROOF => {
+                    entity.position.y = TO_FIXED!(posY) - yOffset;
+                }
+                CollisionModes::CMODE_RWALL => {
+                    entity.position.x = TO_FIXED!(posX) - xOffset;
+                }
             }
         }
+
+        collided
     }
 }
 

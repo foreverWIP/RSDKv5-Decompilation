@@ -6,8 +6,6 @@ using namespace RSDK;
 #include "Legacy/AnimationLegacy.cpp"
 #endif
 
-SpriteAnimation RSDK::spriteAnimationList[SPRFILE_COUNT];
-
 uint16 RSDK::LoadSpriteAnimation(const char *filePath, uint8 scope)
 {
     if (!scope || scope > SCOPE_STAGE)
@@ -145,87 +143,4 @@ uint16 RSDK::CreateSpriteAnimation(const char *filename, uint32 frameCount, uint
     AllocateStorage((void **)&spr->animations, sizeof(SpriteAnimationEntry) * MIN(animCount, SPRITEANIM_COUNT), DATASET_STG, true);
 
     return id;
-}
-
-void RSDK::ProcessAnimation(Animator *animator)
-{
-    if (!animator || !animator->frames)
-        return;
-
-    animator->timer += animator->speed;
-
-    if (animator->frames == (SpriteFrame *)1) { // model anim
-        while (animator->timer > animator->frameDuration) {
-            ++animator->frameID;
-
-            animator->timer -= animator->frameDuration;
-            if (animator->frameID >= animator->frameCount)
-                animator->frameID = animator->loopIndex;
-        }
-    }
-    else { // sprite anim
-        while (animator->timer > animator->frameDuration) {
-            ++animator->frameID;
-
-            animator->timer -= animator->frameDuration;
-            if (animator->frameID >= animator->frameCount)
-                animator->frameID = animator->loopIndex;
-
-            animator->frameDuration = animator->frames[animator->frameID].duration;
-        }
-    }
-}
-
-int32 RSDK::GetStringWidth(uint16 aniFrames, uint16 animID, String *string, int32 startIndex, int32 length, int32 spacing)
-{
-    if (aniFrames >= SPRFILE_COUNT || !string || !string->chars)
-        return 0;
-
-    SpriteAnimation *spr = &spriteAnimationList[aniFrames];
-    if (animID < spr->animCount) {
-        SpriteAnimationEntry *anim = &spr->animations[animID];
-
-        startIndex = CLAMP(startIndex, 0, string->length - 1);
-
-        if (length <= 0 || length > string->length)
-            length = string->length;
-
-        int32 w = 0;
-        for (int32 c = startIndex; c < length; ++c) {
-            int32 charFrame = string->chars[c];
-            if (charFrame < anim->frameCount) {
-                w += spr->frames[anim->frameListOffset + charFrame].width;
-                if (c + 1 >= length)
-                    return w;
-
-                w += spacing;
-            }
-        }
-
-        return w;
-    }
-
-    return 0;
-}
-
-void RSDK::SetSpriteString(uint16 aniFrames, uint16 animID, String *string)
-{
-    if (aniFrames >= SPRFILE_COUNT || !string)
-        return;
-
-    SpriteAnimation *spr = &spriteAnimationList[aniFrames];
-    if (animID < spr->animCount) {
-        SpriteAnimationEntry *anim = &spr->animations[animID];
-
-        for (int32 c = 0; c < string->length; ++c) {
-            int32 unicodeChar = string->chars[c];
-            string->chars[c]  = -1;
-            for (int32 f = 0; f < anim->frameCount; ++f) {
-                if (spr->frames[anim->frameListOffset + f].unicodeChar == unicodeChar) {
-                    string->chars[c] = f;
-                    break;
-                }
-            }
-        }
-    }
 }
