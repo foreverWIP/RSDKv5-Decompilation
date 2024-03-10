@@ -1078,7 +1078,7 @@ void RenderDevice::ProcessKeyEvent(GLFWwindow *, int32 key, int32 scancode, int3
                             default: break;
                             case 5: LoadScene(); break;
                             case 4:
-                            case 3: RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
+                            case 3: Legacy_stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
                         }
 #else
                         LoadScene();
@@ -1102,7 +1102,7 @@ void RenderDevice::ProcessKeyEvent(GLFWwindow *, int32 key, int32 scancode, int3
                             default: break;
                             case 5: LoadScene(); break;
                             case 4:
-                            case 3: RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
+                            case 3: Legacy_stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
                         }
 #else
                         LoadScene();
@@ -1135,7 +1135,7 @@ void RenderDevice::ProcessKeyEvent(GLFWwindow *, int32 key, int32 scancode, int3
                             default: break;
                             case 5: LoadScene(); break;
                             case 4:
-                            case 3: RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
+                            case 3: Legacy_stageMode = RSDK::Legacy::STAGEMODE_LOAD; break;
                         }
 #else
                         LoadScene();
@@ -1191,8 +1191,8 @@ void RenderDevice::ProcessKeyEvent(GLFWwindow *, int32 key, int32 scancode, int3
                                 break;
                             case 4:
                             case 3:
-                                if (RSDK::Legacy::stageMode != ENGINESTATE_NONE)
-                                    RSDK::Legacy::stageMode ^= RSDK::Legacy::STAGEMODE_STEPOVER;
+                                if (Legacy_stageMode != ENGINESTATE_NONE)
+                                    Legacy_stageMode ^= RSDK::Legacy::STAGEMODE_STEPOVER;
                                 break;
                         }
 #else

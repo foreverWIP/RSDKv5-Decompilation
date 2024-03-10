@@ -54,27 +54,8 @@ inline void StrAdd(char *dest, const char *src)
     dest[destStrPos] = 0;
 }
 
-inline bool StrComp(const char *stringA, const char *stringB)
-{
-    bool32 match    = true;
-    bool32 finished = false;
-    while (!finished) {
-        if (*stringA == *stringB || *stringA == *stringB + ' ' || *stringA == *stringB - ' ') {
-            if (*stringA) {
-                ++stringA;
-                ++stringB;
-            }
-            else {
-                finished = true;
-            }
-        }
-        else {
-            match    = false;
-            finished = true;
-        }
-    }
-
-    return match;
+extern "C" {
+    bool StrComp(const char *stringA, const char *stringB);
 }
 
 inline int32 StrLength(const char *string)

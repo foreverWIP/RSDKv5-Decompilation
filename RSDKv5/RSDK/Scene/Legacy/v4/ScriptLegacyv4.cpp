@@ -1051,7 +1051,7 @@ void RSDK::Legacy::v4::CheckAliasText(char *text)
     if (FindStringToken(text, "publicalias", 1) == 0) {
 #if !RETRO_USE_ORIGINAL_CODE
         if (scriptValueListCount >= LEGACY_v4_SCRIPT_VAR_COUNT) {
-            RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
+            PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
             legacy_gameMode = ENGINE_SCRIPTERROR;
             return;
         }
@@ -1098,7 +1098,7 @@ void RSDK::Legacy::v4::CheckAliasText(char *text)
     else if (FindStringToken(text, "privatealias", 1) == 0) {
 #if !RETRO_USE_ORIGINAL_CODE
         if (scriptValueListCount >= LEGACY_v4_SCRIPT_VAR_COUNT) {
-            RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
+            PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
             legacy_gameMode = ENGINE_SCRIPTERROR;
             return;
         }
@@ -1146,7 +1146,7 @@ void RSDK::Legacy::v4::CheckStaticText(char *text)
     if (FindStringToken(text, "publicvalue", 1) == 0) {
 #if !RETRO_USE_ORIGINAL_CODE
         if (scriptValueListCount >= LEGACY_v4_SCRIPT_VAR_COUNT) {
-            RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
+            PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
             legacy_gameMode = ENGINE_SCRIPTERROR;
             return;
         }
@@ -1201,7 +1201,7 @@ void RSDK::Legacy::v4::CheckStaticText(char *text)
     else if (FindStringToken(text, "privatevalue", 1) == 0) {
 #if !RETRO_USE_ORIGINAL_CODE
         if (scriptValueListCount >= LEGACY_v4_SCRIPT_VAR_COUNT) {
-            RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
+            PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
             legacy_gameMode = ENGINE_SCRIPTERROR;
             return;
         }
@@ -1261,7 +1261,7 @@ bool32 RSDK::Legacy::v4::CheckTableText(char *text)
     if (FindStringToken(text, "publictable", 1) == 0) {
 #if !RETRO_USE_ORIGINAL_CODE
         if (scriptValueListCount >= LEGACY_v4_SCRIPT_VAR_COUNT) {
-            RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
+            PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
             legacy_gameMode = ENGINE_SCRIPTERROR;
             return false;
         }
@@ -1333,7 +1333,7 @@ bool32 RSDK::Legacy::v4::CheckTableText(char *text)
     else if (FindStringToken(text, "privatetable", 1) == 0) {
 #if !RETRO_USE_ORIGINAL_CODE
         if (scriptValueListCount >= LEGACY_v4_SCRIPT_VAR_COUNT) {
-            RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
+            PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases, static values, and tables\nFILE: %s", scriptFile);
             legacy_gameMode = ENGINE_SCRIPTERROR;
             return false;
         }
@@ -1699,8 +1699,8 @@ void RSDK::Legacy::v4::ConvertFunctionText(char *text)
             }
 
             // Eg: temp0 = game.variable
-            for (int32 v = 0; v < globalVariablesCount; ++v) {
-                if (StrComp(funcName, globalVariables[v].name)) {
+            for (int32 v = 0; v < Legacy_globalVariablesCount; ++v) {
+                if (StrComp(funcName, Legacy_globalVariables[v].name)) {
                     StrCopy(funcName, "global");
                     arrayStr[0] = 0;
                     AppendIntegerToString(arrayStr, v);
@@ -1758,15 +1758,15 @@ void RSDK::Legacy::v4::ConvertFunctionText(char *text)
                 funcName[1] = 0;
 
                 int32 v = 0;
-                for (; v < globalVariablesCount; ++v) {
-                    if (StrComp(arrayStr, globalVariables[v].name)) {
+                for (; v < Legacy_globalVariablesCount; ++v) {
+                    if (StrComp(arrayStr, Legacy_globalVariables[v].name)) {
                         funcName[0] = 0;
                         AppendIntegerToString(funcName, v);
                         break;
                     }
                 }
 
-                if (v == globalVariablesCount)
+                if (v == Legacy_globalVariablesCount)
                     PrintLog(PRINT_NORMAL, "WARNING: Unknown varName \"%s\", on line %d", arrayStr, lineID);
             }
 
@@ -2092,15 +2092,15 @@ void RSDK::Legacy::v4::CheckCaseNumber(char *text)
             caseValue[1] = 0;
 
             int32 v = 0;
-            for (; v < globalVariablesCount; ++v) {
-                if (StrComp(arrayStr, globalVariables[v].name)) {
+            for (; v < Legacy_globalVariablesCount; ++v) {
+                if (StrComp(arrayStr, Legacy_globalVariables[v].name)) {
                     caseValue[0] = 0;
                     AppendIntegerToString(caseValue, v);
                     break;
                 }
             }
 
-            if (v == globalVariablesCount)
+            if (v == Legacy_globalVariablesCount)
                 PrintLog(PRINT_NORMAL, "WARNING: Unknown varName \"%s\", on line %d", arrayStr, lineID);
         }
 
@@ -2329,15 +2329,15 @@ bool32 RSDK::Legacy::v4::ReadSwitchCase(char *text)
                 caseValue[1] = 0;
 
                 int32 v = 0;
-                for (; v < globalVariablesCount; ++v) {
-                    if (StrComp(arrayStr, globalVariables[v].name)) {
+                for (; v < Legacy_globalVariablesCount; ++v) {
+                    if (StrComp(arrayStr, Legacy_globalVariables[v].name)) {
                         caseValue[0] = 0;
                         AppendIntegerToString(caseValue, v);
                         break;
                     }
                 }
 
-                if (v == globalVariablesCount)
+                if (v == Legacy_globalVariablesCount)
                     PrintLog(PRINT_NORMAL, "WARNING: Unknown varName \"%s\", on line %d", arrayStr, lineID);
             }
 
@@ -3228,7 +3228,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_ARRAYPOS5: scriptEng.operands[i] = scriptEng.arrayPosition[5]; break;
                     case VAR_ARRAYPOS6: scriptEng.operands[i] = scriptEng.arrayPosition[6]; break;
                     case VAR_ARRAYPOS7: scriptEng.operands[i] = scriptEng.arrayPosition[7]; break;
-                    case VAR_GLOBAL: scriptEng.operands[i] = globalVariables[arrayVal].value; break;
+                    case VAR_GLOBAL: scriptEng.operands[i] = Legacy_globalVariables[arrayVal].value; break;
                     case VAR_LOCAL: scriptEng.operands[i] = scriptCode[arrayVal]; break;
                     case VAR_OBJECTENTITYPOS: scriptEng.operands[i] = arrayVal; break;
                     case VAR_OBJECTGROUPID: {
@@ -3489,7 +3489,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         int32 y        = entPtr->ypos >> 16;
 
                         if (entPtr->priority == PRIORITY_BOUNDS_SMALL || entPtr->priority == PRIORITY_ACTIVE_SMALL) {
-                            if (stageMode == STAGEMODE_2P) {
+                            if (Legacy_stageMode == STAGEMODE_2P) {
                                 x = entPtr->xpos;
                                 y = entPtr->ypos;
 
@@ -3518,7 +3518,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                             }
                         }
                         else {
-                            if (stageMode == STAGEMODE_2P) {
+                            if (Legacy_stageMode == STAGEMODE_2P) {
                                 x = entPtr->xpos;
                                 y = entPtr->ypos;
 
@@ -3744,7 +3744,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         scriptEng.operands[i] = objectEntityList[arrayVal].values[47];
                         break;
                     }
-                    case VAR_STAGESTATE: scriptEng.operands[i] = stageMode; break;
+                    case VAR_STAGESTATE: scriptEng.operands[i] = Legacy_stageMode; break;
                     case VAR_STAGEACTIVELIST: scriptEng.operands[i] = sceneInfo.activeCategory; break;
                     case VAR_STAGELISTPOS:
                         scriptEng.operands[i] = sceneInfo.listPos - sceneInfo.listCategory[sceneInfo.activeCategory].sceneOffsetStart;
@@ -3860,7 +3860,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_FACEBUFFERD: scriptEng.operands[i] = faceBuffer[arrayVal].d; break;
                     case VAR_FACEBUFFERFLAG: scriptEng.operands[i] = faceBuffer[arrayVal].flag; break;
                     case VAR_FACEBUFFERCOLOR: scriptEng.operands[i] = faceBuffer[arrayVal].color; break;
-                    case VAR_SAVERAM: scriptEng.operands[i] = saveRAM[arrayVal]; break;
+                    case VAR_SAVERAM: scriptEng.operands[i] = Legacy_saveRAM[arrayVal]; break;
                     case VAR_ENGINESTATE: scriptEng.operands[i] = legacy_gameMode; break;
                     case VAR_ENGINELANGUAGE: scriptEng.operands[i] = legacy_language; break;
                     case VAR_ENGINEONLINEACTIVE: scriptEng.operands[i] = legacy_onlineActive; break;
@@ -4683,7 +4683,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             }
             case FUNC_LOADSTAGE:
                 opcodeSize = 0;
-                stageMode  = STAGEMODE_LOAD;
+                Legacy_stageMode  = STAGEMODE_LOAD;
                 break;
             case FUNC_DRAWRECT:
                 opcodeSize = 0;
@@ -5150,7 +5150,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             case FUNC_CALLNATIVEFUNCTION:
                 opcodeSize = 0;
                 if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
-                    void (*func)(void) = (void (*)(void))nativeFunction[scriptEng.operands[0]];
+                    void (*func)(void) = (void (*)(void))Legacy_nativeFunction[scriptEng.operands[0]];
                     if (func)
                         func();
                 }
@@ -5158,12 +5158,12 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             case FUNC_CALLNATIVEFUNCTION2:
                 if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
                     if (StrLength(scriptText)) {
-                        void (*func)(int32 *, char *) = (void (*)(int32 *, char *))nativeFunction[scriptEng.operands[0]];
+                        void (*func)(int32 *, char *) = (void (*)(int32 *, char *))Legacy_nativeFunction[scriptEng.operands[0]];
                         if (func)
                             func(&scriptEng.operands[2], scriptText);
                     }
                     else {
-                        void (*func)(int32 *, int32 *) = (void (*)(int32 *, int32 *))nativeFunction[scriptEng.operands[0]];
+                        void (*func)(int32 *, int32 *) = (void (*)(int32 *, int32 *))Legacy_nativeFunction[scriptEng.operands[0]];
                         if (func)
                             func(&scriptEng.operands[1], &scriptEng.operands[2]);
                     }
@@ -5173,13 +5173,13 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 if (scriptEng.operands[0] >= 0 && scriptEng.operands[0] < LEGACY_v4_NATIIVEFUNCTION_COUNT) {
                     if (StrLength(scriptText)) {
                         void (*func)(int32 *, char *, int32 *, int32 *) =
-                            (void (*)(int32 *, char *, int32 *, int32 *))nativeFunction[scriptEng.operands[0]];
+                            (void (*)(int32 *, char *, int32 *, int32 *))Legacy_nativeFunction[scriptEng.operands[0]];
                         if (func)
                             func(&scriptEng.operands[1], scriptText, &scriptEng.operands[3], &scriptEng.operands[4]);
                     }
                     else {
                         void (*func)(int32 *, int32 *, int32 *, int32 *) =
-                            (void (*)(int32 *, int32 *, int32 *, int32 *))nativeFunction[scriptEng.operands[0]];
+                            (void (*)(int32 *, int32 *, int32 *, int32 *))Legacy_nativeFunction[scriptEng.operands[0]];
                         if (func)
                             func(&scriptEng.operands[1], &scriptEng.operands[2], &scriptEng.operands[3], &scriptEng.operands[4]);
                     }
@@ -5432,7 +5432,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_ARRAYPOS5: scriptEng.arrayPosition[5] = scriptEng.operands[i]; break;
                     case VAR_ARRAYPOS6: scriptEng.arrayPosition[6] = scriptEng.operands[i]; break;
                     case VAR_ARRAYPOS7: scriptEng.arrayPosition[7] = scriptEng.operands[i]; break;
-                    case VAR_GLOBAL: globalVariables[arrayVal].value = scriptEng.operands[i]; break;
+                    case VAR_GLOBAL: Legacy_globalVariables[arrayVal].value = scriptEng.operands[i]; break;
                     case VAR_LOCAL: scriptCode[arrayVal] = scriptEng.operands[i]; break;
                     case VAR_OBJECTENTITYPOS: break;
                     case VAR_OBJECTGROUPID: {
@@ -5834,7 +5834,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         objectEntityList[arrayVal].values[47] = scriptEng.operands[i];
                         break;
                     }
-                    case VAR_STAGESTATE: stageMode = scriptEng.operands[i]; break;
+                    case VAR_STAGESTATE: Legacy_stageMode = scriptEng.operands[i]; break;
                     case VAR_STAGEACTIVELIST: {
                         int32 listID = scriptEng.operands[i];
                         if (listID < sceneInfo.categoryCount) {
@@ -5993,7 +5993,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_FACEBUFFERD: faceBuffer[arrayVal].d = scriptEng.operands[i]; break;
                     case VAR_FACEBUFFERFLAG: faceBuffer[arrayVal].flag = scriptEng.operands[i]; break;
                     case VAR_FACEBUFFERCOLOR: faceBuffer[arrayVal].color = scriptEng.operands[i]; break;
-                    case VAR_SAVERAM: saveRAM[arrayVal] = scriptEng.operands[i]; break;
+                    case VAR_SAVERAM: Legacy_saveRAM[arrayVal] = scriptEng.operands[i]; break;
                     case VAR_ENGINESTATE: legacy_gameMode = scriptEng.operands[i]; break;
                     case VAR_ENGINELANGUAGE: legacy_language = scriptEng.operands[i]; break;
                     case VAR_ENGINEONLINEACTIVE: legacy_onlineActive = scriptEng.operands[i]; break;

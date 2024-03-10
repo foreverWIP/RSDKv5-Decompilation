@@ -2,8 +2,8 @@ use crate::*;
 
 use self::engine_core::math::RSDK_PI;
 
-#[repr(C)]
-enum LegacyRetroStates {
+#[repr(i32)]
+pub enum LegacyRetroStates {
     ENGINE_DEVMENU = 0,
     ENGINE_MAINGAME = 1,
     ENGINE_INITDEVMENU = 2,
@@ -12,7 +12,7 @@ enum LegacyRetroStates {
 }
 
 #[no_mangle]
-static mut legacy_gameMode: int32 = LegacyRetroStates::ENGINE_MAINGAME as i32;
+pub static mut legacy_gameMode: LegacyRetroStates = LegacyRetroStates::ENGINE_MAINGAME;
 #[no_mangle]
 static mut legacy_usingBytecode: bool32 = false32;
 

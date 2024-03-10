@@ -7,7 +7,7 @@ bool32 RSDK::Legacy::v3::LoadGameConfig(const char *filepath)
     char strBuffer[0x40];
     StrCopy(gameVerInfo.gameTitle, "Retro-Engine"); // this is the default window name
 
-    globalVariablesCount = 0;
+    Legacy_globalVariablesCount = 0;
 #if RETRO_USE_MOD_LOADER
     modSettings.playerCount = 0;
 #endif
@@ -32,16 +32,16 @@ bool32 RSDK::Legacy::v3::LoadGameConfig(const char *filepath)
             ReadString(&info, strBuffer);
         }
 
-        globalVariablesCount = ReadInt8(&info);
-        for (int32 v = 0; v < globalVariablesCount; ++v) {
+        Legacy_globalVariablesCount = ReadInt8(&info);
+        for (int32 v = 0; v < Legacy_globalVariablesCount; ++v) {
             // Read Variable Name
-            ReadString(&info, globalVariables[v].name);
+            ReadString(&info, Legacy_globalVariables[v].name);
 
             // Read Variable Value
-            globalVariables[v].value = ReadInt8(&info) << 24;
-            globalVariables[v].value |= ReadInt8(&info) << 16;
-            globalVariables[v].value |= ReadInt8(&info) << 8;
-            globalVariables[v].value |= ReadInt8(&info) << 0;
+            Legacy_globalVariables[v].value = ReadInt8(&info) << 24;
+            Legacy_globalVariables[v].value |= ReadInt8(&info) << 16;
+            Legacy_globalVariables[v].value |= ReadInt8(&info) << 8;
+            Legacy_globalVariables[v].value |= ReadInt8(&info) << 0;
         }
 
         // Read SFX
@@ -167,13 +167,13 @@ bool32 RSDK::Legacy::v3::LoadGameConfig(const char *filepath)
 
 #if RETRO_USE_MOD_LOADER
         v3::LoadGameXML();
-        SetGlobalVariableByName("Options.DevMenuFlag", engine.devMenu ? 1 : 0);
-        SetGlobalVariableByName("Engine.Standalone", 0);
-        SetGlobalVariableByName("game.hasPlusDLC", !RSDK_AUTOBUILD);
+        Legacy_SetGlobalVariableByName("Options.DevMenuFlag", engine.devMenu ? 1 : 0);
+        Legacy_SetGlobalVariableByName("Engine.Standalone", 0);
+        Legacy_SetGlobalVariableByName("game.hasPlusDLC", !RSDK_AUTOBUILD);
 #endif
 
-        SetGlobalVariableByName("Engine.PlatformId", legacy_gamePlatformID);
-        SetGlobalVariableByName("Engine.DeviceType", legacy_deviceType);
+        Legacy_SetGlobalVariableByName("Engine.PlatformId", legacy_gamePlatformID);
+        Legacy_SetGlobalVariableByName("Engine.DeviceType", legacy_deviceType);
 
         legacy_usingBytecode = false;
         InitFileInfo(&info);
@@ -221,7 +221,7 @@ void RSDK::Legacy::v3::ProcessEngine()
                 ResetCurrentStageFolder();
                 sceneInfo.activeCategory = 0;
                 legacy_gameMode                 = ENGINE_MAINGAME;
-                stageMode                = STAGEMODE_LOAD;
+                Legacy_stageMode                = STAGEMODE_LOAD;
                 sceneInfo.listPos        = 0;
             }
             else if (controller[CONT_ANY].keyC.press) {
@@ -230,7 +230,7 @@ void RSDK::Legacy::v3::ProcessEngine()
                 RefreshModFolders();
 #endif
                 legacy_gameMode  = ENGINE_MAINGAME;
-                stageMode = STAGEMODE_LOAD;
+                Legacy_stageMode = STAGEMODE_LOAD;
             }
             break;
         }
@@ -346,9 +346,9 @@ enum RetroEngineCallbacks {
 void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
 {
     // Sonic Origins Params
-    int32 notifyParam1 = GetGlobalVariableByName("game.callbackParam0");
-    int32 notifyParam2 = GetGlobalVariableByName("game.callbackParam1");
-    int32 notifyParam3 = GetGlobalVariableByName("game.callbackParam2");
+    int32 notifyParam1 = Legacy_GetGlobalVariableByName("game.callbackParam0");
+    int32 notifyParam2 = Legacy_GetGlobalVariableByName("game.callbackParam1");
+    int32 notifyParam3 = Legacy_GetGlobalVariableByName("game.callbackParam2");
 
     switch (callbackID) {
         default: PrintLog(PRINT_NORMAL, "Callback: Unknown (%d)", callbackID); break;
@@ -363,12 +363,12 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
             break;
         case CALLBACK_RESTART_SELECTED:
             PrintLog(PRINT_NORMAL, "Callback: Restart Selected");
-            stageMode = STAGEMODE_LOAD;
+            Legacy_stageMode = STAGEMODE_LOAD;
             break;
         case CALLBACK_EXIT_SELECTED:
             sceneInfo.activeCategory = 0;
             sceneInfo.listPos        = 0;
-            stageMode                = STAGEMODE_LOAD;
+            Legacy_stageMode                = STAGEMODE_LOAD;
             break;
         case CALLBACK_BUY_FULL_GAME_SELECTED:
             legacy_gameMode = ENGINE_EXITGAME;
@@ -403,7 +403,7 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
             PrintLog(PRINT_NORMAL, "Callback: Age Gate");
             // Newer versions of the game wont continue without this
             // Thanks to Sappharad for pointing this out
-            SetGlobalVariableByName("HaveLoadAllGDPRValue", 1);
+            Legacy_SetGlobalVariableByName("HaveLoadAllGDPRValue", 1);
             break;
 
         // Sonic Origins
@@ -412,7 +412,7 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
         case NOTIFY_HUD_ENABLE: PrintLog(PRINT_NORMAL, "NOTIFY: HUDEnable() -> %d", notifyParam1); break;
         case NOTIFY_ADD_COIN:
             PrintLog(PRINT_NORMAL, "NOTIFY: AddCoin() -> %d", notifyParam1);
-            SetGlobalVariableByName("game.coinCount", GetGlobalVariableByName("game.coinCount") + notifyParam1);
+            Legacy_SetGlobalVariableByName("game.coinCount", Legacy_GetGlobalVariableByName("game.coinCount") + notifyParam1);
             break;
         case NOTIFY_KILL_ENEMY: PrintLog(PRINT_NORMAL, "NOTIFY: KillEnemy() -> %d", notifyParam1); break;
         case NOTIFY_SAVESLOT_SELECT: PrintLog(PRINT_NORMAL, "NOTIFY: SaveSlotSelect() -> %d", notifyParam1); break;
@@ -434,25 +434,25 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
             sceneInfo.activeCategory = 0;
             sceneInfo.listPos        = 0;
             legacy_gameMode                 = ENGINE_MAINGAME;
-            stageMode                = STAGEMODE_LOAD;
+            Legacy_stageMode                = STAGEMODE_LOAD;
             break;
         case NOTIFY_STATS_PARAM_1: PrintLog(PRINT_NORMAL, "NOTIFY: StatsParam1() -> %d, %d, %d", notifyParam1, notifyParam2, notifyParam3); break;
         case NOTIFY_STATS_PARAM_2: PrintLog(PRINT_NORMAL, "NOTIFY: StatsParam2() -> %d", notifyParam1); break;
         case NOTIFY_CHARACTER_SELECT:
             PrintLog(PRINT_NORMAL, "NOTIFY: CharacterSelect() -> %d", notifyParam1);
-            SetGlobalVariableByName("game.callbackResult", 1);
-            SetGlobalVariableByName("game.continueFlag", 0);
+            Legacy_SetGlobalVariableByName("game.callbackResult", 1);
+            Legacy_SetGlobalVariableByName("game.continueFlag", 0);
             break;
         case NOTIFY_SPECIAL_RETRY:
             PrintLog(PRINT_NORMAL, "NOTIFY: SpecialRetry() -> %d, %d, %d", notifyParam1, notifyParam2, notifyParam3);
-            SetGlobalVariableByName("game.callbackResult", 1);
+            Legacy_SetGlobalVariableByName("game.callbackResult", 1);
             break;
         case NOTIFY_TOUCH_CHECKPOINT: PrintLog(PRINT_NORMAL, "NOTIFY: TouchCheckpoint() -> %d", notifyParam1); break;
         case NOTIFY_ACT_FINISH: PrintLog(PRINT_NORMAL, "NOTIFY: ActFinish() -> %d", notifyParam1); break;
         case NOTIFY_1P_VS_SELECT: PrintLog(PRINT_NORMAL, "NOTIFY: 1PVSSelect() -> %d", notifyParam1); break;
         case NOTIFY_CONTROLLER_SUPPORT:
             PrintLog(PRINT_NORMAL, "NOTIFY: ControllerSupport() -> %d", notifyParam1);
-            SetGlobalVariableByName("game.callbackResult", 1);
+            Legacy_SetGlobalVariableByName("game.callbackResult", 1);
             break;
         case NOTIFY_STAGE_RETRY: PrintLog(PRINT_NORMAL, "NOTIFY: StageRetry() -> %d, %d, %d", notifyParam1, notifyParam2, notifyParam3); break;
         case NOTIFY_SOUND_TRACK: PrintLog(PRINT_NORMAL, "NOTIFY: SoundTrack() -> %d", notifyParam1); break;
@@ -492,7 +492,7 @@ void RSDK::Legacy::v3::RetroEngineCallback(int32 callbackID)
             PrintLog(PRINT_NORMAL, "Callback: onShowRewardAds(0)");
 
             // small hack to prevent a softlock
-            SetGlobalVariableByName("RewardAdCallback", 1);
+            Legacy_SetGlobalVariableByName("RewardAdCallback", 1);
             break;
         case CALLBACK_ONSHOWBANNER_2: PrintLog(PRINT_NORMAL, "Callback: onShowBanner(4, 0)"); break;
 
@@ -574,9 +574,9 @@ void RSDK::Legacy::v3::LoadXMLVariables(const tinyxml2::XMLElement *gameElement)
             if (valAttr)
                 varValue = valAttr->IntValue();
 
-            StrCopy(globalVariables[globalVariablesCount].name, varName);
-            globalVariables[globalVariablesCount].value = varValue;
-            globalVariablesCount++;
+            StrCopy(Legacy_globalVariables[Legacy_globalVariablesCount].name, varName);
+            Legacy_globalVariables[Legacy_globalVariablesCount].value = varValue;
+            Legacy_globalVariablesCount++;
         }
     }
 }

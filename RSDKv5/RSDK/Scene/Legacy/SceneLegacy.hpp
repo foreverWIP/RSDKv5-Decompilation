@@ -2,6 +2,10 @@
 
 #include "v4/SceneLegacyv4.hpp"
 
+extern "C" {
+    extern int32 Legacy_stageMode;
+}
+
 namespace Legacy
 {
 #define LEGACY_LAYER_COUNT    (9)
@@ -131,8 +135,6 @@ struct LineScroll {
     int32 deform[LEGACY_PARALLAX_COUNT];
     uint8 entryCount;
 };
-
-extern int32 stageMode;
 
 extern Camera cameras[2];
 extern Camera *currentCamera;

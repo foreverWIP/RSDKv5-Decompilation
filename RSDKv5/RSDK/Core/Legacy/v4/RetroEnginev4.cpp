@@ -5,7 +5,7 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
     char strBuffer[0x40];
     StrCopy(gameVerInfo.gameTitle, "Retro-Engine"); // this is the default window name
 
-    globalVariablesCount = 0;
+    Legacy_globalVariablesCount = 0;
 #if RETRO_USE_MOD_LOADER
     modSettings.playerCount = 0;
 #endif
@@ -35,16 +35,16 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
             ReadString(&info, strBuffer);
         }
 
-        globalVariablesCount = ReadInt8(&info);
-        for (int32 v = 0; v < globalVariablesCount; ++v) {
+        Legacy_globalVariablesCount = ReadInt8(&info);
+        for (int32 v = 0; v < Legacy_globalVariablesCount; ++v) {
             // Read Variable Name
-            ReadString(&info, globalVariables[v].name);
+            ReadString(&info, Legacy_globalVariables[v].name);
 
             // Read Variable Value
-            globalVariables[v].value = ReadInt8(&info) << 0;
-            globalVariables[v].value |= ReadInt8(&info) << 8;
-            globalVariables[v].value |= ReadInt8(&info) << 16;
-            globalVariables[v].value |= ReadInt8(&info) << 24;
+            Legacy_globalVariables[v].value = ReadInt8(&info) << 0;
+            Legacy_globalVariables[v].value |= ReadInt8(&info) << 8;
+            Legacy_globalVariables[v].value |= ReadInt8(&info) << 16;
+            Legacy_globalVariables[v].value |= ReadInt8(&info) << 24;
         }
 
         // Read SFX
@@ -171,11 +171,11 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
 
 #if RETRO_USE_MOD_LOADER
         v4::LoadGameXML();
-        SetGlobalVariableByName("options.devMenuFlag", engine.devMenu ? 1 : 0);
-        SetGlobalVariableByName("engine.standalone", 0);
+        Legacy_SetGlobalVariableByName("options.devMenuFlag", engine.devMenu ? 1 : 0);
+        Legacy_SetGlobalVariableByName("engine.standalone", 0);
 #endif
 
-        SetGlobalVariableByName("game.hasPlusDLC", !RSDK_AUTOBUILD);
+        Legacy_SetGlobalVariableByName("game.hasPlusDLC", !RSDK_AUTOBUILD);
 
         legacy_usingBytecode = false;
         InitFileInfo(&info);
@@ -186,9 +186,9 @@ bool32 RSDK::Legacy::v4::LoadGameConfig(const char *filepath)
     }
 
     // These need to be set every time its reloaded
-    nativeFunctionCount = 0;
+    Legacy_nativeFunctionCount = 0;
 
-    nativeFunctionCount = 0;
+    Legacy_nativeFunctionCount = 0;
     AddNativeFunction("SetAchievement", SetAchievement);
     AddNativeFunction("SetLeaderboard", SetLeaderboard);
     AddNativeFunction("HapticEffect", HapticEffect);
@@ -280,7 +280,7 @@ void RSDK::Legacy::v4::ProcessEngine()
                 ResetCurrentStageFolder();
                 sceneInfo.activeCategory = 0;
                 legacy_gameMode                 = ENGINE_MAINGAME;
-                stageMode                = STAGEMODE_LOAD;
+                Legacy_stageMode                = STAGEMODE_LOAD;
                 sceneInfo.listPos        = 0;
             }
             else if (controller[CONT_ANY].keyC.press) {
@@ -289,7 +289,7 @@ void RSDK::Legacy::v4::ProcessEngine()
                 RefreshModFolders();
 #endif
                 legacy_gameMode  = ENGINE_MAINGAME;
-                stageMode = STAGEMODE_LOAD;
+                Legacy_stageMode = STAGEMODE_LOAD;
             }
             break;
         }
@@ -302,7 +302,7 @@ void RSDK::Legacy::v4::ProcessEngine()
             sceneInfo.activeCategory = 0;
             sceneInfo.listPos        = 0;
             legacy_gameMode                 = ENGINE_MAINGAME;
-            stageMode                = STAGEMODE_LOAD;
+            Legacy_stageMode                = STAGEMODE_LOAD;
             break;
 
         default: break;
@@ -379,9 +379,9 @@ void RSDK::Legacy::v4::LoadXMLVariables(const tinyxml2::XMLElement *gameElement)
             if (valAttr)
                 varValue = valAttr->IntValue();
 
-            StrCopy(globalVariables[globalVariablesCount].name, varName);
-            globalVariables[globalVariablesCount].value = varValue;
-            globalVariablesCount++;
+            StrCopy(Legacy_globalVariables[Legacy_globalVariablesCount].name, varName);
+            Legacy_globalVariables[Legacy_globalVariablesCount].value = varValue;
+            Legacy_globalVariablesCount++;
         }
     }
 }

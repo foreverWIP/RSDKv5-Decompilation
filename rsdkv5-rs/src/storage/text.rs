@@ -29,11 +29,7 @@ pub fn gen_hash_md5(message: &str) -> HashMD5 {
 
 #[no_mangle]
 #[export_name = "GenerateHashMD5"]
-pub extern "C" fn gen_hash_md5_buf(
-    buffer: *mut uint32,
-    textBuffer: *const i8,
-    textBufferLen: int32,
-) {
+pub extern "C" fn gen_hash_md5_buf(buffer: *mut uint32, textBuffer: *mut i8, textBufferLen: int32) {
     unsafe {
         let c_str = {
             assert!(!textBuffer.is_null());
@@ -144,4 +140,32 @@ pub extern "C" fn compare_strings(
     }
 
     return true32;
+}
+
+#[cfg(feature = "version_u")]
+#[no_mangle]
+#[export_name = "StrComp"]
+pub extern "C" fn str_comp(mut stringA: *const i8, mut stringB: *const i8) -> bool {
+    let mut _match: bool = true;
+    let mut finished: bool = false;
+    unsafe {
+        while (!finished) {
+            if (*stringA == *stringB
+                || *stringA == *stringB + (' ' as i8)
+                || *stringA == *stringB - (' ' as i8))
+            {
+                if *stringA != 0 {
+                    stringA = stringA.wrapping_add(1);
+                    stringB = stringB.wrapping_add(1);
+                } else {
+                    finished = true;
+                }
+            } else {
+                _match = false;
+                finished = true;
+            }
+        }
+    }
+
+    return _match;
 }

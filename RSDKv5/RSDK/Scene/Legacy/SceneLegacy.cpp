@@ -2,8 +2,6 @@
 #include "v3/SceneLegacyv3.cpp"
 #include "v4/SceneLegacyv4.cpp"
 
-int32 RSDK::Legacy::stageMode = 0;
-
 RSDK::Legacy::Camera RSDK::Legacy::cameras[2];
 RSDK::Legacy::Camera *RSDK::Legacy::currentCamera = NULL;
 
@@ -330,7 +328,7 @@ void RSDK::Legacy::ProcessInput()
 
     anyPress = controller->keyA.press || controller->keyB.press || controller->keyC.press || controller->keyX.press || controller->keyY.press
                || controller->keyZ.press || controller->keyStart.press || controller->keySelect.press;
-    SetGlobalVariableByName("input.pressButton", anyPress);
+    Legacy_SetGlobalVariableByName("input.pressButton", anyPress);
 }
 
 void RSDK::Legacy::ProcessSceneTimer()

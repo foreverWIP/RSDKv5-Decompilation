@@ -8,6 +8,10 @@
 
 #include <stdarg.h>
 
+extern "C" {
+    void PrintLog(int32 mode, const char *message, ...);
+}
+
 namespace RSDK
 {
 
@@ -32,8 +36,6 @@ enum TouchCornerButtons {
 extern bool32 engineDebugMode;
 extern bool32 useEndLine;
 extern char outputString[0x400];
-
-void PrintLog(int32 mode, const char *message, ...);
 
 #if !RETRO_REV02
 enum PrintMessageTypes {

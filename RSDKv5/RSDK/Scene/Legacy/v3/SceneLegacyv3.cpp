@@ -35,7 +35,7 @@ void RSDK::Legacy::v3::InitFirstStage()
     LoadGameXML(true);
 #endif
 
-    stageMode = STAGEMODE_LOAD;
+    Legacy_stageMode = STAGEMODE_LOAD;
     legacy_gameMode  = ENGINE_MAINGAME;
 }
 
@@ -46,7 +46,7 @@ void RSDK::Legacy::v3::ProcessStage()
     debugHitboxCount = 0;
 #endif
 
-    switch (stageMode) {
+    switch (Legacy_stageMode) {
         case STAGEMODE_LOAD: // Startup
             Legacy_fadeMode = 0;
             Legacy_SetActivePalette(0, 0, 256);
@@ -68,13 +68,13 @@ void RSDK::Legacy::v3::ProcessStage()
 
 #if RSDK_AUTOBUILD
             // Prevent playing as Knuckles or Amy if on autobuilds
-            if (GetGlobalVariableByName("PLAYER_KNUCKLES") && playerListPos == GetGlobalVariableByName("PLAYER_KNUCKLES"))
+            if (Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES"))
                 playerListPos = 0;
-            else if (GetGlobalVariableByName("PLAYER_KNUCKLES_TAILS") && playerListPos == GetGlobalVariableByName("PLAYER_KNUCKLES_TAILS"))
+            else if (GetGlobalVariableByName("PLAYER_KNUCKLES_TAILS") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES_TAILS"))
                 playerListPos = 0;
-            else if (GetGlobalVariableByName("PLAYER_AMY") && playerListPos == GetGlobalVariableByName("PLAYER_AMY"))
+            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY"))
                 playerListPos = 0;
-            else if (GetGlobalVariableByName("PLAYER_AMY_TAILS") && playerListPos == GetGlobalVariableByName("PLAYER_AMY_TAILS"))
+            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS"))
                 playerListPos = 0;
 #endif
 
@@ -92,7 +92,7 @@ void RSDK::Legacy::v3::ProcessStage()
             stageMilliseconds = 0;
             stageSeconds      = 0;
             stageMinutes      = 0;
-            stageMode         = STAGEMODE_NORMAL;
+            Legacy_stageMode         = STAGEMODE_NORMAL;
 
             sceneInfo.currentScreenID = 0;
             currentScreen             = screens;
@@ -119,7 +119,7 @@ void RSDK::Legacy::v3::ProcessStage()
             ProcessInput();
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode = STAGEMODE_PAUSED;
+                Legacy_stageMode = STAGEMODE_PAUSED;
                 PauseSound();
             }
 
@@ -191,7 +191,7 @@ void RSDK::Legacy::v3::ProcessStage()
 #endif
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode = STAGEMODE_NORMAL;
+                Legacy_stageMode = STAGEMODE_NORMAL;
                 ResumeSound();
             }
             break;
@@ -229,7 +229,7 @@ void RSDK::Legacy::v3::ProcessStage()
             }
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode -= STAGEMODE_STEPOVER;
+                Legacy_stageMode -= STAGEMODE_STEPOVER;
                 ResumeSound();
             }
             break;
@@ -270,7 +270,7 @@ void RSDK::Legacy::v3::ProcessStage()
             }
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode -= STAGEMODE_STEPOVER;
+                Legacy_stageMode -= STAGEMODE_STEPOVER;
                 ResumeSound();
             }
             break;

@@ -1,3 +1,4 @@
+pub mod legacy;
 pub mod text;
 
 use crate::*;

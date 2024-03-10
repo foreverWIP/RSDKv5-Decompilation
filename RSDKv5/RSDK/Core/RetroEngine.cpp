@@ -202,7 +202,7 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
 
                         SceneInfo pre      = sceneInfo;
                         int32 preGameMode  = legacy_gameMode;
-                        int32 preStageMode = RSDK::Legacy::stageMode;
+                        int32 preStageMode = Legacy_stageMode;
 
                         // Clear some stuff
                         sceneInfo.listData     = NULL;
@@ -1363,7 +1363,7 @@ void RSDK::ProcessDebugCommands()
     }
 
 #if RETRO_REV0U
-    int32 state          = engine.version == 5 ? sceneInfo.state : Legacy::stageMode;
+    int32 state          = engine.version == 5 ? sceneInfo.state : Legacy_stageMode;
     const int32 stepOver = engine.version == 5 ? (int32)ENGINESTATE_STEPOVER : (int32)Legacy::STAGEMODE_STEPOVER;
 #else
     uint8 state = sceneInfo.state;
@@ -1403,7 +1403,7 @@ void RSDK::ProcessDebugCommands()
 
 #if RETRO_REV0U
     if (engine.version != 5)
-        Legacy::stageMode = state;
+        Legacy_stageMode = state;
     else
 #endif
         sceneInfo.state = state;

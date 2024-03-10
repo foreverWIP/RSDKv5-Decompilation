@@ -3040,12 +3040,12 @@ void RSDK::Legacy::v3::EnemyCollision(int32 left, int32 top, int32 right, int32 
     int32 hammerHitboxBottom = 0;
 
 #if !RETRO_USE_ORIGINAL_CODE
-    bool32 miniPlayerFlag = GetGlobalVariableByName("Mini_PlayerFlag");
-    int8 playerAmy        = GetGlobalVariableByName("PLAYER_AMY") ? GetGlobalVariableByName("PLAYER_AMY") : 5;
-    int8 aniHammerJump    = GetGlobalVariableByName("ANI_HAMMER_JUMP") ? GetGlobalVariableByName("ANI_HAMMER_JUMP") : 45;
-    int8 aniHammerDash    = GetGlobalVariableByName("ANI_HAMMER_DASH") ? GetGlobalVariableByName("ANI_HAMMER_DASH") : 46;
+    bool32 miniPlayerFlag = Legacy_GetGlobalVariableByName("Mini_PlayerFlag");
+    int8 playerAmy        = Legacy_GetGlobalVariableByName("PLAYER_AMY") ? Legacy_GetGlobalVariableByName("PLAYER_AMY") : 5;
+    int8 aniHammerJump    = Legacy_GetGlobalVariableByName("ANI_HAMMER_JUMP") ? Legacy_GetGlobalVariableByName("ANI_HAMMER_JUMP") : 45;
+    int8 aniHammerDash    = Legacy_GetGlobalVariableByName("ANI_HAMMER_DASH") ? Legacy_GetGlobalVariableByName("ANI_HAMMER_DASH") : 46;
 #else
-    bool32 mini_PlayerFlag = globalVariables[62];
+    bool32 mini_PlayerFlag = Legacy_globalVariables[62];
     int8 playerAmy         = 5;
     int8 aniHammerJump     = 45;
     int8 aniHammerDash     = 46;

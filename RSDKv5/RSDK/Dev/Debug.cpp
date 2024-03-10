@@ -27,7 +27,7 @@ DevMenu RSDK::devMenu = DevMenu();
 
 inline void PrintConsole(const char *message) { printf("%s", message); }
 
-void RSDK::PrintLog(int32 mode, const char *message, ...)
+void PrintLog(int32 mode, const char *message, ...)
 {
 #ifndef RETRO_DISABLE_LOG
     if (engineDebugMode) {
@@ -461,7 +461,7 @@ void RSDK::DevMenu_MainMenu()
 #if RETRO_USE_MOD_LOADER && RETRO_REV0U
         if (devMenu.selection <= 1 && devMenu.startingVersion != engine.version) {
             // goofy aaa hack
-            RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_NORMAL;
+            Legacy_stageMode = RSDK::Legacy::STAGEMODE_NORMAL;
             devMenu.selection       = 0;
         }
 #endif
@@ -477,7 +477,7 @@ void RSDK::DevMenu_MainMenu()
                     case 4:
                     case 3:
                         legacy_gameMode  = RSDK::Legacy::ENGINE_MAINGAME;
-                        RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD;
+                        Legacy_stageMode = RSDK::Legacy::STAGEMODE_LOAD;
                         break;
                 }
 #else
@@ -806,7 +806,7 @@ void RSDK::DevMenu_SceneSelectMenu()
                     }
 #endif
                     legacy_gameMode  = RSDK::Legacy::ENGINE_MAINGAME;
-                    RSDK::Legacy::stageMode = RSDK::Legacy::STAGEMODE_LOAD;
+                    Legacy_stageMode = RSDK::Legacy::STAGEMODE_LOAD;
                     break;
             }
 #else

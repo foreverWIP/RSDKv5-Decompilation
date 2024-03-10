@@ -885,7 +885,7 @@ void RSDK::Legacy::v3::CheckAliasText(char *text)
 
 #if !RETRO_USE_ORIGINAL_CODE
     if (aliasCount >= LEGACY_v3_ALIAS_COUNT) {
-        RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases\nFILE: %s", scriptFile);
+        PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Too many aliases\nFILE: %s", scriptFile);
         legacy_gameMode = ENGINE_SCRIPTERROR;
         return;
     }
@@ -1074,7 +1074,7 @@ void RSDK::Legacy::v3::ConvertFunctionText(char *text)
     }
 
     if (opcode <= 0) {
-        RSDK::PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Opcode not found\nOPCODE: %s\nLINE: %d\nFILE: %s", funcName, lineID, scriptFile);
+        PrintLog(PRINT_SCRIPTERR, "SCRIPT ERROR: Opcode not found\nOPCODE: %s\nLINE: %d\nFILE: %s", funcName, lineID, scriptFile);
 
         legacy_gameMode = ENGINE_SCRIPTERROR;
     }
@@ -1146,8 +1146,8 @@ void RSDK::Legacy::v3::ConvertFunctionText(char *text)
             }
 
             // Eg: TempValue0 = Game.Variable
-            for (int32 v = 0; v < globalVariablesCount; ++v) {
-                if (StrComp(funcName, globalVariables[v].name)) {
+            for (int32 v = 0; v < Legacy_globalVariablesCount; ++v) {
+                if (StrComp(funcName, Legacy_globalVariables[v].name)) {
                     StrCopy(funcName, "Global");
                     arrayStr[0] = 0;
                     AppendIntegerToString(arrayStr, v);
@@ -2111,7 +2111,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_CHECKRESULT: scriptEng.operands[i] = scriptEng.checkResult; break;
                     case VAR_ARRAYPOS0: scriptEng.operands[i] = scriptEng.arrayPosition[0]; break;
                     case VAR_ARRAYPOS1: scriptEng.operands[i] = scriptEng.arrayPosition[1]; break;
-                    case VAR_GLOBAL: scriptEng.operands[i] = globalVariables[arrayVal].value; break;
+                    case VAR_GLOBAL: scriptEng.operands[i] = Legacy_globalVariables[arrayVal].value; break;
                     case VAR_OBJECTENTITYNO: scriptEng.operands[i] = arrayVal; break;
                     case VAR_OBJECTTYPE: {
                         scriptEng.operands[i] = objectEntityList[arrayVal].type;
@@ -2591,7 +2591,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         }
                         break;
                     }
-                    case VAR_STAGESTATE: scriptEng.operands[i] = stageMode; break;
+                    case VAR_STAGESTATE: scriptEng.operands[i] = Legacy_stageMode; break;
                     case VAR_STAGEACTIVELIST: scriptEng.operands[i] = sceneInfo.activeCategory; break;
                     case VAR_STAGELISTPOS:
                         scriptEng.operands[i] = sceneInfo.listPos - sceneInfo.listCategory[sceneInfo.activeCategory].sceneOffsetStart;
@@ -2692,7 +2692,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_ENGINESTATE: scriptEng.operands[i] = legacy_gameMode; break;
                     case VAR_STAGEDEBUGMODE: scriptEng.operands[i] = debugMode; break;
                     case VAR_ENGINEMESSAGE: scriptEng.operands[i] = engineMessage; break;
-                    case VAR_SAVERAM: scriptEng.operands[i] = saveRAM[arrayVal]; break;
+                    case VAR_SAVERAM: scriptEng.operands[i] = Legacy_saveRAM[arrayVal]; break;
                     case VAR_ENGINELANGUAGE: scriptEng.operands[i] = legacy_language; break;
                     case VAR_OBJECTSPRITESHEET: {
                         scriptEng.operands[i] = objectScriptList[objectEntityList[arrayVal].type].spriteSheetID;
@@ -3383,7 +3383,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             }
             case FUNC_LOADSTAGE:
                 opcodeSize = 0;
-                stageMode  = STAGEMODE_LOAD;
+                Legacy_stageMode  = STAGEMODE_LOAD;
                 break;
             case FUNC_DRAWRECT:
                 opcodeSize = 0;
@@ -3923,7 +3923,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_CHECKRESULT: scriptEng.checkResult = scriptEng.operands[i]; break;
                     case VAR_ARRAYPOS0: scriptEng.arrayPosition[0] = scriptEng.operands[i]; break;
                     case VAR_ARRAYPOS1: scriptEng.arrayPosition[1] = scriptEng.operands[i]; break;
-                    case VAR_GLOBAL: globalVariables[arrayVal].value = scriptEng.operands[i]; break;
+                    case VAR_GLOBAL: Legacy_globalVariables[arrayVal].value = scriptEng.operands[i]; break;
                     case VAR_OBJECTENTITYNO: break;
                     case VAR_OBJECTTYPE: {
                         objectEntityList[arrayVal].type = scriptEng.operands[i];
@@ -4324,7 +4324,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         break;
                     }
                     case VAR_PLAYEROUTOFBOUNDS: break;
-                    case VAR_STAGESTATE: stageMode = scriptEng.operands[i]; break;
+                    case VAR_STAGESTATE: Legacy_stageMode = scriptEng.operands[i]; break;
                     case VAR_STAGEACTIVELIST: {
                         int32 listSlots[] = { 0, 1, 3, 2 };
 
@@ -4488,7 +4488,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_ENGINESTATE: legacy_gameMode = scriptEng.operands[i]; break;
                     case VAR_STAGEDEBUGMODE: debugMode = scriptEng.operands[i]; break;
                     case VAR_ENGINEMESSAGE: break;
-                    case VAR_SAVERAM: saveRAM[arrayVal] = scriptEng.operands[i]; break;
+                    case VAR_SAVERAM: Legacy_saveRAM[arrayVal] = scriptEng.operands[i]; break;
                     case VAR_ENGINELANGUAGE: legacy_language = scriptEng.operands[i]; break;
                     case VAR_OBJECTSPRITESHEET: {
                         objectScriptList[objectEntityList[arrayVal].type].spriteSheetID = scriptEng.operands[i];

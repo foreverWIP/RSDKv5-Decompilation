@@ -1,4 +1,5 @@
 pub mod collision;
+pub mod legacy;
 
 use crate::*;
 
@@ -141,7 +142,7 @@ pub struct SceneInfo {
     timeCounter: int32,
     currentDrawGroup: int32,
     currentScreenID: int32,
-    listPos: uint16,
+    pub listPos: uint16,
     entitySlot: uint16,
     createSlot: uint16,
     classCount: uint16,
@@ -150,7 +151,7 @@ pub struct SceneInfo {
     debugMode: bool32,
     useGlobalObjects: bool32,
     timeEnabled: bool32,
-    activeCategory: uint8,
+    pub activeCategory: uint8,
     categoryCount: uint8,
     state: uint8,
     #[cfg(feature = "version_2")]

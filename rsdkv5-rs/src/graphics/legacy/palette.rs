@@ -198,7 +198,7 @@ pub extern "C" fn load_palette(
     endIndex: int32,
 ) {
     let fullPath =
-        "Data/Palettes/".to_owned() + unsafe { CStr::from_ptr(filePath).to_str().unwrap() };
+        "Data/Palettes/".to_owned() + unsafe { CStr::from_ptr(filePath).to_str().unwrap() } + "\0";
 
     let mut info = DEFAULT_FILEINFO;
     init_file_info(&mut info);

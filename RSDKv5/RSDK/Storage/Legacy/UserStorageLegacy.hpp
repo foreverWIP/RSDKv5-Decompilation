@@ -17,22 +17,24 @@ struct GlobalVariable {
     int32 value;
 };
 
-extern void *nativeFunction[LEGACY_v4_NATIIVEFUNCTION_COUNT];
-extern int32 nativeFunctionCount;
+extern "C" {
+    extern void *Legacy_nativeFunction[LEGACY_v4_NATIIVEFUNCTION_COUNT];
+    extern int32 Legacy_nativeFunctionCount;
 
-extern int32 globalVariablesCount;
-extern GlobalVariable globalVariables[LEGACY_GLOBALVAR_COUNT];
+    extern int32 Legacy_globalVariablesCount;
+    extern GlobalVariable Legacy_globalVariables[LEGACY_GLOBALVAR_COUNT];
 
-extern int32 saveRAM[LEGACY_SAVEDATA_SIZE];
+    extern int32 Legacy_saveRAM[LEGACY_SAVEDATA_SIZE];
 
-int32 GetGlobalVariableByName(const char *name);
-void SetGlobalVariableByName(const char *name, int32 value);
-int32 GetGlobalVariableID(const char *name);
+    int32 Legacy_GetGlobalVariableByName(const char *name);
+    void Legacy_SetGlobalVariableByName(const char *name, int32 value);
+    int32 Legacy_GetGlobalVariableID(const char *name);
+}
 
 #define AddNativeFunction(name, funcPtr)                                                                                                             \
-    if (nativeFunctionCount < LEGACY_v4_NATIIVEFUNCTION_COUNT) {                                                                                     \
-        SetGlobalVariableByName(name, nativeFunctionCount);                                                                                          \
-        nativeFunction[nativeFunctionCount++] = (void *)funcPtr;                                                                                     \
+    if (Legacy_nativeFunctionCount < LEGACY_v4_NATIIVEFUNCTION_COUNT) {                                                                                     \
+        Legacy_SetGlobalVariableByName(name, Legacy_nativeFunctionCount);                                                                                          \
+        Legacy_nativeFunction[Legacy_nativeFunctionCount++] = (void *)funcPtr;                                                                                     \
     }
 
 bool32 ReadSaveRAM();
@@ -53,9 +55,11 @@ namespace v4
 // Native Functions
 void SetAchievement(int32 *achievementID, int32 *status);
 void SetLeaderboard(int32 *leaderboardID, int32 *score);
-void HapticEffect(int32 *id, int32 *unknown1, int32 *unknown2, int32 *unknown3);
 
-void NotifyCallback(int32 *callback, int32 *param1, int32 *param2, int32 *param3);
+extern "C" {
+    void HapticEffect(int32 *id, int32 *unknown1, int32 *unknown2, int32 *unknown3);
+    void NotifyCallback(int32 *callback, int32 *param1, int32 *param2, int32 *param3);
+}
 
 } // namespace v4
 

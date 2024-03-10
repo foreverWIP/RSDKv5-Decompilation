@@ -24,7 +24,7 @@ void RSDK::Legacy::v4::InitFirstStage(void)
     ClearGraphicsData();
     ClearAnimationData();
     Legacy_activePalette = Legacy_fullPalette[0];
-    stageMode     = STAGEMODE_LOAD;
+    Legacy_stageMode     = STAGEMODE_LOAD;
     legacy_gameMode      = ENGINE_MAINGAME;
 }
 
@@ -34,7 +34,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
     debugHitboxCount = 0;
 #endif
 
-    switch (stageMode) {
+    switch (Legacy_stageMode) {
         case STAGEMODE_LOAD: // Startup
             Legacy_SetActivePalette(0, 0, 256);
             gameMenu[0].visibleRowOffset = 0;
@@ -56,13 +56,13 @@ void RSDK::Legacy::v4::ProcessStage(void)
             stageMilliseconds = 0;
             stageSeconds      = 0;
             stageMinutes      = 0;
-            stageMode         = STAGEMODE_NORMAL;
+            Legacy_stageMode         = STAGEMODE_NORMAL;
 
 #if RSDK_AUTOBUILD
             // Prevent playing as Amy if on autobuilds
-            if (GetGlobalVariableByName("PLAYER_AMY") && playerListPos == GetGlobalVariableByName("PLAYER_AMY"))
+            if (Legacy_GetGlobalVariableByName("PLAYER_AMY") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY"))
                 playerListPos = 0;
-            else if (GetGlobalVariableByName("PLAYER_AMY_TAILS") && playerListPos == GetGlobalVariableByName("PLAYER_AMY_TAILS"))
+            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS"))
                 playerListPos = 0;
 #endif
 
@@ -84,7 +84,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             ProcessInput();
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode += STAGEMODE_STEPOVER;
+                Legacy_stageMode += STAGEMODE_STEPOVER;
                 PauseSound();
             }
 
@@ -121,7 +121,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             ProcessInput();
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode += STAGEMODE_STEPOVER;
+                Legacy_stageMode += STAGEMODE_STEPOVER;
                 PauseSound();
             }
 
@@ -166,7 +166,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             ProcessInput();
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode += STAGEMODE_STEPOVER;
+                Legacy_stageMode += STAGEMODE_STEPOVER;
                 PauseSound();
             }
 
@@ -196,7 +196,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             ProcessInput();
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode += STAGEMODE_STEPOVER;
+                Legacy_stageMode += STAGEMODE_STEPOVER;
                 PauseSound();
             }
 
@@ -261,7 +261,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             }
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode -= STAGEMODE_STEPOVER;
+                Legacy_stageMode -= STAGEMODE_STEPOVER;
                 ResumeSound();
             }
             break;
@@ -302,7 +302,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             }
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode -= STAGEMODE_STEPOVER;
+                Legacy_stageMode -= STAGEMODE_STEPOVER;
                 ResumeSound();
             }
             break;
@@ -334,7 +334,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             }
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode -= STAGEMODE_STEPOVER;
+                Legacy_stageMode -= STAGEMODE_STEPOVER;
                 ResumeSound();
             }
             break;
@@ -369,7 +369,7 @@ void RSDK::Legacy::v4::ProcessStage(void)
             }
 
             if (pauseEnabled && controller[CONT_ANY].keyStart.press) {
-                stageMode -= STAGEMODE_STEPOVER;
+                Legacy_stageMode -= STAGEMODE_STEPOVER;
                 ResumeSound();
             }
             break;
