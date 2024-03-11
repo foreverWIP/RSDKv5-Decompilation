@@ -3677,9 +3677,9 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             case FUNC_TRANSFORMVERTICES:
                 opcodeSize = 0;
                 switch (scriptEng.operands[0]) {
-                    case MAT_WORLD: TransformVerticies(&matWorld, scriptEng.operands[1], scriptEng.operands[2]); break;
-                    case MAT_VIEW: TransformVerticies(&matView, scriptEng.operands[1], scriptEng.operands[2]); break;
-                    case MAT_TEMP: TransformVerticies(&matTemp, scriptEng.operands[1], scriptEng.operands[2]); break;
+                    case MAT_WORLD: TransformVertices(&matWorld, scriptEng.operands[1], scriptEng.operands[2]); break;
+                    case MAT_VIEW: TransformVertices(&matView, scriptEng.operands[1], scriptEng.operands[2]); break;
+                    case MAT_TEMP: TransformVertices(&matTemp, scriptEng.operands[1], scriptEng.operands[2]); break;
                 }
                 break;
             case FUNC_CALLFUNCTION: {

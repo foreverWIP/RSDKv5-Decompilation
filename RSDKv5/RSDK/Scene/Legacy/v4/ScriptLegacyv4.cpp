@@ -4938,9 +4938,9 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             case FUNC_MATRIXINVERSE:
                 opcodeSize = 0;
                 switch (scriptEng.operands[0]) {
-                    case MAT_WORLD: MatrixInverse(&matWorld); break;
-                    case MAT_VIEW: MatrixInverse(&matView); break;
-                    case MAT_TEMP: MatrixInverse(&matTemp); break;
+                    case MAT_WORLD: RSDK::Legacy::MatrixInverse(&matWorld); break;
+                    case MAT_VIEW: RSDK::Legacy::MatrixInverse(&matView); break;
+                    case MAT_TEMP: RSDK::Legacy::MatrixInverse(&matTemp); break;
                 }
                 break;
             case FUNC_TRANSFORMVERTICES:
