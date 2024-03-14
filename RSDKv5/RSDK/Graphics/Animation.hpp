@@ -79,93 +79,20 @@ struct Animator {
 
 extern "C" {
     extern SpriteAnimation spriteAnimationList[SPRFILE_COUNT];
-}
 
-uint16 LoadSpriteAnimation(const char *filename, uint8 scope);
-uint16 CreateSpriteAnimation(const char *filename, uint32 frameCount, uint32 animCount, uint8 scope);
-
-inline uint16 FindSpriteAnimation(uint16 aniFrames, const char *name)
-{
-    if (aniFrames >= SPRFILE_COUNT)
-        return 0;
-
-    SpriteAnimation *spr = &spriteAnimationList[aniFrames];
-
-    RETRO_HASH_MD5(hash);
-    GEN_HASH_MD5(name, hash);
-
-    for (int32 a = 0; a < spr->animCount; ++a) {
-        if (HASH_MATCH_MD5(hash, spr->animations[a].hash))
-            return a;
-    }
-
-    return -1;
-}
-
-inline SpriteFrame *GetFrame(uint16 aniFrames, uint16 anim, int32 frame)
-{
-    if (aniFrames >= SPRFILE_COUNT)
-        return NULL;
-
-    SpriteAnimation *spr = &spriteAnimationList[aniFrames];
-    if (anim >= spr->animCount)
-        return NULL;
-
-    return &spr->frames[frame + spr->animations[anim].frameListOffset];
-}
-
-inline Hitbox *GetHitbox(Animator *animator, uint8 hitboxID)
-{
-    if (animator && animator->frames)
-        return &animator->frames[animator->frameID].hitboxes[hitboxID & (FRAMEHITBOX_COUNT - 1)];
-    else
-        return NULL;
-}
-
-inline int16 GetFrameID(Animator *animator)
-{
-    if (animator && animator->frames)
-        return animator->frames[animator->frameID].unicodeChar;
-
-    return 0;
-}
-
-extern "C" {
+    uint16 LoadSpriteAnimation(const char *filename, uint8 scope);
+    uint16 CreateSpriteAnimation(const char *filename, uint32 frameCount, uint32 animCount, uint8 scope);
+    uint16 FindSpriteAnimation(uint16 aniFrames, const char *name);
+    SpriteFrame *GetFrame(uint16 aniFrames, uint16 anim, int32 frame);
+    Hitbox *GetHitbox(Animator *animator, uint8 hitboxID);
+    int16 GetFrameID(Animator *animator);
     void ProcessAnimation(Animator *animator);
     void SetSpriteAnimation(uint16 aniFrames, uint16 animationID, Animator *animator, bool32 forceApply, int32 frameID);
-}
-
-inline void EditSpriteAnimation(uint16 aniFrames, uint16 animID, const char *name, int32 frameOffset, uint16 frameCount, int16 animSpeed,
-                                uint8 loopIndex, uint8 rotationStyle)
-{
-    if (aniFrames < SPRFILE_COUNT) {
-        SpriteAnimation *spr = &spriteAnimationList[aniFrames];
-        if (animID < spr->animCount) {
-            SpriteAnimationEntry *anim = &spr->animations[animID];
-            GEN_HASH_MD5(name, anim->hash);
-            anim->frameListOffset = frameOffset;
-            anim->frameCount      = frameCount;
-            anim->animationSpeed  = animSpeed;
-            anim->loopIndex       = loopIndex;
-            anim->rotationStyle   = rotationStyle;
-        }
-    }
-}
-
-extern "C" {
+    void EditSpriteAnimation(uint16 aniFrames, uint16 animID, const char *name, int32 frameOffset, uint16 frameCount, int16 animSpeed,
+                                uint8 loopIndex, uint8 rotationStyle);
     int32 GetStringWidth(uint16 aniFrames, uint16 animID, String *string, int32 startIndex, int32 length, int32 spacing);
     void SetSpriteString(uint16 aniFrames, uint16 animID, String *string);
-}
-
-inline void ClearSpriteAnimations()
-{
-    // Unload animations
-    for (int32 s = 0; s < SPRFILE_COUNT; ++s) {
-        if (spriteAnimationList[s].scope != SCOPE_GLOBAL) {
-            MEM_ZERO(spriteAnimationList[s]);
-            spriteAnimationList[s].scope = SCOPE_NONE;
-        }
-    }
+    void ClearSpriteAnimations();
 }
 
 #if RETRO_REV0U

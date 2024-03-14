@@ -1,9 +1,21 @@
+use std::ffi::CStr;
+
 use crate::*;
 
 use self::{
+    engine_core::reader::{
+        close_file, init_file_info, read_int_16, read_int_32, read_int_8, read_string,
+        read_string_buf, FileModes, LoadFile, Scopes, DEFAULT_FILEINFO,
+    },
     scene::collision::Hitbox,
-    storage::text::{HashMD5, RetroString},
+    storage::{
+        allocate_storage,
+        text::{gen_hash_md5, gen_hash_md5_buf, gen_hash_md5_ptr, HashMD5, RetroString},
+        StorageDataSets,
+    },
 };
+
+use super::sprite::LoadSpriteSheet;
 
 const SPRFILE_COUNT: usize = 0x400;
 const SPRITEFRAME_COUNT: usize = 0x400;
@@ -66,7 +78,7 @@ const DEFAULT_SPRITEANIMATION: SpriteAnimation = SpriteAnimation {
 };
 
 #[repr(C)]
-struct Animator {
+pub struct Animator {
     frames: *mut SpriteFrame,
     frameID: int32,
     animationID: int16,
@@ -82,6 +94,135 @@ struct Animator {
 #[no_mangle]
 static mut spriteAnimationList: [SpriteAnimation; SPRFILE_COUNT] =
     [DEFAULT_SPRITEANIMATION; SPRFILE_COUNT];
+
+#[no_mangle]
+#[export_name = "LoadSpriteAnimation"]
+pub extern "C" fn load_sprite_animation(filePath: *const i8, scope: uint8) -> uint16 {
+    if (scope == 0 || scope > Scopes::SCOPE_STAGE as u8) {
+        return u16::MAX;
+    }
+
+    unsafe {
+        let fullFilePath =
+            ("Data/Sprites/".to_owned() + CStr::from_ptr(filePath).to_str().unwrap() + "\0")
+                .as_str()
+                .to_owned();
+        let hash = gen_hash_md5(&fullFilePath);
+
+        for i in 0..SPRFILE_COUNT {
+            if (spriteAnimationList[i].hash == hash) {
+                return i as u16;
+            }
+        }
+
+        let mut id: u16 = 0;
+        loop {
+            if id as usize >= SPRFILE_COUNT {
+                break;
+            }
+            if (spriteAnimationList[id as usize].scope == Scopes::SCOPE_NONE as u8) {
+                break;
+            }
+            id += 1;
+        }
+
+        if (id as usize >= SPRFILE_COUNT) {
+            return u16::MAX;
+        }
+
+        let mut nameBuffer = [[0i8; 0x20]; 0x8];
+        let mut sheetIDs = [0u8; 0x18];
+        sheetIDs[0] = 0;
+
+        let mut info = DEFAULT_FILEINFO;
+        init_file_info(&mut info);
+        if (LoadFile(
+            &mut info,
+            fullFilePath.as_ptr() as *const i8,
+            FileModes::FMODE_RB as u8,
+        ) == true32)
+        {
+            let sig: uint32 = read_int_32(&mut info, false32) as u32;
+
+            if (sig != RSDK_SIGNATURE_SPR) {
+                close_file(&mut info);
+                return u16::MAX;
+            }
+
+            let spr = &mut spriteAnimationList[id as usize];
+            spr.scope = scope;
+            spr.hash = hash;
+
+            let frameCount: uint32 = read_int_32(&mut info, false32) as u32;
+            allocate_storage(
+                std::ptr::addr_of_mut!(spr.frames) as *mut *mut u8,
+                frameCount * std::mem::size_of::<SpriteFrame>() as u32,
+                StorageDataSets::DATASET_STG,
+                false32,
+            );
+
+            let sheetCount: uint8 = read_int_8(&mut info);
+            for s in 0..sheetCount {
+                let path = read_string(&mut info);
+                sheetIDs[s as usize] = LoadSpriteSheet(path.as_ptr() as *const i8, scope) as u8;
+            }
+
+            let hitboxCount: uint8 = read_int_8(&mut info);
+            for h in 0..hitboxCount {
+                read_string_buf(&mut info, nameBuffer[h as usize].as_mut_ptr());
+            }
+
+            spr.animCount = read_int_16(&mut info) as u16;
+            allocate_storage(
+                std::ptr::addr_of_mut!(spr.animations) as *mut *mut u8,
+                spr.animCount as u32 * std::mem::size_of::<SpriteAnimationEntry>() as u32,
+                StorageDataSets::DATASET_STG,
+                false32,
+            );
+
+            let mut frameID: int32 = 0;
+            for a in 0..spr.animCount {
+                let animation = spr.animations.wrapping_add(a as usize).as_mut().unwrap();
+                animation.hash = gen_hash_md5(&read_string(&mut info));
+
+                animation.frameCount = read_int_16(&mut info) as u16;
+                animation.frameListOffset = frameID;
+                animation.animationSpeed = read_int_16(&mut info);
+                animation.loopIndex = read_int_8(&mut info);
+                animation.rotationStyle = read_int_8(&mut info);
+
+                for f in 0..animation.frameCount {
+                    let frame = spr.frames.wrapping_add(frameID as usize).as_mut().unwrap();
+                    frameID += 1;
+
+                    frame.sheetID = sheetIDs[read_int_8(&mut info) as usize];
+                    frame.duration = read_int_16(&mut info) as u16;
+                    frame.unicodeChar = read_int_16(&mut info) as u16;
+                    frame.sprX = read_int_16(&mut info);
+                    frame.sprY = read_int_16(&mut info);
+                    frame.width = read_int_16(&mut info);
+                    frame.height = read_int_16(&mut info);
+                    frame.pivotX = read_int_16(&mut info);
+                    frame.pivotY = read_int_16(&mut info);
+
+                    frame.hitboxCount = hitboxCount;
+                    for h in 0..hitboxCount {
+                        frame.hitboxes[h as usize].left = read_int_16(&mut info);
+                        frame.hitboxes[h as usize].top = read_int_16(&mut info);
+                        frame.hitboxes[h as usize].right = read_int_16(&mut info);
+                        frame.hitboxes[h as usize].bottom = read_int_16(&mut info);
+                    }
+                }
+            }
+
+            close_file(&mut info);
+
+            return id;
+        }
+    }
+
+    return u16::MAX;
+}
 
 #[no_mangle]
 #[export_name = "SetSpriteAnimation"]
@@ -238,6 +379,179 @@ pub extern "C" fn set_sprite_string(aniFrames: uint16, animID: uint16, string: &
                         break;
                     }
                 }
+            }
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "CreateSpriteAnimation"]
+pub extern "C" fn create_sprite_animation(
+    filename: *const i8,
+    frameCount: uint32,
+    animCount: uint32,
+    scope: uint8,
+) -> uint16 {
+    if (scope == 0 || scope > Scopes::SCOPE_STAGE as u8) {
+        return u16::MAX;
+    }
+
+    unsafe {
+        let hash = gen_hash_md5(
+            ("Data/Sprites/".to_owned() + CStr::from_ptr(filename).to_str().unwrap()).as_str(),
+        );
+
+        for i in 0..SPRFILE_COUNT {
+            if spriteAnimationList[i].hash == hash {
+                return i as u16;
+            }
+        }
+
+        let mut id: uint16 = 0;
+        loop {
+            if id >= SPRFILE_COUNT as u16 {
+                break;
+            }
+
+            if (spriteAnimationList[id as usize].scope == Scopes::SCOPE_NONE as u8) {
+                break;
+            }
+
+            id += 1;
+        }
+
+        if (id >= SPRFILE_COUNT as u16) {
+            return u16::MAX;
+        }
+
+        let spr = &mut spriteAnimationList[id as usize];
+        spr.scope = scope;
+        spr.hash = hash;
+
+        allocate_storage(
+            ((&mut spr.frames) as *mut *mut SpriteFrame) as *mut *mut u8,
+            std::mem::size_of::<SpriteFrame>() as u32
+                * u32::min(frameCount, SPRITEFRAME_COUNT as u32),
+            StorageDataSets::DATASET_STG,
+            true32,
+        );
+        allocate_storage(
+            ((&mut spr.animations) as *mut *mut SpriteAnimationEntry) as *mut *mut u8,
+            std::mem::size_of::<SpriteAnimationEntry>() as u32
+                * u32::min(animCount, SPRITEANIM_COUNT as u32),
+            StorageDataSets::DATASET_STG,
+            true32,
+        );
+
+        return id;
+    }
+}
+
+#[no_mangle]
+#[export_name = "FindSpriteAnimation"]
+pub extern "C" fn find_sprite_animation(aniFrames: uint16, name: *const i8) -> uint16 {
+    let aniFrames = aniFrames as usize;
+    if (aniFrames >= SPRFILE_COUNT) {
+        return 0;
+    }
+
+    unsafe {
+        let spr = &spriteAnimationList[aniFrames];
+
+        let hash = gen_hash_md5_ptr(name);
+
+        for a in 0..spr.animCount {
+            if hash == (*spr.animations.wrapping_add(a as usize)).hash {
+                return a;
+            }
+        }
+    }
+
+    return u16::MAX;
+}
+
+#[no_mangle]
+#[export_name = "GetFrame"]
+pub extern "C" fn get_frame(aniFrames: uint16, anim: uint16, frame: int32) -> *mut SpriteFrame {
+    if (aniFrames as usize >= SPRFILE_COUNT) {
+        return std::ptr::null_mut();
+    }
+
+    unsafe {
+        let spr = &spriteAnimationList[aniFrames as usize];
+        if (anim >= spr.animCount) {
+            return std::ptr::null_mut();
+        }
+
+        return spr.frames.wrapping_add(
+            (frame + (*spr.animations.wrapping_add(anim as usize)).frameListOffset) as usize,
+        );
+    }
+}
+
+#[no_mangle]
+#[export_name = "GetHitbox"]
+pub extern "C" fn get_hitbox(animator: &Animator, hitboxID: uint8) -> *mut Hitbox {
+    if (!(animator as *const Animator).is_null() && !animator.frames.is_null()) {
+        unsafe {
+            return &mut (*animator.frames.wrapping_add(animator.frameID as usize)).hitboxes
+                [hitboxID as usize & (FRAMEHITBOX_COUNT - 1)];
+        }
+    } else {
+        return std::ptr::null_mut();
+    }
+}
+
+#[no_mangle]
+#[export_name = "GetFrameID"]
+pub extern "C" fn get_frame_id(animator: &Animator) -> int16 {
+    if (!(animator as *const Animator).is_null() && !animator.frames.is_null()) {
+        unsafe {
+            return (*animator.frames.wrapping_add(animator.frameID as usize)).unicodeChar as i16;
+        }
+    }
+
+    return 0;
+}
+
+#[no_mangle]
+#[export_name = "ClearSpriteAnimations"]
+pub extern "C" fn clear_sprite_animations() {
+    unsafe {
+        // Unload animations
+        for s in 0..SPRFILE_COUNT {
+            if (spriteAnimationList[s].scope != Scopes::SCOPE_GLOBAL as u8) {
+                spriteAnimationList[s] = DEFAULT_SPRITEANIMATION;
+                spriteAnimationList[s].scope = Scopes::SCOPE_NONE as u8;
+            }
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "EditSpriteAnimation"]
+pub extern "C" fn edit_sprite_animation(
+    aniFrames: uint16,
+    animID: uint16,
+    name: *const i8,
+    frameOffset: int32,
+    frameCount: uint16,
+    animSpeed: int16,
+    loopIndex: uint8,
+    rotationStyle: uint8,
+) {
+    let aniFrames = aniFrames as usize;
+    unsafe {
+        if (aniFrames < SPRFILE_COUNT) {
+            let spr = &spriteAnimationList[aniFrames];
+            if (animID < spr.animCount) {
+                let anim = spr.animations.wrapping_add(animID as usize);
+                (*anim).hash = gen_hash_md5_ptr(name);
+                (*anim).frameListOffset = frameOffset;
+                (*anim).frameCount = frameCount;
+                (*anim).animationSpeed = animSpeed;
+                (*anim).loopIndex = loopIndex;
+                (*anim).rotationStyle = rotationStyle;
             }
         }
     }

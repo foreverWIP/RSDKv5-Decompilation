@@ -1,6 +1,10 @@
 #ifndef SPRITE_H
 #define SPRITE_H
 
+extern "C" {
+    uint16 LoadSpriteSheet(const char *filename, uint8 scope);
+}
+
 namespace RSDK
 {
 
@@ -117,7 +121,6 @@ struct ImageTGA : public Image {
 };
 #endif
 
-uint16 LoadSpriteSheet(const char *filename, uint8 scope);
 bool32 LoadImage(const char *filename, double displayLength, double fadeSpeed, bool32 (*skipCallback)());
 
 #if RETRO_REV0U

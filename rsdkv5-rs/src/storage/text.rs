@@ -27,6 +27,18 @@ pub fn gen_hash_md5(message: &str) -> HashMD5 {
     }
 }
 
+pub fn gen_hash_md5_ptr(ptr: *const i8) -> HashMD5 {
+    unsafe {
+        let c_str = {
+            assert!(!ptr.is_null());
+
+            CStr::from_ptr(ptr)
+        };
+
+        gen_hash_md5(c_str.to_str().unwrap())
+    }
+}
+
 #[no_mangle]
 #[export_name = "GenerateHashMD5"]
 pub extern "C" fn gen_hash_md5_buf(buffer: *mut uint32, textBuffer: *mut i8, textBufferLen: int32) {

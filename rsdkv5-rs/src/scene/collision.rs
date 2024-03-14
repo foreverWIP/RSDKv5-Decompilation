@@ -1,3 +1,5 @@
+use std::marker::ConstParamTy;
+
 use crate::*;
 
 use self::{
@@ -49,7 +51,7 @@ const DEFAULT_COLLISIONSENSOR: CollisionSensor = CollisionSensor {
 };
 
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, ConstParamTy, Copy, Eq, PartialEq)]
 pub enum CollisionModes {
     CMODE_FLOOR,
     CMODE_LWALL,
@@ -59,10 +61,10 @@ pub enum CollisionModes {
 
 #[repr(C)]
 pub struct Hitbox {
-    left: int16,
-    top: int16,
-    right: int16,
-    bottom: int16,
+    pub left: int16,
+    pub top: int16,
+    pub right: int16,
+    pub bottom: int16,
 }
 const DEFAULT_HITBOX: Hitbox = Hitbox {
     left: 0,
@@ -156,12 +158,9 @@ cfg_if::cfg_if! {
     }
 }
 
-#[no_mangle]
-#[export_name = "ObjectTileGrip"]
-pub extern "C" fn object_tile_grip(
+fn object_tile_grip_internal<const cMode: CollisionModes>(
     entity: &mut Entity,
     cLayers: uint16,
-    cMode: CollisionModes,
     cPlane: uint8,
     xOffset: int32,
     yOffset: int32,
@@ -294,6 +293,39 @@ pub extern "C" fn object_tile_grip(
         }
 
         collided
+    }
+}
+
+#[no_mangle]
+#[export_name = "ObjectTileGrip"]
+pub extern "C" fn object_tile_grip(
+    entity: &mut Entity,
+    cLayers: uint16,
+    cMode: CollisionModes,
+    cPlane: uint8,
+    xOffset: int32,
+    yOffset: int32,
+    tolerance: int32,
+) -> bool32 {
+    match cMode {
+        CollisionModes::CMODE_FLOOR => {
+            object_tile_grip_internal::<{ CollisionModes::CMODE_FLOOR }>(
+                entity, cLayers, cPlane, xOffset, yOffset, tolerance,
+            )
+        }
+        CollisionModes::CMODE_LWALL => {
+            object_tile_grip_internal::<{ CollisionModes::CMODE_LWALL }>(
+                entity, cLayers, cPlane, xOffset, yOffset, tolerance,
+            )
+        }
+        CollisionModes::CMODE_ROOF => object_tile_grip_internal::<{ CollisionModes::CMODE_ROOF }>(
+            entity, cLayers, cPlane, xOffset, yOffset, tolerance,
+        ),
+        CollisionModes::CMODE_RWALL => {
+            object_tile_grip_internal::<{ CollisionModes::CMODE_RWALL }>(
+                entity, cLayers, cPlane, xOffset, yOffset, tolerance,
+            )
+        }
     }
 }
 

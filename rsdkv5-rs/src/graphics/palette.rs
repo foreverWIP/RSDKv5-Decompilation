@@ -193,7 +193,8 @@ pub extern "C" fn load_palette(bankID: uint8, filename: *const i8, disabledRows:
     use self::engine_core::reader::init_file_info;
 
     unsafe {
-        let fullFilePath = "Data/Palettes/".to_owned() + CStr::from_ptr(filename).to_str().unwrap();
+        let fullFilePath =
+            "Data/Palettes/".to_owned() + CStr::from_ptr(filename).to_str().unwrap() + "\0";
 
         let mut info = DEFAULT_FILEINFO;
         init_file_info(&mut info);

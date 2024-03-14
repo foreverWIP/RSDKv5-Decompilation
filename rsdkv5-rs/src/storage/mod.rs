@@ -35,7 +35,7 @@ const STORAGE_ENTRY_COUNT: usize = 0x1000;
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, PartialOrd)]
-enum StorageDataSets {
+pub enum StorageDataSets {
     DATASET_STG = 0,
     DATASET_MUS = 1,
     DATASET_SFX = 2,

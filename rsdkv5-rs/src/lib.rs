@@ -1,4 +1,5 @@
 #![allow(non_snake_case, non_camel_case_types)]
+#![feature(adt_const_params)]
 
 pub mod dev;
 pub mod engine_core;

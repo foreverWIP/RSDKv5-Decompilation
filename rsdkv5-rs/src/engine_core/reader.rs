@@ -1,4 +1,7 @@
-use std::{ffi::c_long, fs::File};
+use std::{
+    ffi::{c_long, CStr, CString},
+    fs::File,
+};
 
 use crate::*;
 
@@ -196,7 +199,7 @@ pub extern "C" fn seek_cur(info: &mut FileInfo, count: i32) {
     }
 
     if (info.usingFileBuffer) {
-        info.fileBuffer = info.fileBuffer.wrapping_add(count as usize);
+        info.fileBuffer = info.fileBuffer.wrapping_add((count as isize) as usize);
     } else {
         fSeek(info.file, count, 1); // if this works i'll blow up
     }
@@ -284,9 +287,18 @@ pub extern "C" fn read_single(info: &mut FileInfo) -> f32 {
     }
 }
 
+pub fn read_string(info: &mut FileInfo) -> String {
+    let size = read_int_8(info);
+    let mut ret = String::from("");
+    for _ in 0..size {
+        ret += &(read_int_8(info) as char).to_string();
+    }
+    ret
+}
+
 #[no_mangle]
 #[export_name = "ReadString"]
-pub extern "C" fn read_string(info: &mut FileInfo, buffer: *mut i8) {
+pub extern "C" fn read_string_buf(info: &mut FileInfo, buffer: *mut i8) {
     let size = read_int_8(info);
     read_bytes(info, buffer as *mut u8, size as i32);
     unsafe {
