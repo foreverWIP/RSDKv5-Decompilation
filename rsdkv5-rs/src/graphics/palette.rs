@@ -44,12 +44,6 @@ pub static mut gfxLineBuffer: [uint8; SCREEN_YSIZE] = [0; SCREEN_YSIZE];
 #[no_mangle]
 static mut maskColor: int32 = 0;
 
-/*#if RETRO_REV02
-uint16 *RSDK::tintLookupTable = NULL;
-#else
-uint16 RSDK::tintLookupTable[0x10000];
-#endif*/
-
 cfg_if::cfg_if! {
     if #[cfg(feature = "version_2")] {
         #[no_mangle]

@@ -13,18 +13,9 @@ int32 RSDK::Legacy::gfxDataPosition;
 RSDK::Legacy::GFXSurface RSDK::Legacy::gfxSurface[LEGACY_SURFACE_COUNT];
 uint8 RSDK::Legacy::graphicData[LEGACY_GFXDATA_SIZE];
 
-uint16 RSDK::Legacy::blendLookupTable[0x20 * 0x100];
-uint16 RSDK::Legacy::subtractLookupTable[0x20 * 0x100];
 uint16 RSDK::Legacy::tintLookupTable[0x10000];
 
 void RSDK::Legacy::GenerateBlendLookupTable() {
-  for (int32 y = 0; y < 0x100; y++) {
-    for (int32 x = 0; x < 0x20; x++) {
-      blendLookupTable[x + (0x20 * y)] = y * x >> 8;
-      subtractLookupTable[x + (0x20 * y)] = y * (0x1F - x) >> 8;
-    }
-  }
-
   for (int32 i = 0; i < 0x10000; i++) {
     int32 tintValue =
         ((i & 0x1F) + ((i & 0x7E0) >> 6) + ((i & 0xF800) >> 11)) / 3 + 6;
@@ -116,7 +107,7 @@ void RSDK::Legacy::DrawHLineScrollLayer(int32 layerID) {
   int32 drawableLines[2] = {waterDrawPos, SCREEN_YSIZE - waterDrawPos};
   for (int32 i = 0; i < 2; ++i) {
     while (drawableLines[i]--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+      Legacy_activePalette = fullPalette[*lineBuffer];
       lineBuffer++;
 
       int32 chunkX = hParallax.linePos[*scrollIndex];
@@ -700,7 +691,7 @@ void RSDK::Legacy::DrawVLineScrollLayer(int32 layerID) {
   }
 
   uint16 *frameBuffer = currentScreen->frameBuffer;
-  Legacy_activePalette = Legacy_fullPalette[Legacy_gfxLineBuffer[0]];
+  Legacy_activePalette = fullPalette[Legacy_gfxLineBuffer[0]];
   int32 tileXPos = xscrollOffset % (layerheight << 7);
   if (tileXPos < 0)
     tileXPos += layerheight << 7;
@@ -1256,7 +1247,7 @@ void RSDK::Legacy::Draw3DFloorLayer(int32 layerID) {
 
   for (int32 i = 4; i < 112; ++i) {
     if (!(i & 1)) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+      Legacy_activePalette = fullPalette[*lineBuffer];
       lineBuffer++;
     }
     int32 XBuffer = layerYPos / (i << 9) * -cosValue >> 8;
@@ -1320,7 +1311,7 @@ void RSDK::Legacy::Draw3DSkyLayer(int32 layerID) {
   int32 layerZPos = layer->zpos >> 4;
   for (int32 i = TILE_SIZE / 2; i < SCREEN_YSIZE - TILE_SIZE; ++i) {
     if (!(i & 1)) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+      Legacy_activePalette = fullPalette[*lineBuffer];
       lineBuffer++;
     }
 
@@ -1572,458 +1563,29 @@ void RSDK::Legacy::DrawScaledTintMask(int32 direction, int32 XPos, int32 YPos,
 
 void RSDK::Legacy::DrawSprite(int32 XPos, int32 YPos, int32 width, int32 height,
                               int32 sprX, int32 sprY, int32 sheetID) {
-  if (width + XPos > Legacy_GFX_LINESIZE)
-    width = Legacy_GFX_LINESIZE - XPos;
-  if (XPos < 0) {
-    sprX -= XPos;
-    width += XPos;
-    XPos = 0;
-  }
-  if (height + YPos > SCREEN_YSIZE)
-    height = SCREEN_YSIZE - YPos;
-  if (YPos < 0) {
-    sprY -= YPos;
-    height += YPos;
-    YPos = 0;
-  }
-  if (width <= 0 || height <= 0)
-    return;
-
-  GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - width;
-  int32 gfxPitch = surface->width - width;
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[YPos];
-  uint8 *pixels =
-      &graphicData[sprX + surface->width * sprY + surface->dataPosition];
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-
-  while (height--) {
-    Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-    lineBuffer++;
-
-    int32 w = width;
-    while (w--) {
-      if (*pixels > 0)
-        *frameBuffer = Legacy_activePalette[*pixels];
-      ++pixels;
-      ++frameBuffer;
-    }
-
-    frameBuffer += pitch;
-    pixels += gfxPitch;
-  }
+  RSDK::Legacy::DrawSpriteFlipped(XPos, YPos, width, height, sprX, sprY, FLIP_NONE, sheetID);
 }
 
 void RSDK::Legacy::DrawSpriteFlipped(int32 XPos, int32 YPos, int32 width,
                                      int32 height, int32 sprX, int32 sprY,
                                      int32 direction, int32 sheetID) {
-  int32 widthFlip = width;
-  int32 heightFlip = height;
-
-  if (width + XPos > Legacy_GFX_LINESIZE) {
-    width = Legacy_GFX_LINESIZE - XPos;
-  }
-  if (XPos < 0) {
-    sprX -= XPos;
-    width += XPos;
-    widthFlip += XPos + XPos;
-    XPos = 0;
-  }
-  if (height + YPos > SCREEN_YSIZE) {
-    height = SCREEN_YSIZE - YPos;
-  }
-  if (YPos < 0) {
-    sprY -= YPos;
-    height += YPos;
-    heightFlip += YPos + YPos;
-    YPos = 0;
-  }
-  if (width <= 0 || height <= 0)
-    return;
-
   GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch;
-  int32 gfxPitch;
-  uint8 *lineBuffer;
-  uint8 *pixels;
-  uint16 *frameBuffer;
-  switch (direction) {
-  case FLIP_NONE:
-    pitch = Legacy_GFX_LINESIZE - width;
-    gfxPitch = surface->width - width;
-    lineBuffer = &Legacy_gfxLineBuffer[YPos];
-    pixels = &graphicData[sprX + surface->width * sprY + surface->dataPosition];
-    frameBuffer =
-        &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-
-    while (height--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 w = width;
-      while (w--) {
-        if (*pixels > 0)
-          *frameBuffer = Legacy_activePalette[*pixels];
-        ++pixels;
-        ++frameBuffer;
-      }
-
-      frameBuffer += pitch;
-      pixels += gfxPitch;
-    }
-    break;
-
-  case FLIP_X:
-    pitch = Legacy_GFX_LINESIZE - width;
-    gfxPitch = width + surface->width;
-    lineBuffer = &Legacy_gfxLineBuffer[YPos];
-    pixels = &graphicData[widthFlip - 1 + sprX + surface->width * sprY +
-                          surface->dataPosition];
-    frameBuffer =
-        &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-    while (height--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-
-      lineBuffer++;
-      int32 w = width;
-      while (w--) {
-        if (*pixels > 0)
-          *frameBuffer = Legacy_activePalette[*pixels];
-        --pixels;
-        ++frameBuffer;
-      }
-
-      frameBuffer += pitch;
-      pixels += gfxPitch;
-    }
-    break;
-
-  case FLIP_Y:
-    pitch = Legacy_GFX_LINESIZE - width;
-    gfxPitch = width + surface->width;
-    lineBuffer = &Legacy_gfxLineBuffer[YPos];
-    pixels = &graphicData[sprX + surface->width * (sprY + heightFlip - 1) +
-                          surface->dataPosition];
-    frameBuffer =
-        &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-    while (height--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 w = width;
-      while (w--) {
-        if (*pixels > 0)
-          *frameBuffer = Legacy_activePalette[*pixels];
-        ++pixels;
-        ++frameBuffer;
-      }
-
-      frameBuffer += pitch;
-      pixels -= gfxPitch;
-    }
-    break;
-
-  case FLIP_XY:
-    pitch = Legacy_GFX_LINESIZE - width;
-    gfxPitch = surface->width - width;
-    lineBuffer = &Legacy_gfxLineBuffer[YPos];
-    pixels = &graphicData[widthFlip - 1 + sprX +
-                          surface->width * (sprY + heightFlip - 1) +
-                          surface->dataPosition];
-    frameBuffer =
-        &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-    while (height--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 w = width;
-      while (w--) {
-        if (*pixels > 0)
-          *frameBuffer = Legacy_activePalette[*pixels];
-        --pixels;
-        ++frameBuffer;
-      }
-
-      frameBuffer += pitch;
-      pixels -= gfxPitch;
-    }
-    break;
-
-  default:
-    break;
-  }
+  RSDK::DrawSpriteFlippedGeneric(XPos, YPos, width, height, sprX, sprY,
+                                 direction, INK_NONE, 0xff, surface->width,
+                                 &graphicData[surface->dataPosition]);
 }
 void RSDK::Legacy::DrawSpriteScaled(int32 direction, int32 XPos, int32 YPos,
                                     int32 pivotX, int32 pivotY, int32 scaleX,
                                     int32 scaleY, int32 width, int32 height,
                                     int32 sprX, int32 sprY, int32 sheetID) {
-  int32 roundedYPos = 0;
-  int32 roundedXPos = 0;
-  int32 truescaleX = 4 * scaleX;
-  int32 truescaleY = 4 * scaleY;
-  int32 widthM1 = width - 1;
-  int32 trueXPos = XPos - (truescaleX * pivotX >> 11);
-  int32 trueYPos = YPos - (truescaleY * pivotY >> 11);
-  width = truescaleX * width >> 11;
-  height = truescaleY * height >> 11;
-  int32 finalscaleX =
-      (int32)(float)((float)(2048.0 / (float)truescaleX) * 2048.0);
-  int32 finalscaleY =
-      (int32)(float)((float)(2048.0 / (float)truescaleY) * 2048.0);
-  if (width + trueXPos > Legacy_GFX_LINESIZE) {
-    width = Legacy_GFX_LINESIZE - trueXPos;
-  }
-
-  if (direction) {
-    if (trueXPos < 0) {
-      widthM1 -= trueXPos * -finalscaleX >> 11;
-      roundedXPos = (uint16)trueXPos * -(int16)finalscaleX & 0x7FF;
-      width += trueXPos;
-      trueXPos = 0;
-    }
-  } else if (trueXPos < 0) {
-    sprX += trueXPos * -finalscaleX >> 11;
-    roundedXPos = (uint16)trueXPos * -(int16)finalscaleX & 0x7FF;
-    width += trueXPos;
-    trueXPos = 0;
-  }
-
-  if (height + trueYPos > SCREEN_YSIZE) {
-    height = SCREEN_YSIZE - trueYPos;
-  }
-  if (trueYPos < 0) {
-    sprY += trueYPos * -finalscaleY >> 11;
-    roundedYPos = (uint16)trueYPos * -(int16)finalscaleY & 0x7FF;
-    height += trueYPos;
-    trueYPos = 0;
-  }
-
-  if (width <= 0 || height <= 0)
-    return;
-
   GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - width;
-  int32 gfxwidth = surface->width;
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[trueYPos];
-  uint8 *pixels =
-      &graphicData[sprX + surface->width * sprY + surface->dataPosition];
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[trueXPos + Legacy_GFX_LINESIZE * trueYPos];
-
-  if (direction == FLIP_X) {
-    uint8 *pixelsPtr = &pixels[widthM1];
-    int32 gfxPitch = 0;
-
-    while (height--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 roundXPos = roundedXPos;
-      int32 w = width;
-      while (w--) {
-        if (*pixelsPtr > 0)
-          *frameBuffer = Legacy_activePalette[*pixelsPtr];
-        int32 offsetX = finalscaleX + roundXPos;
-        pixelsPtr -= offsetX >> 11;
-        gfxPitch += offsetX >> 11;
-        roundXPos = offsetX & 0x7FF;
-        ++frameBuffer;
-      }
-
-      frameBuffer += pitch;
-      int32 offsetY = finalscaleY + roundedYPos;
-      pixelsPtr += gfxPitch + (offsetY >> 11) * gfxwidth;
-      roundedYPos = offsetY & 0x7FF;
-      gfxPitch = 0;
-    }
-  } else {
-    int32 gfxPitch = 0;
-    int32 h = height;
-    while (h--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 roundXPos = roundedXPos;
-      int32 w = width;
-      while (w--) {
-        if (*pixels > 0)
-          *frameBuffer = Legacy_activePalette[*pixels];
-        int32 offsetX = finalscaleX + roundXPos;
-        pixels += offsetX >> 11;
-        gfxPitch += offsetX >> 11;
-        roundXPos = offsetX & 0x7FF;
-        ++frameBuffer;
-      }
-
-      frameBuffer += pitch;
-      int32 offsetY = finalscaleY + roundedYPos;
-      pixels += (offsetY >> 11) * gfxwidth - gfxPitch;
-      roundedYPos = offsetY & 0x7FF;
-      gfxPitch = 0;
-    }
-  }
+  DrawSpriteRotozoomGeneric(XPos, YPos, -pivotX, -pivotY, width, height, sprX, sprY, scaleX, scaleY, direction, 0, INK_NONE, 0xff, &graphicData[surface->dataPosition], surface->widthShift);
 }
 void RSDK::Legacy::DrawSpriteRotated(int32 direction, int32 XPos, int32 YPos,
                                      int32 pivotX, int32 pivotY, int32 sprX,
                                      int32 sprY, int32 width, int32 height,
                                      int32 rotation, int32 sheetID) {
-  int32 sprXPos = (pivotX + sprX) << 9;
-  int32 sprYPos = (pivotY + sprY) << 9;
-  int32 fullwidth = width + sprX;
-  int32 fullheight = height + sprY;
-  int32 angle = rotation & 0x1FF;
-  if (angle < 0)
-    angle += 0x200;
-  if (angle)
-    angle = 0x200 - angle;
-  int32 sine = sin512LookupTable[angle];
-  int32 cosine = cos512LookupTable[angle];
-  int32 xPositions[4];
-  int32 yPositions[4];
-
-  if (direction == FLIP_X) {
-    xPositions[0] =
-        XPos + ((sine * (-pivotY - 2) + cosine * (pivotX + 2)) >> 9);
-    yPositions[0] =
-        YPos + ((cosine * (-pivotY - 2) - sine * (pivotX + 2)) >> 9);
-    xPositions[1] =
-        XPos + ((sine * (-pivotY - 2) + cosine * (pivotX - width - 2)) >> 9);
-    yPositions[1] =
-        YPos + ((cosine * (-pivotY - 2) - sine * (pivotX - width - 2)) >> 9);
-    xPositions[2] =
-        XPos + ((sine * (height - pivotY + 2) + cosine * (pivotX + 2)) >> 9);
-    yPositions[2] =
-        YPos + ((cosine * (height - pivotY + 2) - sine * (pivotX + 2)) >> 9);
-    int32 a = pivotX - width - 2;
-    int32 b = height - pivotY + 2;
-    xPositions[3] = XPos + ((sine * b + cosine * a) >> 9);
-    yPositions[3] = YPos + ((cosine * b - sine * a) >> 9);
-  } else {
-    xPositions[0] =
-        XPos + ((sine * (-pivotY - 2) + cosine * (-pivotX - 2)) >> 9);
-    yPositions[0] =
-        YPos + ((cosine * (-pivotY - 2) - sine * (-pivotX - 2)) >> 9);
-    xPositions[1] =
-        XPos + ((sine * (-pivotY - 2) + cosine * (width - pivotX + 2)) >> 9);
-    yPositions[1] =
-        YPos + ((cosine * (-pivotY - 2) - sine * (width - pivotX + 2)) >> 9);
-    xPositions[2] =
-        XPos + ((sine * (height - pivotY + 2) + cosine * (-pivotX - 2)) >> 9);
-    yPositions[2] =
-        YPos + ((cosine * (height - pivotY + 2) - sine * (-pivotX - 2)) >> 9);
-    int32 a = width - pivotX + 2;
-    int32 b = height - pivotY + 2;
-    xPositions[3] = XPos + ((sine * b + cosine * a) >> 9);
-    yPositions[3] = YPos + ((cosine * b - sine * a) >> 9);
-  }
-
-  int32 left = Legacy_GFX_LINESIZE;
-  for (int32 i = 0; i < 4; ++i) {
-    if (xPositions[i] < left)
-      left = xPositions[i];
-  }
-  if (left < 0)
-    left = 0;
-
-  int32 right = 0;
-  for (int32 i = 0; i < 4; ++i) {
-    if (xPositions[i] > right)
-      right = xPositions[i];
-  }
-  if (right > Legacy_GFX_LINESIZE)
-    right = Legacy_GFX_LINESIZE;
-  int32 maxX = right - left;
-
-  int32 top = SCREEN_YSIZE;
-  for (int32 i = 0; i < 4; ++i) {
-    if (yPositions[i] < top)
-      top = yPositions[i];
-  }
-  if (top < 0)
-    top = 0;
-
-  int32 bottom = 0;
-  for (int32 i = 0; i < 4; ++i) {
-    if (yPositions[i] > bottom)
-      bottom = yPositions[i];
-  }
-  if (bottom > SCREEN_YSIZE)
-    bottom = SCREEN_YSIZE;
-  int32 maxY = bottom - top;
-
-  if (maxX <= 0 || maxY <= 0)
-    return;
-
-  GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - maxX;
-  int32 lineSize = surface->widthShift;
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[left + Legacy_GFX_LINESIZE * top];
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[top];
-  int32 startX = left - XPos;
-  int32 startY = top - YPos;
-  int32 shiftPivot = (sprX << 9) - 1;
-  int32 shiftheight = (sprY << 9) - 1;
-  fullwidth <<= 9;
-  fullheight <<= 9;
-  uint8 *pixels = &graphicData[surface->dataPosition];
-  if (cosine < 0 || sine < 0)
-    sprYPos += sine + cosine;
-
-  if (direction == FLIP_X) {
-    int32 drawX = sprXPos - (cosine * startX - sine * startY) - 0x100;
-    int32 drawY = cosine * startY + sprYPos + sine * startX;
-    while (maxY--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 finalX = drawX;
-      int32 finalY = drawY;
-      int32 w = maxX;
-      while (w--) {
-        if (finalX > shiftPivot && finalX < fullwidth && finalY > shiftheight &&
-            finalY < fullheight) {
-          uint8 index = pixels[(finalY >> 9 << lineSize) + (finalX >> 9)];
-          if (index > 0)
-            *frameBuffer = Legacy_activePalette[index];
-        }
-        ++frameBuffer;
-        finalX -= cosine;
-        finalY += sine;
-      }
-
-      drawX += sine;
-      drawY += cosine;
-      frameBuffer += pitch;
-    }
-  } else {
-    int32 drawX = sprXPos + cosine * startX - sine * startY;
-    int32 drawY = cosine * startY + sprYPos + sine * startX;
-    while (maxY--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 finalX = drawX;
-      int32 finalY = drawY;
-      int32 w = maxX;
-      while (w--) {
-        if (finalX > shiftPivot && finalX < fullwidth && finalY > shiftheight &&
-            finalY < fullheight) {
-          uint8 index = pixels[(finalY >> 9 << lineSize) + (finalX >> 9)];
-          if (index > 0)
-            *frameBuffer = Legacy_activePalette[index];
-        }
-        ++frameBuffer;
-        finalX += cosine;
-        finalY += sine;
-      }
-
-      drawX -= sine;
-      drawY += cosine;
-      frameBuffer += pitch;
-    }
-  }
+  RSDK::Legacy::DrawSpriteRotozoom(direction, XPos, YPos, pivotX, pivotY, sprX, sprY, width, height, rotation, 0x200, sheetID);
 }
 
 void RSDK::Legacy::DrawSpriteRotozoom(int32 direction, int32 XPos, int32 YPos,
@@ -2031,171 +1593,8 @@ void RSDK::Legacy::DrawSpriteRotozoom(int32 direction, int32 XPos, int32 YPos,
                                       int32 sprY, int32 width, int32 height,
                                       int32 rotation, int32 scale,
                                       int32 sheetID) {
-  if (scale == 0)
-    return;
-
-  int32 sprXPos = (pivotX + sprX) << 9;
-  int32 sprYPos = (pivotY + sprY) << 9;
-  int32 fullwidth = width + sprX;
-  int32 fullheight = height + sprY;
-  int32 angle = rotation & 0x1FF;
-  if (angle < 0)
-    angle += 0x200;
-  if (angle)
-    angle = 0x200 - angle;
-  int32 sine = scale * sin512LookupTable[angle] >> 9;
-  int32 cosine = scale * cos512LookupTable[angle] >> 9;
-  int32 xPositions[4];
-  int32 yPositions[4];
-
-  if (direction == FLIP_X) {
-    xPositions[0] =
-        XPos + ((sine * (-pivotY - 2) + cosine * (pivotX + 2)) >> 9);
-    yPositions[0] =
-        YPos + ((cosine * (-pivotY - 2) - sine * (pivotX + 2)) >> 9);
-    xPositions[1] =
-        XPos + ((sine * (-pivotY - 2) + cosine * (pivotX - width - 2)) >> 9);
-    yPositions[1] =
-        YPos + ((cosine * (-pivotY - 2) - sine * (pivotX - width - 2)) >> 9);
-    xPositions[2] =
-        XPos + ((sine * (height - pivotY + 2) + cosine * (pivotX + 2)) >> 9);
-    yPositions[2] =
-        YPos + ((cosine * (height - pivotY + 2) - sine * (pivotX + 2)) >> 9);
-    int32 a = pivotX - width - 2;
-    int32 b = height - pivotY + 2;
-    xPositions[3] = XPos + ((sine * b + cosine * a) >> 9);
-    yPositions[3] = YPos + ((cosine * b - sine * a) >> 9);
-  } else {
-    xPositions[0] =
-        XPos + ((sine * (-pivotY - 2) + cosine * (-pivotX - 2)) >> 9);
-    yPositions[0] =
-        YPos + ((cosine * (-pivotY - 2) - sine * (-pivotX - 2)) >> 9);
-    xPositions[1] =
-        XPos + ((sine * (-pivotY - 2) + cosine * (width - pivotX + 2)) >> 9);
-    yPositions[1] =
-        YPos + ((cosine * (-pivotY - 2) - sine * (width - pivotX + 2)) >> 9);
-    xPositions[2] =
-        XPos + ((sine * (height - pivotY + 2) + cosine * (-pivotX - 2)) >> 9);
-    yPositions[2] =
-        YPos + ((cosine * (height - pivotY + 2) - sine * (-pivotX - 2)) >> 9);
-    int32 a = width - pivotX + 2;
-    int32 b = height - pivotY + 2;
-    xPositions[3] = XPos + ((sine * b + cosine * a) >> 9);
-    yPositions[3] = YPos + ((cosine * b - sine * a) >> 9);
-  }
-  int32 truescale = (int32)(float)((float)(512.0 / (float)scale) * 512.0);
-  sine = truescale * sin512LookupTable[angle] >> 9;
-  cosine = truescale * cos512LookupTable[angle] >> 9;
-
-  int32 left = Legacy_GFX_LINESIZE;
-  for (int32 i = 0; i < 4; ++i) {
-    if (xPositions[i] < left)
-      left = xPositions[i];
-  }
-  if (left < 0)
-    left = 0;
-
-  int32 right = 0;
-  for (int32 i = 0; i < 4; ++i) {
-    if (xPositions[i] > right)
-      right = xPositions[i];
-  }
-  if (right > Legacy_GFX_LINESIZE)
-    right = Legacy_GFX_LINESIZE;
-  int32 maxX = right - left;
-
-  int32 top = SCREEN_YSIZE;
-  for (int32 i = 0; i < 4; ++i) {
-    if (yPositions[i] < top)
-      top = yPositions[i];
-  }
-  if (top < 0)
-    top = 0;
-
-  int32 bottom = 0;
-  for (int32 i = 0; i < 4; ++i) {
-    if (yPositions[i] > bottom)
-      bottom = yPositions[i];
-  }
-  if (bottom > SCREEN_YSIZE)
-    bottom = SCREEN_YSIZE;
-  int32 maxY = bottom - top;
-
-  if (maxX <= 0 || maxY <= 0)
-    return;
-
   GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - maxX;
-  int32 lineSize = surface->widthShift;
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[left + Legacy_GFX_LINESIZE * top];
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[top];
-  int32 startX = left - XPos;
-  int32 startY = top - YPos;
-  int32 shiftPivot = (sprX << 9) - 1;
-  int32 shiftheight = (sprY << 9) - 1;
-  fullwidth <<= 9;
-  fullheight <<= 9;
-  uint8 *pixels = &graphicData[surface->dataPosition];
-  if (cosine < 0 || sine < 0)
-    sprYPos += sine + cosine;
-
-  if (direction == FLIP_X) {
-    int32 drawX =
-        sprXPos - (cosine * startX - sine * startY) - (truescale >> 1);
-    int32 drawY = cosine * startY + sprYPos + sine * startX;
-    while (maxY--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 finalX = drawX;
-      int32 finalY = drawY;
-      int32 w = maxX;
-      while (w--) {
-        if (finalX > shiftPivot && finalX < fullwidth && finalY > shiftheight &&
-            finalY < fullheight) {
-          uint8 index = pixels[(finalY >> 9 << lineSize) + (finalX >> 9)];
-          if (index > 0)
-            *frameBuffer = Legacy_activePalette[index];
-        }
-
-        ++frameBuffer;
-        finalX -= cosine;
-        finalY += sine;
-      }
-
-      drawX += sine;
-      drawY += cosine;
-      frameBuffer += pitch;
-    }
-  } else {
-    int32 drawX = sprXPos + cosine * startX - sine * startY;
-    int32 drawY = cosine * startY + sprYPos + sine * startX;
-    while (maxY--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 finalX = drawX;
-      int32 finalY = drawY;
-      int32 w = maxX;
-      while (w--) {
-        if (finalX > shiftPivot && finalX < fullwidth && finalY > shiftheight &&
-            finalY < fullheight) {
-          uint8 index = pixels[(finalY >> 9 << lineSize) + (finalX >> 9)];
-          if (index > 0)
-            *frameBuffer = Legacy_activePalette[index];
-        }
-
-        ++frameBuffer;
-        finalX += cosine;
-        finalY += sine;
-      }
-
-      drawX -= sine;
-      drawY += cosine;
-      frameBuffer += pitch;
-    }
-  }
+  DrawSpriteRotozoomGeneric(XPos, YPos, -pivotX, -pivotY, width, height, sprX, sprY, scale, scale, direction, rotation, INK_NONE, 0xff, &graphicData[surface->dataPosition], surface->widthShift);
 }
 
 void RSDK::Legacy::DrawBlendedSprite(int32 XPos, int32 YPos, int32 width,
@@ -2228,7 +1627,7 @@ void RSDK::Legacy::DrawBlendedSprite(int32 XPos, int32 YPos, int32 width,
       &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
 
   while (height--) {
-    Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+    Legacy_activePalette = fullPalette[*lineBuffer];
     lineBuffer++;
 
     int32 w = width;
@@ -2277,7 +1676,7 @@ void RSDK::Legacy::DrawAlphaBlendedSprite(int32 XPos, int32 YPos, int32 width,
       &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
   if (alpha == 0xFF) {
     while (height--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+      Legacy_activePalette = fullPalette[*lineBuffer];
       lineBuffer++;
 
       int32 w = width;
@@ -2296,7 +1695,7 @@ void RSDK::Legacy::DrawAlphaBlendedSprite(int32 XPos, int32 YPos, int32 width,
     uint16 *pixelBlend = &blendLookupTable[0x20 * alpha];
 
     while (height--) {
-      Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+      Legacy_activePalette = fullPalette[*lineBuffer];
       lineBuffer++;
 
       int32 w = width;
@@ -2363,7 +1762,7 @@ void RSDK::Legacy::DrawAdditiveBlendedSprite(int32 XPos, int32 YPos,
       &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
 
   while (height--) {
-    Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+    Legacy_activePalette = fullPalette[*lineBuffer];
     lineBuffer++;
 
     int32 w = width;
@@ -2426,7 +1825,7 @@ void RSDK::Legacy::DrawSubtractiveBlendedSprite(int32 XPos, int32 YPos,
       &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
 
   while (height--) {
-    Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+    Legacy_activePalette = fullPalette[*lineBuffer];
     lineBuffer++;
 
     int32 w = width;
@@ -2675,7 +2074,7 @@ void RSDK::Legacy::DrawTexturedFace(void *v, uint8 sheetID) {
   uint8 *lineBuffer = &Legacy_gfxLineBuffer[faceTop];
 
   while (faceTop < faceBottom) {
-    Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+    Legacy_activePalette = fullPalette[*lineBuffer];
     lineBuffer++;
 
     int32 startX = faceLineStart[faceTop];
@@ -3066,7 +2465,7 @@ void RSDK::Legacy::v4::DrawTexturedFaceBlended(void *v, uint8 sheetID) {
   int32 shiftwidth = gfxSurface[sheetID].widthShift;
   uint8 *lineBuffer = &Legacy_gfxLineBuffer[faceTop];
   while (faceTop < faceBottom) {
-    Legacy_activePalette = Legacy_fullPalette[*lineBuffer];
+    Legacy_activePalette = fullPalette[*lineBuffer];
     lineBuffer++;
 
     int32 startX = faceLineStart[faceTop];

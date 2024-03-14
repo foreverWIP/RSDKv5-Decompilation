@@ -387,8 +387,12 @@ void DrawBlendedFace(Vector2 *vertices, uint32 *colors, int32 vertCount, int32 a
 void DrawSprite(Animator *animator, Vector2 *position, bool32 screenRelative);
 void DrawSpriteFlipped(int32 x, int32 y, int32 width, int32 height, int32 sprX, int32 sprY, int32 direction, int32 inkEffect, int32 alpha,
                        int32 sheetID);
+void DrawSpriteFlippedGeneric(int32 x, int32 y, int32 width, int32 height, int32 sprX, int32 sprY, int32 direction, int32 inkEffect, int32 alpha,
+                             int32 surfaceWidth, uint8 *surfacePixels);
 void DrawSpriteRotozoom(int32 x, int32 y, int32 pivotX, int32 pivotY, int32 width, int32 height, int32 sprX, int32 sprY, int32 scaleX, int32 scaleY,
                         int32 direction, int16 Rotation, int32 inkEffect, int32 alpha, int32 sheetID);
+void DrawSpriteRotozoomGeneric(int32 x, int32 y, int32 pivotX, int32 pivotY, int32 width, int32 height, int32 sprX, int32 sprY, int32 scaleX,
+                              int32 scaleY, int32 direction, int16 rotation, int32 inkEffect, int32 alpha, uint8 *pixels, int32 lineSize);
 
 void DrawDeformedSprite(uint16 sheetID, int32 inkEffect, int32 alpha);
 

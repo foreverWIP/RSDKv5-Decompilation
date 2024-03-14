@@ -29,7 +29,7 @@ void RSDK::Legacy::v3::InitFirstStage()
     Legacy_fadeMode = 0;
     ClearGraphicsData();
     ClearAnimationData();
-    Legacy_activePalette = Legacy_fullPalette[0];
+    Legacy_activePalette = fullPalette[0];
     Legacy_LoadPalette("MasterPalette.act", 0, 0, 0, 256);
 #if RETRO_USE_MOD_LOADER
     LoadGameXML(true);

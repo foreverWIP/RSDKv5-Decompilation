@@ -23,7 +23,7 @@ void RSDK::Legacy::v4::InitFirstStage(void)
     Legacy_fadeMode = 0;
     ClearGraphicsData();
     ClearAnimationData();
-    Legacy_activePalette = Legacy_fullPalette[0];
+    Legacy_activePalette = fullPalette[0];
     Legacy_stageMode     = STAGEMODE_LOAD;
     legacy_gameMode      = ENGINE_MAINGAME;
 }

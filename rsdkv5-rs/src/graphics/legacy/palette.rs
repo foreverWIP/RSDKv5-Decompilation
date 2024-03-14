@@ -2,8 +2,11 @@ use std::ffi::CStr;
 
 use crate::*;
 
-use self::engine_core::reader::{
-    close_file, init_file_info, read_bytes, seek_set, FileModes, LoadFile, DEFAULT_FILEINFO,
+use self::{
+    engine_core::reader::{
+        close_file, init_file_info, read_bytes, seek_set, FileModes, LoadFile, DEFAULT_FILEINFO,
+    },
+    graphics::palette::fullPalette,
 };
 
 pub const LEGACY_PALETTE_COUNT: usize = 0x8;
@@ -11,11 +14,8 @@ pub const LEGACY_PALETTE_COLOR_COUNT: usize = 0x100;
 
 // Palettes (as RGB565 Colors)
 #[no_mangle]
-pub static mut Legacy_fullPalette: [[uint16; LEGACY_PALETTE_COLOR_COUNT]; LEGACY_PALETTE_COUNT] =
-    [[0; LEGACY_PALETTE_COLOR_COUNT]; LEGACY_PALETTE_COUNT];
-#[no_mangle]
 pub static mut Legacy_activePalette: &mut [uint16; LEGACY_PALETTE_COLOR_COUNT] =
-    unsafe { &mut Legacy_fullPalette[0] }; // Ptr to the 256 color set thats active
+    unsafe { &mut fullPalette[0] }; // Ptr to the 256 color set thats active
 
 #[no_mangle]
 pub static mut Legacy_gfxLineBuffer: [uint8; SCREEN_YSIZE * 2] = [0; SCREEN_YSIZE * 2]; // Pointers to active palette
@@ -57,7 +57,7 @@ pub extern "C" fn set_active_palette(newActivePal: uint8, startLine: int32, endL
             }
         }
 
-        Legacy_activePalette = &mut Legacy_fullPalette[Legacy_gfxLineBuffer[0] as usize];
+        Legacy_activePalette = &mut fullPalette[Legacy_gfxLineBuffer[0] as usize];
     }
 }
 
@@ -72,7 +72,7 @@ pub extern "C" fn set_palette_entry(
 ) {
     unsafe {
         if paletteIndex != 0xFF {
-            Legacy_fullPalette[paletteIndex as usize][index as usize] = PACK_RGB888!(r, g, b);
+            fullPalette[paletteIndex as usize][index as usize] = PACK_RGB888!(r, g, b);
         } else {
             Legacy_activePalette[index as usize] = PACK_RGB888!(r, g, b);
         }
@@ -83,7 +83,7 @@ pub extern "C" fn set_palette_entry(
 #[export_name = "Legacy_SetPaletteEntryPacked"]
 pub extern "C" fn set_palette_entry_packed(paletteIndex: uint8, index: uint8, color: uint32) {
     unsafe {
-        Legacy_fullPalette[paletteIndex as usize][index as usize] =
+        fullPalette[paletteIndex as usize][index as usize] =
             PACK_RGB888!((color >> 16) as u8, (color >> 8) as u8, (color >> 0) as u8);
     }
 }
@@ -95,7 +95,7 @@ pub extern "C" fn get_palette_entry_packed(bankID: uint8, index: uint8) -> uint3
         // 0xF800 = 1111 1000 0000 0000 = R
         // 0x7E0  = 0000 0111 1110 0000 = G
         // 0x1F   = 0000 0000 0001 1111 = B
-        let clr: uint16 = Legacy_fullPalette[bankID as usize & 7][index as usize];
+        let clr: uint16 = fullPalette[bankID as usize & 7][index as usize];
 
         let R: int32 = (clr as i32 & 0xF800) << 8;
         let G: int32 = (clr as i32 & 0x7E0) << 5;
@@ -117,9 +117,8 @@ pub extern "C" fn v4_copy_palette(
     {
         unsafe {
             for i in 0..count {
-                Legacy_fullPalette[destinationPalette as usize]
-                    [(destPaletteStart as u16 + i) as usize] = Legacy_fullPalette
-                    [sourcePalette as usize][(srcPaletteStart as u16 + i) as usize];
+                fullPalette[destinationPalette as usize][(destPaletteStart as u16 + i) as usize] =
+                    fullPalette[sourcePalette as usize][(srcPaletteStart as u16 + i) as usize];
             }
         }
     }
@@ -145,7 +144,7 @@ pub extern "C" fn v4_rotate_palette(palID: int32, startIndex: uint8, endIndex: u
         if palID == -1 {
             palette = Legacy_activePalette;
         } else {
-            palette = &mut Legacy_fullPalette[palID as usize];
+            palette = &mut fullPalette[palID as usize];
         }
         if right {
             let startClr: uint16 = palette[endIndex as usize];
@@ -270,7 +269,7 @@ pub extern "C" fn set_palette_fade(
     let blendA: uint32 = 0xFF - blendAmount as u32;
     unsafe {
         let mut paletteColor: *mut uint16 =
-            &mut Legacy_fullPalette[destPaletteID as usize][startIndex as usize];
+            &mut fullPalette[destPaletteID as usize][startIndex as usize];
         for i in startIndex..endIndex {
             let clrA: uint32 = get_palette_entry_packed(srcPaletteA, i as u8);
             let clrB: uint32 = get_palette_entry_packed(srcPaletteB, i as u8);
@@ -306,7 +305,7 @@ pub extern "C" fn set_limited_fade(
 
     unsafe {
         Legacy_paletteMode = 1;
-        Legacy_activePalette = &mut Legacy_fullPalette[paletteID as usize];
+        Legacy_activePalette = &mut fullPalette[paletteID as usize];
     }
 
     if (blendAmount >= 0x100) {
@@ -320,7 +319,7 @@ pub extern "C" fn set_limited_fade(
     let blendA: uint32 = 0xFF - blendAmount as u32;
     unsafe {
         let mut paletteColor: *mut uint16 =
-            &mut Legacy_fullPalette[paletteID as usize][startIndex as usize];
+            &mut fullPalette[paletteID as usize][startIndex as usize];
         for i in startIndex..endIndex {
             let clrA: uint32 = get_palette_entry_packed(paletteID, i as u8);
 

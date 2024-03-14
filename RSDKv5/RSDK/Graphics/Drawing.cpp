@@ -2855,6 +2855,12 @@ void RSDK::DrawSprite(Animator *animator, Vector2 *position, bool32 screenRelati
 void RSDK::DrawSpriteFlipped(int32 x, int32 y, int32 width, int32 height, int32 sprX, int32 sprY, int32 direction, int32 inkEffect, int32 alpha,
                              int32 sheetID)
 {
+    GFXSurface *surface = &gfxSurface[sheetID];
+    DrawSpriteFlippedGeneric(x, y, width, height, sprX, sprY, direction, inkEffect, alpha, surface->width, surface->pixels);
+}
+void RSDK::DrawSpriteFlippedGeneric(int32 x, int32 y, int32 width, int32 height, int32 sprX, int32 sprY, int32 direction, int32 inkEffect, int32 alpha,
+                             int32 surfaceWidth, uint8 *surfacePixels)
+{
     switch (inkEffect) {
         default: break;
         case INK_ALPHA:
@@ -2905,7 +2911,6 @@ void RSDK::DrawSpriteFlipped(int32 x, int32 y, int32 width, int32 height, int32 
     if (width <= 0 || height <= 0)
         return;
 
-    GFXSurface *surface = &gfxSurface[sheetID];
     validDraw           = true;
     int32 pitch         = currentScreen->pitch - width;
     int32 gfxPitch      = 0;
@@ -2917,9 +2922,9 @@ void RSDK::DrawSpriteFlipped(int32 x, int32 y, int32 width, int32 height, int32 
         default: break;
 
         case FLIP_NONE:
-            gfxPitch    = surface->width - width;
+            gfxPitch    = surfaceWidth - width;
             lineBuffer  = &gfxLineBuffer[y];
-            pixels      = &surface->pixels[sprX + surface->width * sprY];
+            pixels      = &surfacePixels[sprX + surfaceWidth * sprY];
             frameBuffer = &currentScreen->frameBuffer[x + currentScreen->pitch * y];
             switch (inkEffect) {
                 case INK_NONE:
@@ -3066,9 +3071,9 @@ void RSDK::DrawSpriteFlipped(int32 x, int32 y, int32 width, int32 height, int32 
             break;
 
         case FLIP_X:
-            gfxPitch    = width + surface->width;
+            gfxPitch    = width + surfaceWidth;
             lineBuffer  = &gfxLineBuffer[y];
-            pixels      = &surface->pixels[widthFlip - 1 + sprX + surface->width * sprY];
+            pixels      = &surfacePixels[widthFlip - 1 + sprX + surfaceWidth * sprY];
             frameBuffer = &currentScreen->frameBuffer[x + currentScreen->pitch * y];
             switch (inkEffect) {
                 case INK_NONE:
@@ -3215,9 +3220,9 @@ void RSDK::DrawSpriteFlipped(int32 x, int32 y, int32 width, int32 height, int32 
             break;
 
         case FLIP_Y:
-            gfxPitch    = width + surface->width;
+            gfxPitch    = width + surfaceWidth;
             lineBuffer  = &gfxLineBuffer[y];
-            pixels      = &surface->pixels[sprX + surface->width * (sprY + heightFlip - 1)];
+            pixels      = &surfacePixels[sprX + surfaceWidth * (sprY + heightFlip - 1)];
             frameBuffer = &currentScreen->frameBuffer[x + currentScreen->pitch * y];
             switch (inkEffect) {
                 case INK_NONE:
@@ -3364,9 +3369,9 @@ void RSDK::DrawSpriteFlipped(int32 x, int32 y, int32 width, int32 height, int32 
             break;
 
         case FLIP_XY:
-            gfxPitch    = surface->width - width;
+            gfxPitch    = surfaceWidth - width;
             lineBuffer  = &gfxLineBuffer[y];
-            pixels      = &surface->pixels[widthFlip - 1 + sprX + surface->width * (sprY + heightFlip - 1)];
+            pixels      = &surfacePixels[widthFlip - 1 + sprX + surfaceWidth * (sprY + heightFlip - 1)];
             frameBuffer = &currentScreen->frameBuffer[x + currentScreen->pitch * y];
             switch (inkEffect) {
                 case INK_NONE:
@@ -3516,6 +3521,12 @@ void RSDK::DrawSpriteFlipped(int32 x, int32 y, int32 width, int32 height, int32 
 void RSDK::DrawSpriteRotozoom(int32 x, int32 y, int32 pivotX, int32 pivotY, int32 width, int32 height, int32 sprX, int32 sprY, int32 scaleX,
                               int32 scaleY, int32 direction, int16 rotation, int32 inkEffect, int32 alpha, int32 sheetID)
 {
+    GFXSurface *surface = &gfxSurface[sheetID];
+    DrawSpriteRotozoomGeneric(x, y, pivotX, pivotY, width, height, sprX, sprY, scaleX, scaleY, direction, rotation, inkEffect, alpha, surface->pixels, surface->lineSize);
+}
+void RSDK::DrawSpriteRotozoomGeneric(int32 x, int32 y, int32 pivotX, int32 pivotY, int32 width, int32 height, int32 sprX, int32 sprY, int32 scaleX,
+                              int32 scaleY, int32 direction, int16 rotation, int32 inkEffect, int32 alpha, uint8 *pixels, int32 lineSize)
+{
     switch (inkEffect) {
         default: break;
         case INK_ALPHA:
@@ -3634,8 +3645,6 @@ void RSDK::DrawSpriteRotozoom(int32 x, int32 y, int32 pivotX, int32 pivotY, int3
     int32 xSize = right - left;
     int32 ySize = bottom - top;
     if (xSize >= 1 && ySize >= 1) {
-        GFXSurface *surface = &gfxSurface[sheetID];
-
         int32 fullX         = TO_FIXED(sprX + width);
         int32 fullY         = TO_FIXED(sprY + height);
         validDraw           = true;
@@ -3646,11 +3655,9 @@ void RSDK::DrawSpriteRotozoom(int32 x, int32 y, int32 pivotX, int32 pivotY, int3
         int32 pitch         = currentScreen->pitch - xSize;
         int32 deltaYLen     = fullScaleY * cosine >> 2;
         int32 deltaY        = fullScaleY * sine >> 2;
-        int32 lineSize      = surface->lineSize;
         uint8 *lineBuffer   = &gfxLineBuffer[top];
         int32 xLen          = left - x;
         int32 yLen          = top - y;
-        uint8 *pixels       = surface->pixels;
         uint16 *frameBuffer = &currentScreen->frameBuffer[left + (top * currentScreen->pitch)];
         int32 fullSprX      = TO_FIXED(sprX) - 1;
         int32 fullSprY      = TO_FIXED(sprY) - 1;
