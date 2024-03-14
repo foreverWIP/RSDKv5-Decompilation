@@ -270,6 +270,12 @@ void RSDK::GenerateBlendLookupTable()
         tintLookupTable[i] = 0x841 * MIN(0x1F, tintValue);
     }
 #endif
+#if RETRO_REV0U
+    for (int32 i = 0; i < 0x10000; ++i) {
+        int32 tintValue    = (((uint32)i & 0x1F) + ((i >> 6) & 0x1F) + (((uint16)i >> 11) & 0x1F)) / 3 + 6;
+        defaultTintLookupTable[i] = 0x841 * MIN(0x1F, tintValue);
+    }
+#endif
 
     for (int32 c = 0; c < 0x100; ++c) {
         rgb32To16_R[c] = (c & 0xFFF8) << 8;

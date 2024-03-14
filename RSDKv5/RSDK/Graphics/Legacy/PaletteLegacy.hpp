@@ -5,7 +5,6 @@ extern "C" {
     // Palettes (as RGB565 Colors)
     extern uint16 *Legacy_activePalette; // Pointers to the 256 color set thats active
 
-    extern uint8 Legacy_gfxLineBuffer[SCREEN_YSIZE * 2]; // Pointers to active palette
     extern int32 Legacy_GFX_LINESIZE;
     extern int32 Legacy_GFX_LINESIZE_MINUSONE;
     extern int32 Legacy_GFX_LINESIZE_DOUBLE;

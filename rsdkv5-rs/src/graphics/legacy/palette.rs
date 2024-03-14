@@ -18,8 +18,6 @@ pub static mut Legacy_activePalette: &mut [uint16; LEGACY_PALETTE_COLOR_COUNT] =
     unsafe { &mut fullPalette[0] }; // Ptr to the 256 color set thats active
 
 #[no_mangle]
-pub static mut Legacy_gfxLineBuffer: [uint8; SCREEN_YSIZE * 2] = [0; SCREEN_YSIZE * 2]; // Pointers to active palette
-#[no_mangle]
 pub static mut Legacy_GFX_LINESIZE: int32 = 0;
 #[no_mangle]
 pub static mut Legacy_GFX_LINESIZE_MINUSONE: int32 = 0;
@@ -53,11 +51,11 @@ pub extern "C" fn set_active_palette(newActivePal: uint8, startLine: int32, endL
                     break;
                 }
 
-                Legacy_gfxLineBuffer[l as usize] = newActivePal;
+                gfxLineBuffer[l as usize] = newActivePal;
             }
         }
 
-        Legacy_activePalette = &mut fullPalette[Legacy_gfxLineBuffer[0] as usize];
+        Legacy_activePalette = &mut fullPalette[gfxLineBuffer[0] as usize];
     }
 }
 

@@ -1,4 +1,5 @@
 #include "RSDK/Core/RetroEngine.hpp"
+#include "RSDK/Graphics/Palette.hpp"
 
 using namespace RSDK;
 
@@ -38,7 +39,11 @@ void RSDK::LoadSceneFolder()
     ClearViewableVariables();
 
     // "unload" tint table
+#if RETRO_REV0U
+    tintLookupTable = defaultTintLookupTable;
+#else
     tintLookupTable = NULL;
+#endif
 #endif
 
     // Unload TileLayers

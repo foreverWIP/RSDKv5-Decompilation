@@ -1,5 +1,6 @@
 
 
+#include "RSDK/Graphics/Drawing.hpp"
 #include "v3/DrawingLegacyv3.cpp"
 #include "v4/DrawingLegacyv4.cpp"
 
@@ -12,16 +13,6 @@ RSDK::Legacy::DrawListEntry
 int32 RSDK::Legacy::gfxDataPosition;
 RSDK::Legacy::GFXSurface RSDK::Legacy::gfxSurface[LEGACY_SURFACE_COUNT];
 uint8 RSDK::Legacy::graphicData[LEGACY_GFXDATA_SIZE];
-
-uint16 RSDK::Legacy::tintLookupTable[0x10000];
-
-void RSDK::Legacy::GenerateBlendLookupTable() {
-  for (int32 i = 0; i < 0x10000; i++) {
-    int32 tintValue =
-        ((i & 0x1F) + ((i & 0x7E0) >> 6) + ((i & 0xF800) >> 11)) / 3 + 6;
-    tintLookupTable[i] = 0x841 * MIN(tintValue, 0x1F);
-  }
-}
 
 void RSDK::Legacy::ClearScreen(uint8 index) {
   uint16 color = Legacy_activePalette[index];
@@ -94,7 +85,7 @@ void RSDK::Legacy::DrawHLineScrollLayer(int32 layerID) {
   }
 
   uint16 *frameBuffer = currentScreen->frameBuffer;
-  uint8 *lineBuffer = Legacy_gfxLineBuffer;
+  uint8 *lineBuffer = gfxLineBuffer;
   int32 tileYPos = yscrollOffset % (layerheight << 7);
   if (tileYPos < 0)
     tileYPos += layerheight << 7;
@@ -691,7 +682,7 @@ void RSDK::Legacy::DrawVLineScrollLayer(int32 layerID) {
   }
 
   uint16 *frameBuffer = currentScreen->frameBuffer;
-  Legacy_activePalette = fullPalette[Legacy_gfxLineBuffer[0]];
+  Legacy_activePalette = fullPalette[gfxLineBuffer[0]];
   int32 tileXPos = xscrollOffset % (layerheight << 7);
   if (tileXPos < 0)
     tileXPos += layerheight << 7;
@@ -1238,7 +1229,7 @@ void RSDK::Legacy::Draw3DFloorLayer(int32 layerID) {
   int32 layerZPos = layer->zpos;
   int32 sinValue = sinM7LookupTable[layer->angle];
   int32 cosValue = cosM7LookupTable[layer->angle];
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[(SCREEN_YSIZE / 2) + 12];
+  uint8 *lineBuffer = &gfxLineBuffer[(SCREEN_YSIZE / 2) + 12];
   uint16 *frameBuffer =
       &currentScreen
            ->frameBuffer[((SCREEN_YSIZE / 2) + 12) * Legacy_GFX_LINESIZE];
@@ -1306,7 +1297,7 @@ void RSDK::Legacy::Draw3DSkyLayer(int32 layerID) {
   uint16 *frameBuffer =
       &currentScreen
            ->frameBuffer[((SCREEN_YSIZE / 2) + 12) * Legacy_GFX_LINESIZE];
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[((SCREEN_YSIZE / 2) + 12)];
+  uint8 *lineBuffer = &gfxLineBuffer[((SCREEN_YSIZE / 2) + 12)];
   int32 layerXPos = layer->xpos >> 4;
   int32 layerZPos = layer->zpos >> 4;
   for (int32 i = TILE_SIZE / 2; i < SCREEN_YSIZE - TILE_SIZE; ++i) {
@@ -1369,196 +1360,23 @@ void RSDK::Legacy::Draw3DSkyLayer(int32 layerID) {
 void RSDK::Legacy::DrawRectangle(int32 XPos, int32 YPos, int32 width,
                                  int32 height, int32 R, int32 G, int32 B,
                                  int32 A) {
-  if (A > 0xFF)
-    A = 0xFF;
-
-  if (width + XPos > Legacy_GFX_LINESIZE)
-    width = Legacy_GFX_LINESIZE - XPos;
-  if (XPos < 0) {
-    width += XPos;
-    XPos = 0;
+  int32 inkEffect = INK_ALPHA;
+  if (A >= 0xFF) {
+    inkEffect = INK_NONE;
   }
-
-  if (height + YPos > SCREEN_YSIZE)
-    height = SCREEN_YSIZE - YPos;
-  if (YPos < 0) {
-    height += YPos;
-    YPos = 0;
-  }
-
-  if (width <= 0 || height <= 0 || A <= 0)
-    return;
-
-  int32 pitch = Legacy_GFX_LINESIZE - width;
-  uint16 *frameBufferPtr =
-      &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-  uint16 clr = PACK_RGB888(R, G, B);
-
-  if (A == 0xFF) {
-    int32 h = height;
-    while (h--) {
-      int32 w = width;
-      while (w--) {
-        *frameBufferPtr = clr;
-        ++frameBufferPtr;
-      }
-      frameBufferPtr += pitch;
-    }
-  } else {
-    uint16 *fbufferBlend = &blendLookupTable[0x20 * (0xFF - A)];
-    uint16 *pixelBlend = &blendLookupTable[0x20 * A];
-
-    int32 h = height;
-    while (h--) {
-      int32 w = width;
-      while (w--) {
-        int32 R = (fbufferBlend[(*frameBufferPtr & 0xF800) >> 11] +
-                   pixelBlend[(clr & 0xF800) >> 11])
-                  << 11;
-        int32 G = (fbufferBlend[(*frameBufferPtr & 0x7E0) >> 6] +
-                   pixelBlend[(clr & 0x7E0) >> 6])
-                  << 6;
-        int32 B = fbufferBlend[*frameBufferPtr & 0x1F] + pixelBlend[clr & 0x1F];
-
-        *frameBufferPtr = R | G | B;
-        ++frameBufferPtr;
-      }
-      frameBufferPtr += pitch;
-    }
-  }
+  RSDK::DrawRectangle(XPos, YPos, width, height, (R << 16) | (G << 8) | B, A, inkEffect, true);
 }
 
 void RSDK::Legacy::DrawTintRectangle(int32 XPos, int32 YPos, int32 width,
                                      int32 height) {
-  if (width + XPos > Legacy_GFX_LINESIZE)
-    width = Legacy_GFX_LINESIZE - XPos;
-  if (XPos < 0) {
-    width += XPos;
-    XPos = 0;
-  }
-
-  if (height + YPos > SCREEN_YSIZE)
-    height = SCREEN_YSIZE - YPos;
-  if (YPos < 0) {
-    height += YPos;
-    YPos = 0;
-  }
-  if (width <= 0 || height <= 0)
-    return;
-  int32 yOffset = Legacy_GFX_LINESIZE - width;
-  for (uint16 *frameBufferPtr =
-           &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-       ; frameBufferPtr += yOffset) {
-    height--;
-    if (!height)
-      break;
-    int32 w = width;
-    while (w--) {
-      *frameBufferPtr = tintLookupTable[*frameBufferPtr];
-      ++frameBufferPtr;
-    }
-  }
+  RSDK::DrawRectangle(XPos, YPos, width, height, 0, 0, INK_TINT, true);
 }
 void RSDK::Legacy::DrawScaledTintMask(int32 direction, int32 XPos, int32 YPos,
                                       int32 pivotX, int32 pivotY, int32 scaleX,
                                       int32 scaleY, int32 width, int32 height,
                                       int32 sprX, int32 sprY, int32 sheetID) {
-  int32 roundedYPos = 0;
-  int32 roundedXPos = 0;
-  int32 truescaleX = 4 * scaleX;
-  int32 truescaleY = 4 * scaleY;
-  int32 widthM1 = width - 1;
-  int32 trueXPos = XPos - (truescaleX * pivotX >> 11);
-  int32 trueYPos = YPos - (truescaleY * pivotY >> 11);
-  width = truescaleX * width >> 11;
-  height = truescaleY * height >> 11;
-  int32 finalscaleX =
-      (int32)(float)((float)(2048.0 / (float)truescaleX) * 2048.0);
-  int32 finalscaleY =
-      (int32)(float)((float)(2048.0 / (float)truescaleY) * 2048.0);
-
-  if (width + trueXPos > Legacy_GFX_LINESIZE) {
-    width = Legacy_GFX_LINESIZE - trueXPos;
-  }
-
-  if (direction) {
-    if (trueXPos < 0) {
-      widthM1 -= trueXPos * -finalscaleX >> 11;
-      roundedXPos = (uint16)trueXPos * -(int16)finalscaleX & 0x7FF;
-      width += trueXPos;
-      trueXPos = 0;
-    }
-  } else if (trueXPos < 0) {
-    sprX += trueXPos * -finalscaleX >> 11;
-    roundedXPos = (uint16)trueXPos * -(int16)finalscaleX & 0x7FF;
-    width += trueXPos;
-    trueXPos = 0;
-  }
-
-  if (height + trueYPos > SCREEN_YSIZE) {
-    height = SCREEN_YSIZE - trueYPos;
-  }
-  if (trueYPos < 0) {
-    sprY += trueYPos * -finalscaleY >> 11;
-    roundedYPos = (uint16)trueYPos * -(int16)finalscaleY & 0x7FF;
-    height += trueYPos;
-    trueYPos = 0;
-  }
-
-  if (width <= 0 || height <= 0)
-    return;
-
   GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - width;
-  int32 gfxwidth = surface->width;
-  // uint8 *lineBuffer       = &Legacy_gfxLineBuffer[trueYPos];
-  uint8 *gfxData =
-      &graphicData[sprX + surface->width * sprY + surface->dataPosition];
-  uint16 *frameBufferPtr =
-      &currentScreen->frameBuffer[trueXPos + Legacy_GFX_LINESIZE * trueYPos];
-  if (direction == FLIP_X) {
-    uint8 *gfxDataPtr = &gfxData[widthM1];
-    int32 gfxPitch = 0;
-    while (height--) {
-      int32 roundXPos = roundedXPos;
-      int32 w = width;
-      while (w--) {
-        if (*gfxDataPtr > 0)
-          *frameBufferPtr = tintLookupTable[*gfxDataPtr];
-        int32 offsetX = finalscaleX + roundXPos;
-        gfxDataPtr -= offsetX >> 11;
-        gfxPitch += offsetX >> 11;
-        roundXPos = offsetX & 0x7FF;
-        ++frameBufferPtr;
-      }
-      frameBufferPtr += pitch;
-      int32 offsetY = finalscaleY + roundedYPos;
-      gfxDataPtr += gfxPitch + (offsetY >> 11) * gfxwidth;
-      roundedYPos = offsetY & 0x7FF;
-      gfxPitch = 0;
-    }
-  } else {
-    int32 gfxPitch = 0;
-    int32 h = height;
-    while (h--) {
-      int32 roundXPos = roundedXPos;
-      int32 w = width;
-      while (w--) {
-        if (*gfxData > 0)
-          *frameBufferPtr = tintLookupTable[*gfxData];
-        int32 offsetX = finalscaleX + roundXPos;
-        gfxData += offsetX >> 11;
-        gfxPitch += offsetX >> 11;
-        roundXPos = offsetX & 0x7FF;
-        ++frameBufferPtr;
-      }
-      frameBufferPtr += pitch;
-      int32 offsetY = finalscaleY + roundedYPos;
-      gfxData += (offsetY >> 11) * gfxwidth - gfxPitch;
-      roundedYPos = offsetY & 0x7FF;
-      gfxPitch = 0;
-    }
-  }
+  DrawSpriteRotozoomGeneric(XPos, YPos, -pivotX, -pivotY, width, height, sprX, sprY, scaleX, scaleY, direction, 0, INK_TINT, 0xff, &graphicData[surface->dataPosition], surface->widthShift);
 }
 
 void RSDK::Legacy::DrawSprite(int32 XPos, int32 YPos, int32 width, int32 height,
@@ -1600,255 +1418,36 @@ void RSDK::Legacy::DrawSpriteRotozoom(int32 direction, int32 XPos, int32 YPos,
 void RSDK::Legacy::DrawBlendedSprite(int32 XPos, int32 YPos, int32 width,
                                      int32 height, int32 sprX, int32 sprY,
                                      int32 sheetID) {
-  if (width + XPos > Legacy_GFX_LINESIZE)
-    width = Legacy_GFX_LINESIZE - XPos;
-  if (XPos < 0) {
-    sprX -= XPos;
-    width += XPos;
-    XPos = 0;
-  }
-  if (height + YPos > SCREEN_YSIZE)
-    height = SCREEN_YSIZE - YPos;
-  if (YPos < 0) {
-    sprY -= YPos;
-    height += YPos;
-    YPos = 0;
-  }
-  if (width <= 0 || height <= 0)
-    return;
-
   GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - width;
-  int32 gfxPitch = surface->width - width;
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[YPos];
-  uint8 *pixels =
-      &graphicData[sprX + surface->width * sprY + surface->dataPosition];
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-
-  while (height--) {
-    Legacy_activePalette = fullPalette[*lineBuffer];
-    lineBuffer++;
-
-    int32 w = width;
-    while (w--) {
-      if (*pixels > 0)
-        *frameBuffer = ((Legacy_activePalette[*pixels] & 0xF7DE) >> 1) +
-                       ((*frameBuffer & 0xF7DE) >> 1);
-      ++pixels;
-      ++frameBuffer;
-    }
-
-    frameBuffer += pitch;
-    pixels += gfxPitch;
-  }
+  RSDK::DrawSpriteFlippedGeneric(XPos, YPos, width, height, sprX, sprY,
+                                 FLIP_NONE, INK_BLEND, 0xff, surface->width,
+                                 &graphicData[surface->dataPosition]);
 }
 void RSDK::Legacy::DrawAlphaBlendedSprite(int32 XPos, int32 YPos, int32 width,
                                           int32 height, int32 sprX, int32 sprY,
                                           int32 alpha, int32 sheetID) {
-  if (alpha > 0xFF)
-    alpha = 0xFF;
-
-  if (width + XPos > Legacy_GFX_LINESIZE)
-    width = Legacy_GFX_LINESIZE - XPos;
-  if (XPos < 0) {
-    sprX -= XPos;
-    width += XPos;
-    XPos = 0;
-  }
-  if (height + YPos > SCREEN_YSIZE)
-    height = SCREEN_YSIZE - YPos;
-  if (YPos < 0) {
-    sprY -= YPos;
-    height += YPos;
-    YPos = 0;
-  }
-  if (width <= 0 || height <= 0 || alpha <= 0)
-    return;
-
   GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - width;
-  int32 gfxPitch = surface->width - width;
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[YPos];
-  uint8 *pixels =
-      &graphicData[sprX + surface->width * sprY + surface->dataPosition];
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-  if (alpha == 0xFF) {
-    while (height--) {
-      Legacy_activePalette = fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 w = width;
-      while (w--) {
-        if (*pixels > 0)
-          *frameBuffer = Legacy_activePalette[*pixels];
-        ++pixels;
-        ++frameBuffer;
-      }
-
-      frameBuffer += pitch;
-      pixels += gfxPitch;
-    }
-  } else {
-    uint16 *fbufferBlend = &blendLookupTable[0x20 * (0xFF - alpha)];
-    uint16 *pixelBlend = &blendLookupTable[0x20 * alpha];
-
-    while (height--) {
-      Legacy_activePalette = fullPalette[*lineBuffer];
-      lineBuffer++;
-
-      int32 w = width;
-      while (w--) {
-        if (*pixels > 0) {
-          uint16 color = Legacy_activePalette[*pixels];
-
-          int32 R = (fbufferBlend[(*frameBuffer & 0xF800) >> 11] +
-                     pixelBlend[(color & 0xF800) >> 11])
-                    << 11;
-          int32 G = (fbufferBlend[(*frameBuffer & 0x7E0) >> 6] +
-                     pixelBlend[(color & 0x7E0) >> 6])
-                    << 6;
-          int32 B =
-              fbufferBlend[*frameBuffer & 0x1F] + pixelBlend[color & 0x1F];
-
-          *frameBuffer = R | G | B;
-        }
-        ++pixels;
-        ++frameBuffer;
-      }
-
-      frameBuffer += pitch;
-      pixels += gfxPitch;
-    }
-  }
+  RSDK::DrawSpriteFlippedGeneric(XPos, YPos, width, height, sprX, sprY,
+                                 FLIP_NONE, INK_ALPHA, alpha, surface->width,
+                                 &graphicData[surface->dataPosition]);
 }
 void RSDK::Legacy::DrawAdditiveBlendedSprite(int32 XPos, int32 YPos,
                                              int32 width, int32 height,
                                              int32 sprX, int32 sprY,
                                              int32 alpha, int32 sheetID) {
-  if (alpha > 0xFF)
-    alpha = 0xFF;
-
-  if (width + XPos > Legacy_GFX_LINESIZE)
-    width = Legacy_GFX_LINESIZE - XPos;
-
-  if (XPos < 0) {
-    sprX -= XPos;
-    width += XPos;
-    XPos = 0;
-  }
-
-  if (height + YPos > SCREEN_YSIZE)
-    height = SCREEN_YSIZE - YPos;
-
-  if (YPos < 0) {
-    sprY -= YPos;
-    height += YPos;
-    YPos = 0;
-  }
-
-  if (width <= 0 || height <= 0 || alpha <= 0)
-    return;
-
-  uint16 *blendTablePtr = &blendLookupTable[0x20 * alpha];
   GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - width;
-  int32 gfxPitch = surface->width - width;
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[YPos];
-  uint8 *pixels =
-      &graphicData[sprX + surface->width * sprY + surface->dataPosition];
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-
-  while (height--) {
-    Legacy_activePalette = fullPalette[*lineBuffer];
-    lineBuffer++;
-
-    int32 w = width;
-    while (w--) {
-      if (*pixels > 0) {
-        uint16 color = Legacy_activePalette[*pixels];
-
-        int32 R = MIN((blendTablePtr[(color & 0xF800) >> 11] << 11) +
-                          (*frameBuffer & 0xF800),
-                      0xF800);
-        int32 G = MIN((blendTablePtr[(color & 0x7E0) >> 6] << 6) +
-                          (*frameBuffer & 0x7E0),
-                      0x7E0);
-        int32 B =
-            MIN(blendTablePtr[color & 0x1F] + (*frameBuffer & 0x1F), 0x1F);
-
-        *frameBuffer = R | G | B;
-      }
-
-      ++pixels;
-      ++frameBuffer;
-    }
-
-    frameBuffer += pitch;
-    pixels += gfxPitch;
-  }
+  RSDK::DrawSpriteFlippedGeneric(XPos, YPos, width, height, sprX, sprY,
+                                 FLIP_NONE, INK_ADD, alpha, surface->width,
+                                 &graphicData[surface->dataPosition]);
 }
 void RSDK::Legacy::DrawSubtractiveBlendedSprite(int32 XPos, int32 YPos,
                                                 int32 width, int32 height,
                                                 int32 sprX, int32 sprY,
                                                 int32 alpha, int32 sheetID) {
-  if (alpha > 0xFF)
-    alpha = 0xFF;
-
-  if (width + XPos > Legacy_GFX_LINESIZE)
-    width = Legacy_GFX_LINESIZE - XPos;
-  if (XPos < 0) {
-    sprX -= XPos;
-    width += XPos;
-    XPos = 0;
-  }
-  if (height + YPos > SCREEN_YSIZE)
-    height = SCREEN_YSIZE - YPos;
-  if (YPos < 0) {
-    sprY -= YPos;
-    height += YPos;
-    YPos = 0;
-  }
-  if (width <= 0 || height <= 0 || alpha <= 0)
-    return;
-
-  uint16 *subBlendTable = &subtractLookupTable[0x20 * alpha];
   GFXSurface *surface = &gfxSurface[sheetID];
-  int32 pitch = Legacy_GFX_LINESIZE - width;
-  int32 gfxPitch = surface->width - width;
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[YPos];
-  uint8 *pixels =
-      &graphicData[sprX + surface->width * sprY + surface->dataPosition];
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[XPos + Legacy_GFX_LINESIZE * YPos];
-
-  while (height--) {
-    Legacy_activePalette = fullPalette[*lineBuffer];
-    lineBuffer++;
-
-    int32 w = width;
-    while (w--) {
-      if (*pixels > 0) {
-        uint16 color = Legacy_activePalette[*pixels];
-
-        int32 R = MAX((*frameBuffer & 0xF800) -
-                          (subBlendTable[(color & 0xF800) >> 11] << 11),
-                      0);
-        int32 G = MAX((*frameBuffer & 0x7E0) -
-                          (subBlendTable[(color & 0x7E0) >> 6] << 6),
-                      0);
-        int32 B = MAX((*frameBuffer & 0x1F) - subBlendTable[color & 0x1F], 0);
-
-        *frameBuffer = R | G | B;
-      }
-      ++pixels;
-      ++frameBuffer;
-    }
-    frameBuffer += pitch;
-    pixels += gfxPitch;
-  }
+  RSDK::DrawSpriteFlippedGeneric(XPos, YPos, width, height, sprX, sprY,
+                                 FLIP_NONE, INK_SUB, alpha, surface->width,
+                                 &graphicData[surface->dataPosition]);
 }
 
 void RSDK::Legacy::DrawFace(void *v, uint32 color) {
@@ -2071,7 +1670,7 @@ void RSDK::Legacy::DrawTexturedFace(void *v, uint8 sheetID) {
       &currentScreen->frameBuffer[Legacy_GFX_LINESIZE * faceTop];
   uint8 *pixels = &graphicData[gfxSurface[sheetID].dataPosition];
   int32 shiftwidth = gfxSurface[sheetID].widthShift;
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[faceTop];
+  uint8 *lineBuffer = &gfxLineBuffer[faceTop];
 
   while (faceTop < faceBottom) {
     Legacy_activePalette = fullPalette[*lineBuffer];
@@ -2463,7 +2062,7 @@ void RSDK::Legacy::v4::DrawTexturedFaceBlended(void *v, uint8 sheetID) {
       &currentScreen->frameBuffer[Legacy_GFX_LINESIZE * faceTop];
   uint8 *pixels = &graphicData[gfxSurface[sheetID].dataPosition];
   int32 shiftwidth = gfxSurface[sheetID].widthShift;
-  uint8 *lineBuffer = &Legacy_gfxLineBuffer[faceTop];
+  uint8 *lineBuffer = &gfxLineBuffer[faceTop];
   while (faceTop < faceBottom) {
     Legacy_activePalette = fullPalette[*lineBuffer];
     lineBuffer++;

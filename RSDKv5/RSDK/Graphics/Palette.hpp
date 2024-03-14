@@ -27,6 +27,9 @@ extern "C" {
 
 #if RETRO_REV02
     extern uint16 *tintLookupTable;
+#if RETRO_REV0U
+    extern uint16 defaultTintLookupTable[0x10000];
+#endif
 #else
     extern uint16 tintLookupTable[0x10000];
 #endif

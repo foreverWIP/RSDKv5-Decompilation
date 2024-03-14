@@ -32,8 +32,6 @@ extern int32 gfxDataPosition;
 extern GFXSurface gfxSurface[LEGACY_SURFACE_COUNT];
 extern uint8 graphicData[LEGACY_GFXDATA_SIZE];
 
-extern uint16 tintLookupTable[0x10000];
-
 void GenerateBlendLookupTable();
 
 inline void ClearGraphicsData()

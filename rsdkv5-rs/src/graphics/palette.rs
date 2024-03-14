@@ -40,7 +40,7 @@ static mut stagePalette: [[uint16; PALETTE_BANK_SIZE]; PALETTE_BANK_COUNT] =
 pub static mut fullPalette: [[uint16; PALETTE_BANK_SIZE]; PALETTE_BANK_COUNT] =
     [[0; PALETTE_BANK_SIZE]; PALETTE_BANK_COUNT];
 #[no_mangle]
-pub static mut gfxLineBuffer: [uint8; SCREEN_YSIZE] = [0; SCREEN_YSIZE];
+pub static mut gfxLineBuffer: [uint8; SCREEN_YSIZE * 2] = [0; SCREEN_YSIZE * 2];
 #[no_mangle]
 static mut maskColor: int32 = 0;
 
@@ -48,6 +48,9 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "version_2")] {
         #[no_mangle]
         static mut tintLookupTable: *const uint16 = std::ptr::null_mut();
+        #[cfg(feature = "version_u")]
+        #[no_mangle]
+        static mut defaultTintLookupTable: [uint16; 0x10000] = [0; 0x10000];
     } else {
         #[no_mangle]
         static mut tintLookupTable: [uint16; 0x10000] = [0; 0x10000];
