@@ -3605,23 +3605,23 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 switch (scriptEng.operands[0]) {
                     case MAT_WORLD:
                         switch (scriptEng.operands[1]) {
-                            case MAT_WORLD: MatrixMultiply(&matWorld, &matWorld); break;
-                            case MAT_VIEW: MatrixMultiply(&matWorld, &matView); break;
-                            case MAT_TEMP: MatrixMultiply(&matWorld, &matTemp); break;
+                            case MAT_WORLD: MatrixMultiply(&matWorld, &matWorld, &matWorld); break;
+                            case MAT_VIEW: MatrixMultiply(&matWorld, &matWorld, &matView); break;
+                            case MAT_TEMP: MatrixMultiply(&matWorld, &matWorld, &matTemp); break;
                         }
                         break;
                     case MAT_VIEW:
                         switch (scriptEng.operands[1]) {
-                            case MAT_WORLD: MatrixMultiply(&matView, &matWorld); break;
-                            case MAT_VIEW: MatrixMultiply(&matView, &matView); break;
-                            case MAT_TEMP: MatrixMultiply(&matView, &matTemp); break;
+                            case MAT_WORLD: MatrixMultiply(&matView, &matView, &matWorld); break;
+                            case MAT_VIEW: MatrixMultiply(&matView, &matView, &matView); break;
+                            case MAT_TEMP: MatrixMultiply(&matView, &matView, &matTemp); break;
                         }
                         break;
                     case MAT_TEMP:
                         switch (scriptEng.operands[1]) {
-                            case MAT_WORLD: MatrixMultiply(&matTemp, &matWorld); break;
-                            case MAT_VIEW: MatrixMultiply(&matTemp, &matView); break;
-                            case MAT_TEMP: MatrixMultiply(&matTemp, &matTemp); break;
+                            case MAT_WORLD: MatrixMultiply(&matTemp, &matTemp, &matWorld); break;
+                            case MAT_VIEW: MatrixMultiply(&matTemp, &matTemp, &matView); break;
+                            case MAT_TEMP: MatrixMultiply(&matTemp, &matTemp, &matTemp); break;
                         }
                         break;
                 }
@@ -3629,9 +3629,9 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             case FUNC_MATRIXTRANSLATEXYZ:
                 opcodeSize = 0;
                 switch (scriptEng.operands[0]) {
-                    case MAT_WORLD: MatrixTranslateXYZ(&matWorld, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]); break;
-                    case MAT_VIEW: MatrixTranslateXYZ(&matView, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]); break;
-                    case MAT_TEMP: MatrixTranslateXYZ(&matTemp, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]); break;
+                    case MAT_WORLD: MatrixTranslateXYZ(&matWorld, scriptEng.operands[1] << 8, scriptEng.operands[2] << 8, scriptEng.operands[3] << 8, true); break;
+                    case MAT_VIEW: MatrixTranslateXYZ(&matView, scriptEng.operands[1] << 8, scriptEng.operands[2] << 8, scriptEng.operands[3] << 8, true); break;
+                    case MAT_TEMP: MatrixTranslateXYZ(&matTemp, scriptEng.operands[1] << 8, scriptEng.operands[2] << 8, scriptEng.operands[3] << 8, true); break;
                 }
                 break;
             case FUNC_MATRIXSCALEXYZ:
@@ -3645,33 +3645,33 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
             case FUNC_MATRIXROTATEX:
                 opcodeSize = 0;
                 switch (scriptEng.operands[0]) {
-                    case MAT_WORLD: MatrixRotateX(&matWorld, scriptEng.operands[1]); break;
-                    case MAT_VIEW: MatrixRotateX(&matView, scriptEng.operands[1]); break;
-                    case MAT_TEMP: MatrixRotateX(&matTemp, scriptEng.operands[1]); break;
+                    case MAT_WORLD: MatrixRotateX(&matWorld, scriptEng.operands[1] << 1); break;
+                    case MAT_VIEW: MatrixRotateX(&matView, scriptEng.operands[1] << 1); break;
+                    case MAT_TEMP: MatrixRotateX(&matTemp, scriptEng.operands[1] << 1); break;
                 }
                 break;
             case FUNC_MATRIXROTATEY:
                 opcodeSize = 0;
                 switch (scriptEng.operands[0]) {
-                    case MAT_WORLD: MatrixRotateY(&matWorld, scriptEng.operands[1]); break;
-                    case MAT_VIEW: MatrixRotateY(&matView, scriptEng.operands[1]); break;
-                    case MAT_TEMP: MatrixRotateY(&matTemp, scriptEng.operands[1]); break;
+                    case MAT_WORLD: MatrixRotateY(&matWorld, scriptEng.operands[1] << 1); break;
+                    case MAT_VIEW: MatrixRotateY(&matView, scriptEng.operands[1] << 1); break;
+                    case MAT_TEMP: MatrixRotateY(&matTemp, scriptEng.operands[1] << 1); break;
                 }
                 break;
             case FUNC_MATRIXROTATEZ:
                 opcodeSize = 0;
                 switch (scriptEng.operands[0]) {
-                    case MAT_WORLD: MatrixRotateZ(&matWorld, scriptEng.operands[1]); break;
-                    case MAT_VIEW: MatrixRotateZ(&matView, scriptEng.operands[1]); break;
-                    case MAT_TEMP: MatrixRotateZ(&matTemp, scriptEng.operands[1]); break;
+                    case MAT_WORLD: MatrixRotateZ(&matWorld, scriptEng.operands[1] << 1); break;
+                    case MAT_VIEW: MatrixRotateZ(&matView, scriptEng.operands[1] << 1); break;
+                    case MAT_TEMP: MatrixRotateZ(&matTemp, scriptEng.operands[1] << 1); break;
                 }
                 break;
             case FUNC_MATRIXROTATEXYZ:
                 opcodeSize = 0;
                 switch (scriptEng.operands[0]) {
-                    case MAT_WORLD: MatrixRotateXYZ(&matWorld, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]); break;
-                    case MAT_VIEW: MatrixRotateXYZ(&matView, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]); break;
-                    case MAT_TEMP: MatrixRotateXYZ(&matTemp, scriptEng.operands[1], scriptEng.operands[2], scriptEng.operands[3]); break;
+                    case MAT_WORLD: MatrixRotateXYZ(&matWorld, scriptEng.operands[1] << 1, scriptEng.operands[2] << 1, scriptEng.operands[3] << 1); break;
+                    case MAT_VIEW: MatrixRotateXYZ(&matView, scriptEng.operands[1] << 1, scriptEng.operands[2] << 1, scriptEng.operands[3] << 1); break;
+                    case MAT_TEMP: MatrixRotateXYZ(&matTemp, scriptEng.operands[1] << 1, scriptEng.operands[2] << 1, scriptEng.operands[3] << 1); break;
                 }
                 break;
             case FUNC_TRANSFORMVERTICES:

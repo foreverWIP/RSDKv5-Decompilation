@@ -1,10 +1,10 @@
 int32 RSDK::Legacy::vertexCount = 0;
 int32 RSDK::Legacy::faceCount   = 0;
 
-RSDK::Legacy::Matrix RSDK::Legacy::matFinal;
-RSDK::Legacy::Matrix RSDK::Legacy::matWorld;
-RSDK::Legacy::Matrix RSDK::Legacy::matView;
-RSDK::Legacy::Matrix RSDK::Legacy::matTemp;
+RSDK::Matrix RSDK::Legacy::matFinal;
+RSDK::Matrix RSDK::Legacy::matWorld;
+RSDK::Matrix RSDK::Legacy::matView;
+RSDK::Matrix RSDK::Legacy::matTemp;
 
 int32 RSDK::Legacy::projectionX = 136;
 int32 RSDK::Legacy::projectionY = 160;
@@ -25,249 +25,6 @@ RSDK::Legacy::DrawListEntry3D RSDK::Legacy::drawList3D[LEGACY_FACEBUFFER_SIZE];
 
 int32 RSDK::Legacy::fogColor    = 0;
 int32 RSDK::Legacy::fogStrength = 0;
-
-void RSDK::Legacy::SetIdentityMatrix(Matrix *matrix)
-{
-    matrix->values[0][0] = 0x100;
-    matrix->values[0][1] = 0;
-    matrix->values[0][2] = 0;
-    matrix->values[0][3] = 0;
-
-    matrix->values[1][0] = 0;
-    matrix->values[1][1] = 0x100;
-    matrix->values[1][2] = 0;
-    matrix->values[1][3] = 0;
-
-    matrix->values[2][0] = 0;
-    matrix->values[2][1] = 0;
-    matrix->values[2][2] = 0x100;
-    matrix->values[2][3] = 0;
-
-    matrix->values[3][0] = 0;
-    matrix->values[3][1] = 0;
-    matrix->values[3][2] = 0;
-    matrix->values[3][3] = 0x100;
-}
-
-void RSDK::Legacy::MatrixMultiply(Matrix *matrixA, Matrix *matrixB)
-{
-    int32 output[16];
-
-    for (int32 i = 0; i < 0x10; ++i) {
-        uint32 rowA = i / 4;
-        uint32 rowB = i % 4;
-        output[i]   = (matrixA->values[rowA][3] * matrixB->values[3][rowB] >> 8) + (matrixA->values[rowA][2] * matrixB->values[2][rowB] >> 8)
-                    + (matrixA->values[rowA][1] * matrixB->values[1][rowB] >> 8) + (matrixA->values[rowA][0] * matrixB->values[0][rowB] >> 8);
-    }
-
-    for (int32 i = 0; i < 0x10; ++i) matrixA->values[i / 4][i % 4] = output[i];
-}
-
-void RSDK::Legacy::MatrixInverse(Matrix *matrix)
-{
-    double inv[16], det;
-    double m[16];
-    for (int32 y = 0; y < 4; ++y) {
-        for (int32 x = 0; x < 4; ++x) {
-            m[(y << 2) + x] = matrix->values[y][x] / 256.0;
-        }
-    }
-
-    inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15] + m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
-
-    inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15] - m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
-
-    inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15] + m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
-
-    inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14] - m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
-
-    inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15] - m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
-
-    inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15] + m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
-
-    inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15] - m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
-
-    inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14] + m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
-
-    inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15] + m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
-
-    inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15] - m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
-
-    inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15] + m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
-
-    inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14] - m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
-
-    inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11] - m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
-
-    inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11] + m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
-
-    inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11] - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
-
-    inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
-
-    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-
-    if (det == 0)
-        return;
-
-    det = 1.0 / det;
-
-    for (int32 i = 0; i < 0x10; ++i) inv[i] = (int32)((inv[i] * det) * 256);
-    for (int32 i = 0; i < 0x10; ++i) matrix->values[i / 4][i % 4] = (int32)inv[i];
-}
-
-void RSDK::Legacy::MatrixTranslateXYZ(Matrix *matrix, int32 XPos, int32 YPos, int32 ZPos)
-{
-    matrix->values[0][0] = 0x100;
-    matrix->values[0][1] = 0;
-    matrix->values[0][2] = 0;
-    matrix->values[0][3] = 0;
-
-    matrix->values[1][0] = 0;
-    matrix->values[1][1] = 0x100;
-    matrix->values[1][2] = 0;
-    matrix->values[1][3] = 0;
-
-    matrix->values[2][0] = 0;
-    matrix->values[2][1] = 0;
-    matrix->values[2][2] = 0x100;
-    matrix->values[2][3] = 0;
-
-    matrix->values[3][0] = XPos;
-    matrix->values[3][1] = YPos;
-    matrix->values[3][2] = ZPos;
-    matrix->values[3][3] = 0x100;
-}
-
-void RSDK::Legacy::MatrixScaleXYZ(Matrix *matrix, int32 scaleX, int32 scaleY, int32 scaleZ)
-{
-    matrix->values[0][0] = scaleX;
-    matrix->values[0][1] = 0;
-    matrix->values[0][2] = 0;
-    matrix->values[0][3] = 0;
-
-    matrix->values[1][0] = 0;
-    matrix->values[1][1] = scaleY;
-    matrix->values[1][2] = 0;
-    matrix->values[1][3] = 0;
-
-    matrix->values[2][0] = 0;
-    matrix->values[2][1] = 0;
-    matrix->values[2][2] = scaleZ;
-    matrix->values[2][3] = 0;
-
-    matrix->values[3][0] = 0;
-    matrix->values[3][1] = 0;
-    matrix->values[3][2] = 0;
-    matrix->values[3][3] = 0x100;
-}
-
-void RSDK::Legacy::MatrixRotateX(Matrix *matrix, int32 rotationX)
-{
-    int32 sine   = sin512LookupTable[rotationX & 0x1FF] >> 1;
-    int32 cosine = cos512LookupTable[rotationX & 0x1FF] >> 1;
-
-    matrix->values[0][0] = 0x100;
-    matrix->values[0][1] = 0;
-    matrix->values[0][2] = 0;
-    matrix->values[0][3] = 0;
-
-    matrix->values[1][0] = 0;
-    matrix->values[1][1] = cosine;
-    matrix->values[1][2] = sine;
-    matrix->values[1][3] = 0;
-
-    matrix->values[2][0] = 0;
-    matrix->values[2][1] = -sine;
-    matrix->values[2][2] = cosine;
-    matrix->values[2][3] = 0;
-
-    matrix->values[3][0] = 0;
-    matrix->values[3][1] = 0;
-    matrix->values[3][2] = 0;
-    matrix->values[3][3] = 0x100;
-}
-
-void RSDK::Legacy::MatrixRotateY(Matrix *matrix, int32 rotationY)
-{
-    int32 sine   = sin512LookupTable[rotationY & 0x1FF] >> 1;
-    int32 cosine = cos512LookupTable[rotationY & 0x1FF] >> 1;
-
-    matrix->values[0][0] = cosine;
-    matrix->values[0][1] = 0;
-    matrix->values[0][2] = sine;
-    matrix->values[0][3] = 0;
-
-    matrix->values[1][0] = 0;
-    matrix->values[1][1] = 0x100;
-    matrix->values[1][2] = 0;
-    matrix->values[1][3] = 0;
-
-    matrix->values[2][0] = -sine;
-    matrix->values[2][1] = 0;
-    matrix->values[2][2] = cosine;
-    matrix->values[2][3] = 0;
-
-    matrix->values[3][0] = 0;
-    matrix->values[3][1] = 0;
-    matrix->values[3][2] = 0;
-    matrix->values[3][3] = 0x100;
-}
-
-void RSDK::Legacy::MatrixRotateZ(Matrix *matrix, int32 rotationZ)
-{
-    int32 sine           = sin512LookupTable[rotationZ & 0x1FF] >> 1;
-    int32 cosine         = cos512LookupTable[rotationZ & 0x1FF] >> 1;
-    matrix->values[0][0] = cosine;
-    matrix->values[0][1] = 0;
-    matrix->values[0][2] = sine;
-    matrix->values[0][3] = 0;
-
-    matrix->values[1][0] = 0;
-    matrix->values[1][1] = 0x100;
-    matrix->values[1][2] = 0;
-    matrix->values[1][3] = 0;
-
-    matrix->values[2][0] = -sine;
-    matrix->values[2][1] = 0;
-    matrix->values[2][2] = cosine;
-    matrix->values[2][3] = 0;
-
-    matrix->values[3][0] = 0;
-    matrix->values[3][1] = 0;
-    matrix->values[3][2] = 0;
-    matrix->values[3][3] = 0x100;
-}
-
-void RSDK::Legacy::MatrixRotateXYZ(Matrix *matrix, int16 rotationX, int16 rotationY, int16 rotationZ)
-{
-    int32 sinX = sin512LookupTable[rotationX & 0x1FF] >> 1;
-    int32 cosX = cos512LookupTable[rotationX & 0x1FF] >> 1;
-    int32 sinY = sin512LookupTable[rotationY & 0x1FF] >> 1;
-    int32 cosY = cos512LookupTable[rotationY & 0x1FF] >> 1;
-    int32 sinZ = sin512LookupTable[rotationZ & 0x1FF] >> 1;
-    int32 cosZ = cos512LookupTable[rotationZ & 0x1FF] >> 1;
-
-    matrix->values[0][0] = (cosZ * cosY >> 8) + (sinZ * (sinY * sinX >> 8) >> 8);
-    matrix->values[0][1] = (sinZ * cosY >> 8) - (cosZ * (sinY * sinX >> 8) >> 8);
-    matrix->values[0][2] = sinY * cosX >> 8;
-    matrix->values[0][3] = 0;
-
-    matrix->values[1][0] = sinZ * -cosX >> 8;
-    matrix->values[1][1] = cosZ * cosX >> 8;
-    matrix->values[1][2] = sinX;
-    matrix->values[1][3] = 0;
-
-    matrix->values[2][0] = (sinZ * (cosY * sinX >> 8) >> 8) - (cosZ * sinY >> 8);
-    matrix->values[2][1] = (sinZ * -sinY >> 8) - (cosZ * (cosY * sinX >> 8) >> 8);
-    matrix->values[2][2] = cosY * cosX >> 8;
-    matrix->values[2][3] = 0;
-
-    matrix->values[3][0] = 0;
-    matrix->values[3][1] = 0;
-    matrix->values[3][2] = 0;
-    matrix->values[3][3] = 0x100;
-}
 
 void RSDK::Legacy::ProcessScanEdge(Vertex *vertA, Vertex *vertB)
 {
@@ -380,7 +137,7 @@ void RSDK::Legacy::TransformVertexBuffer()
     matFinal.values[3][1] = matWorld.values[3][1];
     matFinal.values[3][2] = matWorld.values[3][2];
     matFinal.values[3][3] = matWorld.values[3][3];
-    MatrixMultiply(&matFinal, &matView);
+    MatrixMultiply(&matFinal, &matFinal, &matView);
 
     for (int32 v = 0; v < vertexCount; ++v) {
         int32 vx = vertexBuffer[v].x;
@@ -388,11 +145,11 @@ void RSDK::Legacy::TransformVertexBuffer()
         int32 vz = vertexBuffer[v].z;
 
         vertexBufferT[v].x =
-            (vx * matFinal.values[0][0] >> 8) + (vy * matFinal.values[1][0] >> 8) + (vz * matFinal.values[2][0] >> 8) + matFinal.values[3][0];
+            (vx * matFinal.values[0][0] >> 8) + (vy * matFinal.values[0][1] >> 8) + (vz * matFinal.values[0][2] >> 8) + matFinal.values[0][3];
         vertexBufferT[v].y =
-            (vx * matFinal.values[0][1] >> 8) + (vy * matFinal.values[1][1] >> 8) + (vz * matFinal.values[2][1] >> 8) + matFinal.values[3][1];
+            (vx * matFinal.values[1][0] >> 8) + (vy * matFinal.values[1][1] >> 8) + (vz * matFinal.values[1][2] >> 8) + matFinal.values[1][3];
         vertexBufferT[v].z =
-            (vx * matFinal.values[0][2] >> 8) + (vy * matFinal.values[1][2] >> 8) + (vz * matFinal.values[2][2] >> 8) + matFinal.values[3][2];
+            (vx * matFinal.values[2][0] >> 8) + (vy * matFinal.values[2][1] >> 8) + (vz * matFinal.values[2][2] >> 8) + matFinal.values[2][3];
     }
 }
 
@@ -403,9 +160,9 @@ void RSDK::Legacy::TransformVertices(Matrix *matrix, int32 startIndex, int32 end
         int32 vy     = vertexBuffer[v].y;
         int32 vz     = vertexBuffer[v].z;
         Vertex *vert = &vertexBuffer[v];
-        vert->x      = (vx * matrix->values[0][0] >> 8) + (vy * matrix->values[1][0] >> 8) + (vz * matrix->values[2][0] >> 8) + matrix->values[3][0];
-        vert->y      = (vx * matrix->values[0][1] >> 8) + (vy * matrix->values[1][1] >> 8) + (vz * matrix->values[2][1] >> 8) + matrix->values[3][1];
-        vert->z      = (vx * matrix->values[0][2] >> 8) + (vy * matrix->values[1][2] >> 8) + (vz * matrix->values[2][2] >> 8) + matrix->values[3][2];
+        vert->x      = (vx * matrix->values[0][0] >> 8) + (vy * matrix->values[0][1] >> 8) + (vz * matrix->values[0][2] >> 8) + matrix->values[0][3];
+        vert->y      = (vx * matrix->values[1][0] >> 8) + (vy * matrix->values[1][1] >> 8) + (vz * matrix->values[1][2] >> 8) + matrix->values[1][3];
+        vert->z      = (vx * matrix->values[2][0] >> 8) + (vy * matrix->values[2][1] >> 8) + (vz * matrix->values[2][2] >> 8) + matrix->values[2][3];
     }
 }
 

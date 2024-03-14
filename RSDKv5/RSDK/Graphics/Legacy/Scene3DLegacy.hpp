@@ -22,10 +22,6 @@ enum MatrixTypes {
     MAT_TEMP  = 2,
 };
 
-struct Matrix {
-    int32 values[4][4];
-};
-
 struct Vertex {
     int32 x;
     int32 y;
@@ -77,15 +73,6 @@ extern DrawListEntry3D drawList3D[LEGACY_FACEBUFFER_SIZE];
 extern int32 fogColor;
 extern int32 fogStrength;
 
-void SetIdentityMatrix(Matrix *matrix);
-void MatrixMultiply(Matrix *matrixA, Matrix *matrixB);
-void MatrixInverse(Matrix *matrix);
-void MatrixTranslateXYZ(Matrix *Matrix, int32 x, int32 y, int32 z);
-void MatrixScaleXYZ(Matrix *matrix, int32 scaleX, int32 scaleY, int32 scaleZ);
-void MatrixRotateX(Matrix *matrix, int32 rotationX);
-void MatrixRotateY(Matrix *matrix, int32 rotationY);
-void MatrixRotateZ(Matrix *matrix, int32 rotationZ);
-void MatrixRotateXYZ(Matrix *matrix, int16 rotationX, int16 rotationY, int16 rotationZ);
 void ProcessScanEdge(Vertex *vertA, Vertex *vertB);
 void ProcessScanEdgeUV(Vertex *vertA, Vertex *vertB);
 void TransformVertexBuffer();
