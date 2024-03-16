@@ -1593,8 +1593,8 @@ void RSDK::Legacy::v4::DrawObjectAnimation(void *objScr, void *ent, int32 XPos,
   ObjectScript *objectScript = (ObjectScript *)objScr;
   Entity *entity = (Entity *)ent;
   SpriteAnimation *sprAnim =
-      &animationList[objectScript->animFile->aniListOffset + entity->animation];
-  SpriteFrame *frame = &animFrames[sprAnim->frameListOffset + entity->frame];
+      &Legacy_animationList[objectScript->animFile->aniListOffset + entity->animation];
+  SpriteFrame *frame = &Legacy_animFrames[sprAnim->frameListOffset + entity->frame];
   int32 rotation = 0;
 
   switch (sprAnim->rotationStyle) {
@@ -1710,7 +1710,7 @@ void RSDK::Legacy::v4::DrawObjectAnimation(void *objScr, void *ent, int32 XPos,
       break;
     }
 
-    frame = &animFrames[sprAnim->frameListOffset + frameID];
+    frame = &Legacy_animFrames[sprAnim->frameListOffset + frameID];
     DrawSpriteRotated(entity->direction, XPos, YPos, -frame->pivotX,
                       -frame->pivotY, frame->sprX, frame->sprY, frame->width,
                       frame->height, rotation, frame->sheetID);
@@ -1987,8 +1987,8 @@ void RSDK::Legacy::v3::DrawObjectAnimation(void *objScr, void *ent, int32 XPos,
   ObjectScript *objectScript = (ObjectScript *)objScr;
   Entity *entity = (Entity *)ent;
   SpriteAnimation *sprAnim =
-      &animationList[objectScript->animFile->aniListOffset + entity->animation];
-  SpriteFrame *frame = &animFrames[sprAnim->frameListOffset + entity->frame];
+      &Legacy_animationList[objectScript->animFile->aniListOffset + entity->animation];
+  SpriteFrame *frame = &Legacy_animFrames[sprAnim->frameListOffset + entity->frame];
   int32 rotation = 0;
 
   switch (sprAnim->rotationStyle) {
@@ -2104,7 +2104,7 @@ void RSDK::Legacy::v3::DrawObjectAnimation(void *objScr, void *ent, int32 XPos,
       break;
     }
 
-    frame = &animFrames[sprAnim->frameListOffset + frameID];
+    frame = &Legacy_animFrames[sprAnim->frameListOffset + frameID];
     DrawSpriteRotated(entity->direction, XPos, YPos, -frame->pivotX,
                       -frame->pivotY, frame->sprX, frame->sprY, frame->width,
                       frame->height, rotation, frame->sheetID);

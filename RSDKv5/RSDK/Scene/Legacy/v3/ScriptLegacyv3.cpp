@@ -2005,7 +2005,7 @@ void RSDK::Legacy::v3::ClearScriptData()
     memset(scriptCode, 0, LEGACY_v3_SCRIPTDATA_COUNT * sizeof(int32));
     memset(jumpTable, 0, LEGACY_v3_JUMPTABLE_COUNT * sizeof(int32));
 
-    scriptFrameCount = 0;
+    Legacy_scriptFrameCount = 0;
 
     scriptCodePos     = 0;
     jumpTablePos      = 0;
@@ -2392,11 +2392,11 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         AnimationFile *animFile = playerList[activePlayer].animationFile;
                         Player *plr             = &playerList[activePlayer];
                         if (animFile) {
-                            int32 h = animFrames[animationList[animFile->aniListOffset + plr->boundEntity->animation].frameListOffset
+                            int32 h = Legacy_animFrames[Legacy_animationList[animFile->aniListOffset + plr->boundEntity->animation].frameListOffset
                                                  + plr->boundEntity->frame]
                                           .hitboxID;
 
-                            scriptEng.operands[i] = hitboxList[animFile->hitboxListOffset + h].left[0];
+                            scriptEng.operands[i] = Legacy_hitboxList[animFile->hitboxListOffset + h].left[0];
                         }
                         else {
                             scriptEng.operands[i] = 0;
@@ -2407,11 +2407,11 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         AnimationFile *animFile = playerList[activePlayer].animationFile;
                         Player *plr             = &playerList[activePlayer];
                         if (animFile) {
-                            int32 h = animFrames[animationList[animFile->aniListOffset + plr->boundEntity->animation].frameListOffset
+                            int32 h = Legacy_animFrames[Legacy_animationList[animFile->aniListOffset + plr->boundEntity->animation].frameListOffset
                                                  + plr->boundEntity->frame]
                                           .hitboxID;
 
-                            scriptEng.operands[i] = hitboxList[animFile->hitboxListOffset + h].top[0];
+                            scriptEng.operands[i] = Legacy_hitboxList[animFile->hitboxListOffset + h].top[0];
                         }
                         else {
                             scriptEng.operands[i] = 0;
@@ -2422,11 +2422,11 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         AnimationFile *animFile = playerList[activePlayer].animationFile;
                         Player *plr             = &playerList[activePlayer];
                         if (animFile) {
-                            int32 h = animFrames[animationList[animFile->aniListOffset + plr->boundEntity->animation].frameListOffset
+                            int32 h = Legacy_animFrames[Legacy_animationList[animFile->aniListOffset + plr->boundEntity->animation].frameListOffset
                                                  + plr->boundEntity->frame]
                                           .hitboxID;
 
-                            scriptEng.operands[i] = hitboxList[animFile->hitboxListOffset + h].right[0];
+                            scriptEng.operands[i] = Legacy_hitboxList[animFile->hitboxListOffset + h].right[0];
                         }
                         else {
                             scriptEng.operands[i] = 0;
@@ -2437,11 +2437,11 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                         AnimationFile *animFile = playerList[activePlayer].animationFile;
                         Player *plr             = &playerList[activePlayer];
                         if (animFile) {
-                            int32 h = animFrames[animationList[animFile->aniListOffset + plr->boundEntity->animation].frameListOffset
+                            int32 h = Legacy_animFrames[Legacy_animationList[animFile->aniListOffset + plr->boundEntity->animation].frameListOffset
                                                  + plr->boundEntity->frame]
                                           .hitboxID;
 
-                            scriptEng.operands[i] = hitboxList[animFile->hitboxListOffset + h].bottom[0];
+                            scriptEng.operands[i] = Legacy_hitboxList[animFile->hitboxListOffset + h].bottom[0];
                         }
                         else {
                             scriptEng.operands[i] = 0;
@@ -2939,20 +2939,20 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 break;
             case FUNC_DRAWSPRITE:
                 opcodeSize  = 0;
-                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
+                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
                 DrawSprite((entity->XPos >> 16) - xScrollOffset + spriteFrame->pivotX, (entity->YPos >> 16) - yScrollOffset + spriteFrame->pivotY,
                            spriteFrame->width, spriteFrame->height, spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                 break;
             case FUNC_DRAWSPRITEXY:
                 opcodeSize  = 0;
-                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
+                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
                 DrawSprite((scriptEng.operands[1] >> 16) - xScrollOffset + spriteFrame->pivotX,
                            (scriptEng.operands[2] >> 16) - yScrollOffset + spriteFrame->pivotY, spriteFrame->width, spriteFrame->height,
                            spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                 break;
             case FUNC_DRAWSPRITESCREENXY:
                 opcodeSize  = 0;
-                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
+                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
                 DrawSprite(scriptEng.operands[1] + spriteFrame->pivotX, scriptEng.operands[2] + spriteFrame->pivotY, spriteFrame->width,
                            spriteFrame->height, spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                 break;
@@ -2966,7 +2966,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 if (scriptEng.operands[6]) {
                     while (scriptEng.operands[4] > 0) {
                         int32 frameID = scriptEng.operands[3] % i / (i / 10) + scriptEng.operands[0];
-                        spriteFrame   = &scriptFrames[scriptInfo->frameListOffset + frameID];
+                        spriteFrame   = &Legacy_scriptFrames[scriptInfo->frameListOffset + frameID];
                         DrawSprite(spriteFrame->pivotX + scriptEng.operands[1], spriteFrame->pivotY + scriptEng.operands[2], spriteFrame->width,
                                    spriteFrame->height, spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                         scriptEng.operands[1] -= scriptEng.operands[5];
@@ -2981,7 +2981,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     while (scriptEng.operands[4] > 0) {
                         if (extra >= i) {
                             int32 frameID = scriptEng.operands[3] % i / (i / 10) + scriptEng.operands[0];
-                            spriteFrame   = &scriptFrames[scriptInfo->frameListOffset + frameID];
+                            spriteFrame   = &Legacy_scriptFrames[scriptInfo->frameListOffset + frameID];
                             DrawSprite(spriteFrame->pivotX + scriptEng.operands[1], spriteFrame->pivotY + scriptEng.operands[2], spriteFrame->width,
                                        spriteFrame->height, spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                         }
@@ -3020,7 +3020,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                             }
                             else {
                                 character += scriptEng.operands[0];
-                                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + character];
+                                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + character];
                                 DrawSprite(scriptEng.operands[1] + spriteFrame->pivotX, scriptEng.operands[2] + spriteFrame->pivotY,
                                            spriteFrame->width, spriteFrame->height, spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                                 scriptEng.operands[1] += spriteFrame->width + scriptEng.operands[6];
@@ -3046,7 +3046,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                             }
                             else {
                                 character += scriptEng.operands[0];
-                                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + character];
+                                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + character];
                                 DrawSprite(scriptEng.operands[1] + spriteFrame->pivotX, scriptEng.operands[2] + spriteFrame->pivotY,
                                            spriteFrame->width, spriteFrame->height, spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                                 scriptEng.operands[1] += spriteFrame->width + scriptEng.operands[6];
@@ -3076,7 +3076,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                             }
                             else {
                                 character += scriptEng.operands[0];
-                                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + character];
+                                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + character];
                                 DrawSprite(scriptEng.operands[1] + spriteFrame->pivotX, scriptEng.operands[2] + spriteFrame->pivotY,
                                            spriteFrame->width, spriteFrame->height, spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                                 scriptEng.operands[1] += spriteFrame->width + scriptEng.operands[6];
@@ -3101,7 +3101,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                             }
                             else {
                                 character += scriptEng.operands[0];
-                                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + character];
+                                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + character];
                                 DrawSprite(scriptEng.operands[1] + spriteFrame->pivotX, scriptEng.operands[2] + spriteFrame->pivotY,
                                            spriteFrame->width, spriteFrame->height, spriteFrame->sprX, spriteFrame->sprY, scriptInfo->spriteSheetID);
                                 scriptEng.operands[1] += spriteFrame->width + scriptEng.operands[6];
@@ -3119,19 +3119,19 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 break;
             case FUNC_SPRITEFRAME:
                 opcodeSize = 0;
-                if (scriptSub == SUB_SETUP && scriptFrameCount < LEGACY_SPRITEFRAME_COUNT) {
-                    scriptFrames[scriptFrameCount].pivotX = scriptEng.operands[0];
-                    scriptFrames[scriptFrameCount].pivotY = scriptEng.operands[1];
-                    scriptFrames[scriptFrameCount].width  = scriptEng.operands[2];
-                    scriptFrames[scriptFrameCount].height = scriptEng.operands[3];
-                    scriptFrames[scriptFrameCount].sprX   = scriptEng.operands[4];
-                    scriptFrames[scriptFrameCount].sprY   = scriptEng.operands[5];
-                    ++scriptFrameCount;
+                if (scriptSub == SUB_SETUP && Legacy_scriptFrameCount < LEGACY_SPRITEFRAME_COUNT) {
+                    Legacy_scriptFrames[Legacy_scriptFrameCount].pivotX = scriptEng.operands[0];
+                    Legacy_scriptFrames[Legacy_scriptFrameCount].pivotY = scriptEng.operands[1];
+                    Legacy_scriptFrames[Legacy_scriptFrameCount].width  = scriptEng.operands[2];
+                    Legacy_scriptFrames[Legacy_scriptFrameCount].height = scriptEng.operands[3];
+                    Legacy_scriptFrames[Legacy_scriptFrameCount].sprX   = scriptEng.operands[4];
+                    Legacy_scriptFrames[Legacy_scriptFrameCount].sprY   = scriptEng.operands[5];
+                    ++Legacy_scriptFrameCount;
                 }
                 break;
             case FUNC_EDITFRAME: {
                 opcodeSize  = 0;
-                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
+                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
 
                 spriteFrame->pivotX = scriptEng.operands[1];
                 spriteFrame->pivotY = scriptEng.operands[2];
@@ -3172,7 +3172,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 break;
             case FUNC_DRAWSPRITEFX:
                 opcodeSize  = 0;
-                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
+                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
                 switch (scriptEng.operands[1]) {
                     default: break;
                     case FX_SCALE:
@@ -3270,7 +3270,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 break;
             case FUNC_DRAWSPRITESCREENFX:
                 opcodeSize  = 0;
-                spriteFrame = &scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
+                spriteFrame = &Legacy_scriptFrames[scriptInfo->frameListOffset + scriptEng.operands[0]];
                 switch (scriptEng.operands[1]) {
                     default: break;
                     case FX_SCALE:
@@ -3802,7 +3802,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 scriptEng.operands[0]   = -1;
                 int32 id                = 0;
                 while (scriptEng.operands[0] == -1) {
-                    SpriteAnimation *anim = &animationList[animFile->aniListOffset + id];
+                    SpriteAnimation *anim = &Legacy_animationList[animFile->aniListOffset + id];
                     if (StrComp(scriptText, anim->name))
                         scriptEng.operands[0] = id;
                     else if (++id == animFile->animCount)

@@ -12,7 +12,7 @@ char RSDK::Legacy::v4::typeNames[LEGACY_v4_OBJECT_COUNT][0x40];
 
 void RSDK::Legacy::v4::ProcessStartupObjects()
 {
-    scriptFrameCount = 0;
+    Legacy_scriptFrameCount = 0;
     ClearAnimationData();
     scriptEng.arrayPosition[8] = LEGACY_v4_TEMPENTITY_START;
     OBJECT_BORDER_X1           = 0x80;
@@ -30,13 +30,13 @@ void RSDK::Legacy::v4::ProcessStartupObjects()
         ObjectScript *scriptInfo    = &objectScriptList[i];
         objectEntityPos             = LEGACY_v4_TEMPENTITY_START;
         curObjectType               = i;
-        scriptInfo->frameListOffset = scriptFrameCount;
+        scriptInfo->frameListOffset = Legacy_scriptFrameCount;
         scriptInfo->spriteSheetID   = 0;
         entity->type                = i;
 
         if (scriptCode[scriptInfo->eventStartup.scriptCodePtr] > 0)
             ProcessScript(scriptInfo->eventStartup.scriptCodePtr, scriptInfo->eventStartup.jumpTablePtr, EVENT_SETUP);
-        scriptInfo->frameCount = scriptFrameCount - scriptInfo->frameListOffset;
+        scriptInfo->frameCount = Legacy_scriptFrameCount - scriptInfo->frameListOffset;
     }
     entity->type  = 0;
     curObjectType = 0;

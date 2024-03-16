@@ -44,8 +44,8 @@ RSDK::Legacy::Hitbox *RSDK::Legacy::v4::GetHitbox(Entity *entity)
 {
     AnimationFile *thisAnim = objectScriptList[entity->type].animFile;
 
-    return &hitboxList[thisAnim->hitboxListOffset
-                       + animFrames[animationList[thisAnim->aniListOffset + entity->animation].frameListOffset + entity->frame].hitboxID];
+    return &Legacy_hitboxList[thisAnim->hitboxListOffset
+                       + Legacy_animFrames[Legacy_animationList[thisAnim->aniListOffset + entity->animation].frameListOffset + entity->frame].hitboxID];
 }
 
 void RSDK::Legacy::v4::FindFloorPosition(Entity *player, CollisionSensor *sensor, int32 startY)

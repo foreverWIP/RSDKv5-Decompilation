@@ -45,25 +45,27 @@ struct Hitbox {
     int8 bottom[LEGACY_HITBOX_DIR_COUNT];
 };
 
-extern AnimationFile animationFileList[LEGACY_ANIFILE_COUNT];
-extern int32 animationFileCount;
+extern "C" {
+    extern AnimationFile Legacy_animationFileList[LEGACY_ANIFILE_COUNT];
+    extern int32 Legacy_animationFileCount;
 
-extern SpriteFrame scriptFrames[LEGACY_SPRITEFRAME_COUNT];
-extern int32 scriptFrameCount;
+    extern SpriteFrame Legacy_scriptFrames[LEGACY_SPRITEFRAME_COUNT];
+    extern int32 Legacy_scriptFrameCount;
 
-extern SpriteFrame animFrames[LEGACY_SPRITEFRAME_COUNT];
-extern int32 animFrameCount;
-extern SpriteAnimation animationList[LEGACY_ANIMATION_COUNT];
-extern int32 animationCount;
-extern Hitbox hitboxList[LEGACY_HITBOX_COUNT];
-extern int32 hitboxCount;
+    extern SpriteFrame Legacy_animFrames[LEGACY_SPRITEFRAME_COUNT];
+    extern int32 Legacy_animFrameCount;
+    extern SpriteAnimation Legacy_animationList[LEGACY_ANIMATION_COUNT];
+    extern int32 Legacy_animationCount;
+    extern Hitbox Legacy_hitboxList[LEGACY_HITBOX_COUNT];
+    extern int32 Legacy_hitboxCount;
+}
 
 void LoadAnimationFile(char *filePath);
 void ClearAnimationData();
 
 AnimationFile *AddAnimationFile(char *filePath);
 
-inline AnimationFile *GetDefaultAnimationRef() { return &animationFileList[0]; }
+inline AnimationFile *GetDefaultAnimationRef() { return &Legacy_animationFileList[0]; }
 
 namespace v3
 {

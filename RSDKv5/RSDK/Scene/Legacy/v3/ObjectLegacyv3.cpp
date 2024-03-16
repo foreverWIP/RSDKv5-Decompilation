@@ -20,7 +20,7 @@ void RSDK::Legacy::v3::SetObjectTypeName(const char *objectName, int32 objectID)
 
 void RSDK::Legacy::v3::ProcessStartupObjects()
 {
-    scriptFrameCount = 0;
+    Legacy_scriptFrameCount = 0;
     ClearAnimationData();
     activePlayer               = 0;
     activePlayerCount          = 1;
@@ -31,12 +31,12 @@ void RSDK::Legacy::v3::ProcessStartupObjects()
         ObjectScript *scriptInfo    = &objectScriptList[i];
         objectLoop                  = LEGACY_v3_TEMPENTITY_START;
         curObjectType               = i;
-        scriptInfo->frameListOffset = scriptFrameCount;
+        scriptInfo->frameListOffset = Legacy_scriptFrameCount;
         scriptInfo->spriteSheetID   = 0;
         entity->type                = i;
         if (scriptCode[scriptInfo->subStartup.scriptCodePtr] > 0)
             ProcessScript(scriptInfo->subStartup.scriptCodePtr, scriptInfo->subStartup.jumpTablePtr, SUB_SETUP);
-        scriptInfo->frameCount = scriptFrameCount - scriptInfo->frameListOffset;
+        scriptInfo->frameCount = Legacy_scriptFrameCount - scriptInfo->frameListOffset;
     }
     entity->type  = 0;
     curObjectType = 0;

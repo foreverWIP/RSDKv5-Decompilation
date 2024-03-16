@@ -1,18 +1,5 @@
 
 
-RSDK::Legacy::AnimationFile RSDK::Legacy::animationFileList[LEGACY_ANIFILE_COUNT];
-int32 RSDK::Legacy::animationFileCount = 0;
-
-RSDK::Legacy::SpriteFrame RSDK::Legacy::scriptFrames[LEGACY_SPRITEFRAME_COUNT];
-int32 RSDK::Legacy::scriptFrameCount = 0;
-
-RSDK::Legacy::SpriteFrame RSDK::Legacy::animFrames[LEGACY_SPRITEFRAME_COUNT];
-int32 RSDK::Legacy::animFrameCount = 0;
-RSDK::Legacy::SpriteAnimation RSDK::Legacy::animationList[LEGACY_ANIMATION_COUNT];
-int32 RSDK::Legacy::animationCount = 0;
-RSDK::Legacy::Hitbox RSDK::Legacy::hitboxList[LEGACY_HITBOX_COUNT];
-int32 RSDK::Legacy::hitboxCount = 0;
-
 void RSDK::Legacy::LoadAnimationFile(char *filePath)
 {
     FileInfo info;
@@ -30,13 +17,13 @@ void RSDK::Legacy::LoadAnimationFile(char *filePath)
             sheetIDs[s] = AddGraphicsFile(sheetPath);
         }
 
-        AnimationFile *animFile = &animationFileList[animationFileCount];
+        AnimationFile *animFile = &Legacy_animationFileList[Legacy_animationFileCount];
         animFile->animCount     = ReadInt8(&info);
-        animFile->aniListOffset = animationCount;
+        animFile->aniListOffset = Legacy_animationCount;
 
         for (int32 a = 0; a < animFile->animCount; ++a) {
-            SpriteAnimation *anim = &animationList[animationCount++];
-            anim->frameListOffset = animFrameCount;
+            SpriteAnimation *anim = &Legacy_animationList[Legacy_animationCount++];
+            anim->frameListOffset = Legacy_animFrameCount;
 
             ReadString(&info, anim->name);
             anim->frameCount    = ReadInt8(&info);
@@ -45,7 +32,7 @@ void RSDK::Legacy::LoadAnimationFile(char *filePath)
             anim->rotationStyle = ReadInt8(&info);
 
             for (int32 f = 0; f < anim->frameCount; ++f) {
-                SpriteFrame *frame = &animFrames[animFrameCount++];
+                SpriteFrame *frame = &Legacy_animFrames[Legacy_animFrameCount++];
                 frame->sheetID     = sheetIDs[ReadInt8(&info)];
                 frame->hitboxID    = ReadInt8(&info);
                 frame->sprX        = ReadInt8(&info);
@@ -61,10 +48,10 @@ void RSDK::Legacy::LoadAnimationFile(char *filePath)
                 anim->frameCount >>= 1;
         }
 
-        animFile->hitboxListOffset = hitboxCount;
+        animFile->hitboxListOffset = Legacy_hitboxCount;
         int32 hbCount              = ReadInt8(&info);
         for (int32 h = 0; h < hbCount; ++h) {
-            Hitbox *hitbox = &hitboxList[hitboxCount++];
+            Hitbox *hitbox = &Legacy_hitboxList[Legacy_hitboxCount++];
             for (int32 d = 0; d < LEGACY_HITBOX_DIR_COUNT; ++d) {
                 hitbox->left[d]   = ReadInt8(&info);
                 hitbox->top[d]    = ReadInt8(&info);
@@ -78,17 +65,17 @@ void RSDK::Legacy::LoadAnimationFile(char *filePath)
 }
 void RSDK::Legacy::ClearAnimationData()
 {
-    for (int32 f = 0; f < LEGACY_SPRITEFRAME_COUNT; ++f) MEM_ZERO(scriptFrames[f]);
-    for (int32 f = 0; f < LEGACY_SPRITEFRAME_COUNT; ++f) MEM_ZERO(animFrames[f]);
-    for (int32 h = 0; h < LEGACY_HITBOX_COUNT; ++h) MEM_ZERO(hitboxList[h]);
-    for (int32 a = 0; a < LEGACY_ANIMATION_COUNT; ++a) MEM_ZERO(animationList[a]);
-    for (int32 a = 0; a < LEGACY_ANIFILE_COUNT; ++a) MEM_ZERO(animationFileList[a]);
+    for (int32 f = 0; f < LEGACY_SPRITEFRAME_COUNT; ++f) MEM_ZERO(Legacy_scriptFrames[f]);
+    for (int32 f = 0; f < LEGACY_SPRITEFRAME_COUNT; ++f) MEM_ZERO(Legacy_animFrames[f]);
+    for (int32 h = 0; h < LEGACY_HITBOX_COUNT; ++h) MEM_ZERO(Legacy_hitboxList[h]);
+    for (int32 a = 0; a < LEGACY_ANIMATION_COUNT; ++a) MEM_ZERO(Legacy_animationList[a]);
+    for (int32 a = 0; a < LEGACY_ANIFILE_COUNT; ++a) MEM_ZERO(Legacy_animationFileList[a]);
 
-    scriptFrameCount   = 0;
-    animFrameCount     = 0;
-    animationCount     = 0;
-    animationFileCount = 0;
-    hitboxCount        = 0;
+    Legacy_scriptFrameCount   = 0;
+    Legacy_animFrameCount     = 0;
+    Legacy_animationCount     = 0;
+    Legacy_animationFileCount = 0;
+    Legacy_hitboxCount        = 0;
 }
 
 RSDK::Legacy::AnimationFile *RSDK::Legacy::AddAnimationFile(char *filePath)
@@ -98,15 +85,15 @@ RSDK::Legacy::AnimationFile *RSDK::Legacy::AddAnimationFile(char *filePath)
     StrAdd(path, filePath);
 
     for (int32 a = 0; a < LEGACY_ANIFILE_COUNT; ++a) {
-        if (StrLength(animationFileList[a].fileName) <= 0) {
-            StrCopy(animationFileList[a].fileName, filePath);
+        if (StrLength(Legacy_animationFileList[a].fileName) <= 0) {
+            StrCopy(Legacy_animationFileList[a].fileName, filePath);
             LoadAnimationFile(path);
-            ++animationFileCount;
-            return &animationFileList[a];
+            ++Legacy_animationFileCount;
+            return &Legacy_animationFileList[a];
         }
 
-        if (StrComp(animationFileList[a].fileName, filePath))
-            return &animationFileList[a];
+        if (StrComp(Legacy_animationFileList[a].fileName, filePath))
+            return &Legacy_animationFileList[a];
     }
 
     return NULL;
@@ -116,7 +103,7 @@ void RSDK::Legacy::v3::ProcessObjectAnimation(void *objScr, void *ent)
 {
     Legacy::v3::ObjectScript *objectScript = (Legacy::v3::ObjectScript *)objScr;
     Legacy::v3::Entity *entity             = (Legacy::v3::Entity *)ent;
-    Legacy::SpriteAnimation *sprAnim       = &Legacy::animationList[objectScript->animFile->aniListOffset + entity->animation];
+    Legacy::SpriteAnimation *sprAnim       = &Legacy_animationList[objectScript->animFile->aniListOffset + entity->animation];
 
     if (entity->animationSpeed <= 0) {
         entity->animationTimer += sprAnim->speed;
@@ -147,7 +134,7 @@ void RSDK::Legacy::v4::ProcessObjectAnimation(void *objScr, void *ent)
 {
     Legacy::v4::ObjectScript *objectScript = (Legacy::v4::ObjectScript *)objScr;
     Legacy::v4::Entity *entity             = (Legacy::v4::Entity *)ent;
-    Legacy::SpriteAnimation *sprAnim       = &Legacy::animationList[objectScript->animFile->aniListOffset + entity->animation];
+    Legacy::SpriteAnimation *sprAnim       = &Legacy_animationList[objectScript->animFile->aniListOffset + entity->animation];
 
     if (entity->animationSpeed <= 0) {
         entity->animationTimer += sprAnim->speed;

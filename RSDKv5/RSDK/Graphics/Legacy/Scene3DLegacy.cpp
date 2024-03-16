@@ -346,7 +346,7 @@ void RSDK::Legacy::Draw3DScene(int32 spriteSheetID)
                     int32 ypos = SCREEN_CENTERY - projectionY * vertexBufferT[face->a].y / vertexBufferT[face->a].z;
 
                     RSDK::Legacy::v4::ObjectScript *scriptInfo = &RSDK::Legacy::v4::objectScriptList[vertexBuffer[face->a].u];
-                    SpriteFrame *frame       = &scriptFrames[scriptInfo->frameListOffset + vertexBuffer[face->b].u];
+                    SpriteFrame *frame       = &Legacy_scriptFrames[scriptInfo->frameListOffset + vertexBuffer[face->b].u];
 
                     switch (vertexBuffer[face->a].v) {
                         case FX_SCALE:

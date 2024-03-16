@@ -82,8 +82,8 @@ int32 RSDK::Legacy::v3::AddDebugHitbox(uint8 type, Entity *entity, int32 left, i
 RSDK::Legacy::Hitbox *RSDK::Legacy::v3::GetPlayerHitbox(Player *player)
 {
     AnimationFile *animFile = player->animationFile;
-    return &hitboxList
-        [animFrames[animationList[animFile->aniListOffset + player->boundEntity->animation].frameListOffset + player->boundEntity->frame].hitboxID
+    return &Legacy_hitboxList
+        [Legacy_animFrames[Legacy_animationList[animFile->aniListOffset + player->boundEntity->animation].frameListOffset + player->boundEntity->frame].hitboxID
          + animFile->hitboxListOffset];
 }
 
