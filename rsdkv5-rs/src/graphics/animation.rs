@@ -4,8 +4,8 @@ use crate::*;
 
 use self::{
     engine_core::reader::{
-        close_file, init_file_info, read_int_16, read_int_32, read_int_8, read_string,
-        read_string_buf, FileModes, LoadFile, Scopes, DEFAULT_FILEINFO,
+        close_file, init_file_info, load_file, read_int_16, read_int_32, read_int_8, read_string,
+        read_string_buf, FileModes, Scopes, DEFAULT_FILEINFO,
     },
     scene::collision::Hitbox,
     storage::{
@@ -136,7 +136,7 @@ pub extern "C" fn load_sprite_animation(filePath: *const i8, scope: uint8) -> ui
 
         let mut info = DEFAULT_FILEINFO;
         init_file_info(&mut info);
-        if (LoadFile(
+        if (load_file(
             &mut info,
             fullFilePath.as_ptr() as *const i8,
             FileModes::FMODE_RB as u8,

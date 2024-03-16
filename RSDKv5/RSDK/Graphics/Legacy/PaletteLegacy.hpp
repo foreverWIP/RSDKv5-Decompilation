@@ -7,7 +7,6 @@ extern "C" {
 
     extern int32 Legacy_GFX_LINESIZE;
     extern int32 Legacy_GFX_LINESIZE_MINUSONE;
-    extern int32 Legacy_GFX_LINESIZE_DOUBLE;
     extern int32 Legacy_GFX_FRAMEBUFFERSIZE;
     extern int32 Legacy_GFX_FBUFFERMINUSONE;
 

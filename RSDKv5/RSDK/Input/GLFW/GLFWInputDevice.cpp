@@ -166,7 +166,7 @@ void RSDK::SKU::InitGLFWInputAPI()
     InitFileInfo(&f);
     f.externalFile = true;
     char path[0x100]; 
-    sprintf_s(path, sizeof(path), "%sgamecontrollerdb.txt", SKU::userFileDir);
+    sprintf_s(path, sizeof(path), "%sgamecontrollerdb.txt", SKU_userFileDir);
 
     if (LoadFile(&f, path, FMODE_RB)) {
         char* buf;

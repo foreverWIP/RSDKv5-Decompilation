@@ -284,7 +284,7 @@ void RSDK::LoadSettingsINI()
     bool32 useBuffer = !(platform == PLATFORM_PC || platform == PLATFORM_DEV);
 
     char pathBuffer[0x100];
-    sprintf_s(pathBuffer, sizeof(pathBuffer), "%sSettings.ini", SKU::userFileDir);
+    sprintf_s(pathBuffer, sizeof(pathBuffer), "%sSettings.ini", SKU_userFileDir);
 
     dictionary *ini = iniparser_load(pathBuffer);
 
@@ -571,7 +571,7 @@ void RSDK::SaveSettingsINI(bool32 writeToFile)
 
     if (changedVideoSettings || writeToFile) {
         char pathBuffer[0x100];
-        sprintf_s(pathBuffer, sizeof(pathBuffer), "%sSettings.ini", SKU::userFileDir);
+        sprintf_s(pathBuffer, sizeof(pathBuffer), "%sSettings.ini", SKU_userFileDir);
 
         dictionary *ini = iniparser_load(pathBuffer);
         FileIO *file    = fOpen(pathBuffer, "wb");

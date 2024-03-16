@@ -1280,7 +1280,7 @@ void RSDK::InitGameLink()
 #if RETRO_PLATFORM == RETRO_WIN
             strcpy_s(buffer, 0x100, gameLogicName);
 #else
-        sprintf(buffer, "%s%s", SKU::userFileDir, gameLogicName);
+        sprintf(buffer, "%s%s", SKU_userFileDir, gameLogicName);
 #endif
             if (!gameLogicHandle)
                 gameLogicHandle = Link::Open(buffer);

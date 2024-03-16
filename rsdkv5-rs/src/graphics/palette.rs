@@ -184,7 +184,7 @@ pub extern "C" fn load_palette(bankID: uint8, filename: *const i8, disabledRows:
     use std::ffi::CStr;
 
     use crate::engine_core::reader::{
-        close_file, read_int_8, seek_cur, FileInfo, FileModes, LoadFile, DEFAULT_FILEINFO,
+        close_file, load_file, read_int_8, seek_cur, FileInfo, FileModes, DEFAULT_FILEINFO,
     };
 
     use self::engine_core::reader::init_file_info;
@@ -195,7 +195,7 @@ pub extern "C" fn load_palette(bankID: uint8, filename: *const i8, disabledRows:
 
         let mut info = DEFAULT_FILEINFO;
         init_file_info(&mut info);
-        if (LoadFile(
+        if (load_file(
             &mut info,
             fullFilePath.as_ptr() as *const i8,
             FileModes::FMODE_RB as u8,

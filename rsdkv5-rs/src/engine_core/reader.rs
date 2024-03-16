@@ -5,7 +5,11 @@ use std::{
 
 use crate::*;
 
-use self::storage::text::{gen_hash_md5, gen_hash_md5_buf, HashMD5};
+use self::{
+    dev::debug::{PrintLog, PrintModes},
+    storage::text::{gen_hash_md5, gen_hash_md5_buf, HashMD5},
+    user::core::user_storage::SKU_userFileDir,
+};
 
 const RSDK_SIGNATURE_RSDK: u32 = 0x4B445352; // "RSDK"
 #[cfg(feature = "version_u")]
@@ -84,7 +88,7 @@ pub const DEFAULT_FILEINFO: FileInfo = FileInfo {
 };
 
 #[repr(C)]
-struct RSDKFileInfo {
+pub struct RSDKFileInfo {
     hash: HashMD5,
     size: int32,
     offset: int32,
@@ -92,6 +96,14 @@ struct RSDKFileInfo {
     useFileBuffer: uint8,
     packID: int32,
 }
+const DEFAULT_RSDKFILEINFO: RSDKFileInfo = RSDKFileInfo {
+    hash: [0; 4],
+    size: 0,
+    offset: 0,
+    encrypted: 0,
+    useFileBuffer: 0,
+    packID: 0,
+};
 
 #[repr(C)]
 pub struct RSDKContainer {
@@ -99,13 +111,46 @@ pub struct RSDKContainer {
     pub fileBuffer: *const uint8,
     pub fileCount: i32,
 }
+const DEFAULT_RSDKCONTAINER: RSDKContainer = RSDKContainer {
+    name: [0; 0x100],
+    fileBuffer: std::ptr::null(),
+    fileCount: 0,
+};
 
 extern "C" {
-    pub static mut dataPacks: [RSDKContainer; DATAPACK_COUNT];
-    pub static mut dataPackCount: uint8;
+    fn malloc(size: usize) -> *mut u8;
+    fn fopen(filename: *const i8, mode: *const i8) -> *mut FileIO;
+    fn ftell(stream: *mut FileIO) -> u32;
 
-    pub fn LoadFile(info: &mut FileInfo, filename: *const i8, fileMode: uint8) -> bool32;
+    fn LoadFile_HandleMods(info: &mut FileInfo, filename: *const i8, fullFilePath: *const i8);
 }
+
+fn fOpen(filename: *const i8, mode: &str) -> *mut FileIO {
+    unsafe { fopen(filename, mode.as_ptr() as *const i8) }
+}
+
+fn fTell(stream: *mut FileIO) -> u32 {
+    unsafe { ftell(stream) }
+}
+
+#[no_mangle]
+pub static mut dataFileList: [RSDKFileInfo; DATAFILE_COUNT] =
+    [DEFAULT_RSDKFILEINFO; DATAFILE_COUNT];
+#[no_mangle]
+pub static mut dataPacks: [RSDKContainer; DATAPACK_COUNT] = [DEFAULT_RSDKCONTAINER; DATAPACK_COUNT];
+
+#[no_mangle]
+pub static mut dataPackCount: uint8 = 0;
+#[no_mangle]
+pub static mut dataFileListCount: uint16 = 0;
+
+#[no_mangle]
+pub static mut gameLogicName: [i8; 0x200] = [0; 0x200];
+
+#[no_mangle]
+pub static mut useDataPack: bool32 = false32;
+
+const openModes: [&str; 3] = ["rb\0", "wb\0", "rb+\0"];
 
 #[no_mangle]
 #[export_name = "InitFileInfo"]
@@ -117,6 +162,239 @@ pub extern "C" fn init_file_info(info: &mut FileInfo) {
     info.encrypted = false;
     info.readPos = 0;
     info.fileOffset = 0;
+}
+
+#[no_mangle]
+#[export_name = "LoadDataPack"]
+pub extern "C" fn load_data_pack(
+    filePath: *const i8,
+    fileOffset: usize,
+    useBuffer: bool32,
+) -> bool32 {
+    unsafe {
+        dataPacks[dataPackCount as usize] = DEFAULT_RSDKCONTAINER;
+        useDataPack = false32;
+        let mut info: FileInfo = DEFAULT_FILEINFO;
+
+        let mut dataPackPath = [0u8; 0x100];
+
+        let fullFilePathStr = CStr::from_ptr(SKU_userFileDir.as_ptr() as *const i8)
+            .to_str()
+            .unwrap()
+            .to_owned()
+            + CStr::from_ptr(filePath).to_str().unwrap();
+        dataPackPath[..(fullFilePathStr.len())].copy_from_slice(fullFilePathStr.as_bytes());
+
+        init_file_info(&mut info);
+        info.externalFile = true32;
+        if (load_file(
+            &mut info,
+            dataPackPath.as_ptr() as *const i8,
+            FileModes::FMODE_RB as u8,
+        ) == true32)
+        {
+            let sig: uint32 = read_int_32(&mut info, false32) as u32;
+            if (sig != RSDK_SIGNATURE_RSDK) {
+                return false32;
+            }
+
+            useDataPack = true32;
+
+            read_int_8(&mut info); // 'v'
+            read_int_8(&mut info); // version
+
+            dataPackPath.as_ptr().copy_to(
+                dataPacks[dataPackCount as usize].name.as_ptr() as *mut u8,
+                dataPackPath.len(),
+            );
+
+            dataPacks[dataPackCount as usize].fileCount = read_int_16(&mut info) as i32;
+            for f in 0..dataPacks[dataPackCount as usize].fileCount {
+                let mut b = [0u8; 4];
+                for y in 0..4 {
+                    read_bytes(&mut info, b.as_mut_ptr(), 4);
+                    dataFileList[f as usize].hash[y] = ((b[0] as u32) << 24)
+                        | ((b[1] as u32) << 16)
+                        | ((b[2] as u32) << 8)
+                        | ((b[3] as u32) << 0);
+                }
+
+                dataFileList[f as usize].offset = read_int_32(&mut info, false32);
+                dataFileList[f as usize].size = read_int_32(&mut info, false32);
+
+                dataFileList[f as usize].encrypted =
+                    if ((dataFileList[f as usize].size as u32) & 0x80000000) != 0 {
+                        1
+                    } else {
+                        0
+                    };
+                dataFileList[f as usize].size &= 0x7FFFFFFF;
+                dataFileList[f as usize].useFileBuffer = useBuffer as u8;
+                dataFileList[f as usize].packID = dataPackCount as i32;
+            }
+
+            dataPacks[dataPackCount as usize].fileBuffer = std::ptr::null();
+            if (useBuffer == true32) {
+                let fileSize = info.fileSize;
+                dataPacks[dataPackCount as usize].fileBuffer = malloc(fileSize as usize);
+                seek_set(&mut info, 0);
+                read_bytes(
+                    &mut info,
+                    dataPacks[dataPackCount as usize].fileBuffer as *mut u8,
+                    fileSize,
+                );
+            }
+
+            dataFileListCount += dataPacks[dataPackCount as usize].fileCount as u16;
+            dataPackCount += 1;
+
+            close_file(&mut info);
+
+            return true32;
+        } else {
+            useDataPack = false32;
+            return false32;
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "OpenDataFile"]
+pub extern "C" fn open_data_file(info: &mut FileInfo, filename: *const i8) -> bool32 {
+    unsafe {
+        let hash = gen_hash_md5(
+            &CStr::from_ptr(filename)
+                .to_str()
+                .unwrap()
+                .to_owned()
+                .to_ascii_lowercase(),
+        );
+
+        for f in 0..dataFileListCount {
+            let file = &dataFileList[f as usize];
+
+            if (hash != file.hash) {
+                continue;
+            }
+
+            info.usingFileBuffer = file.useFileBuffer != 0;
+            if (file.useFileBuffer == 0) {
+                info.file = fOpen(dataPacks[file.packID as usize].name.as_ptr(), "rb\0");
+                if (info.file.is_null()) {
+                    PrintLog(
+                        PrintModes::PRINT_NORMAL,
+                        "File not found (Unable to open datapack): %s".as_ptr() as *const i8,
+                        filename,
+                    );
+                    return false32;
+                }
+
+                fSeek(info.file, file.offset, 0);
+            } else {
+                // a bit of a hack, but it is how it is in the original
+                info.file = &dataPacks[file.packID as usize]
+                    .fileBuffer
+                    .wrapping_add(file.offset as usize);
+
+                let fileBuffer = info.file as *const u8;
+                info.fileBuffer = fileBuffer;
+            }
+
+            info.fileSize = file.size;
+            info.readPos = 0;
+            info.fileOffset = file.offset;
+            info.encrypted = file.encrypted != 0;
+            info.encryptionKeyA.fill(0);
+            info.encryptionKeyB.fill(0);
+            if (info.encrypted) {
+                generate_e_load_keys(info, filename, info.fileSize);
+                info.eKeyNo = ((info.fileSize / 4) & 0x7F) as u8;
+                info.eKeyPosA = 0;
+                info.eKeyPosB = 8;
+                info.eNybbleSwap = false;
+            }
+
+            PrintLog(
+                PrintModes::PRINT_NORMAL,
+                "Loaded data file %s".as_ptr() as *const i8,
+                filename,
+            );
+            return true32;
+        }
+
+        PrintLog(
+            PrintModes::PRINT_NORMAL,
+            "Data file not found: %s".as_ptr() as *const i8,
+            filename,
+        );
+        return false32;
+    }
+}
+
+#[no_mangle]
+#[export_name = "LoadFile"]
+pub extern "C" fn load_file(info: &mut FileInfo, filename: *const i8, fileMode: u8) -> bool32 {
+    if (!info.file.is_null()) {
+        return false32;
+    }
+
+    unsafe {
+        let mut fullFilePath = CStr::from_ptr(filename).to_str().unwrap().to_owned() + "\0";
+
+        if cfg!(feature = "mod_loader") {
+            LoadFile_HandleMods(info, filename, fullFilePath.as_ptr() as *const i8);
+        }
+
+        // somewhat hacky but also pleases the mod gods
+        if (info.externalFile == false32) {
+            fullFilePath = CStr::from_ptr(SKU_userFileDir.as_ptr() as *const i8)
+                .to_str()
+                .unwrap()
+                .to_owned()
+                + &fullFilePath;
+        }
+
+        if (info.externalFile == false32
+            && fileMode == FileModes::FMODE_RB as u8
+            && useDataPack.into())
+        {
+            return open_data_file(info, filename);
+        }
+
+        if (fileMode == FileModes::FMODE_RB as u8
+            || fileMode == FileModes::FMODE_WB as u8
+            || fileMode == FileModes::FMODE_RB_PLUS as u8)
+        {
+            info.file = fOpen(
+                fullFilePath.as_ptr() as *const i8,
+                openModes[fileMode as usize - 1],
+            );
+        }
+
+        if (info.file.is_null()) {
+            PrintLog(
+                PrintModes::PRINT_NORMAL,
+                "File not found: %s".as_ptr() as *const i8,
+                fullFilePath.as_ptr(),
+            );
+            return false32;
+        }
+
+        info.readPos = 0;
+        info.fileSize = 0;
+
+        if (fileMode != FileModes::FMODE_WB as u8) {
+            fSeek(info.file, 0, 2);
+            info.fileSize = fTell(info.file as *mut *const u8) as i32;
+            fSeek(info.file, 0, 0);
+        }
+        PrintLog(
+            PrintModes::PRINT_NORMAL,
+            "Loaded file %s".as_ptr() as *const i8,
+            fullFilePath,
+        );
+        return true32;
+    }
 }
 
 #[no_mangle]

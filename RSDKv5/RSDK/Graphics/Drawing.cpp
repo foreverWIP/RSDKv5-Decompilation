@@ -411,7 +411,6 @@ void RSDK::SetScreenSize(uint8 screenID, uint16 width, uint16 height)
 
         Legacy_GFX_LINESIZE          = screen->pitch;
         Legacy_GFX_LINESIZE_MINUSONE = screen->pitch - 1;
-        Legacy_GFX_LINESIZE_DOUBLE   = 2 * screen->pitch;
         Legacy_GFX_FRAMEBUFFERSIZE   = SCREEN_YSIZE * screen->pitch;
         Legacy_GFX_FBUFFERMINUSONE   = SCREEN_YSIZE * screen->pitch - 1;
 #endif

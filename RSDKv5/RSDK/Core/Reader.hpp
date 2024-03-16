@@ -76,31 +76,31 @@ extern "C" {
     extern uint8 dataPackCount;
     extern RSDKContainer dataPacks[DATAPACK_COUNT];
 
+    extern RSDKFileInfo dataFileList[DATAFILE_COUNT];
+    
+    extern uint16 dataFileListCount;
+    
+    extern char gameLogicName[0x200];
+    
+    extern bool32 useDataPack;
+
+    void LoadFile_HandleMods(FileInfo *info, const char *filename, char *fullFilePath);
     bool32 LoadFile(FileInfo *info, const char *filename, uint8 fileMode);
 }
 
 namespace RSDK
 {
 
-extern RSDKFileInfo dataFileList[DATAFILE_COUNT];
-
-extern uint16 dataFileListCount;
-
-extern char gameLogicName[0x200];
-
-extern bool32 useDataPack;
-
 #if RETRO_REV0U
+void DetectEngineVersion_HandleMods(bool32 *readDataPack);
 void DetectEngineVersion();
 #endif
-bool32 LoadDataPack(const char *filename, size_t fileOffset, bool32 useBuffer);
-bool32 OpenDataFile(FileInfo *info, const char *filename);
+extern "C" {
+    bool32 LoadDataPack(const char *filename, size_t fileOffset, bool32 useBuffer);
+    bool32 OpenDataFile(FileInfo *info, const char *filename);
+}
 
 enum FileModes { FMODE_NONE, FMODE_RB, FMODE_WB, FMODE_RB_PLUS };
-
-static const char *openModes[3] = { "rb", "wb", "rb+" };
-
-
 
 extern "C" {
     void GenerateELoadKeys(FileInfo *info, const char *key1, int32 key2);

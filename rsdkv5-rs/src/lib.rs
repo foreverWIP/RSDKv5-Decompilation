@@ -6,6 +6,7 @@ pub mod engine_core;
 pub mod graphics;
 pub mod scene;
 pub mod storage;
+pub mod user;
 
 use engine_core::math::Vector2;
 use scene::collision::{CollisionModes, TileCollisionModes};

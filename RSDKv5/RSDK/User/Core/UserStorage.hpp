@@ -1,6 +1,12 @@
 #ifndef USER_STORAGE_H
 #define USER_STORAGE_H
 
+#if RETRO_REV02
+extern "C" {
+    extern char SKU_userFileDir[0x100];
+}
+#endif
+
 namespace RSDK
 {
 namespace SKU
@@ -399,13 +405,12 @@ void UserDBStorage_SaveCB8(int32 status);
 
 extern void (*preLoadSaveFileCB)();
 extern void (*postLoadSaveFileCB)();
-extern char userFileDir[0x100];
 
 inline void SetUserFileCallbacks(const char *userDir, void (*preCB)(), void (*postCB)())
 {
     preLoadSaveFileCB  = preCB;
     postLoadSaveFileCB = postCB;
-    strcpy(userFileDir, userDir);
+    strcpy(SKU_userFileDir, userDir);
 }
 
 bool32 LoadUserFile(const char *filename, void *buffer, uint32 bufSize);

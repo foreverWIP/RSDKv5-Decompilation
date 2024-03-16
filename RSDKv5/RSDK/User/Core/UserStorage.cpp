@@ -1022,7 +1022,6 @@ void RSDK::SKU::UserDBStorage_SaveCB8(int32 status)
 
 void (*RSDK::SKU::preLoadSaveFileCB)();
 void (*RSDK::SKU::postLoadSaveFileCB)();
-char RSDK::SKU::userFileDir[0x100];
 
 bool32 RSDK::SKU::LoadUserFile(const char *filename, void *buffer, uint32 bufSize)
 {
@@ -1034,9 +1033,9 @@ bool32 RSDK::SKU::LoadUserFile(const char *filename, void *buffer, uint32 bufSiz
     if (strlen(customUserFileDir))
         sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", customUserFileDir, filename);
     else
-        sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", userFileDir, filename);
+        sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", SKU_userFileDir, filename);
 #else
-    sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", userFileDir, filename);
+    sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", SKU_userFileDir, filename);
 #endif
     PrintLog(PRINT_NORMAL, "Attempting to load user file: %s", fullFilePath);
 
@@ -1075,9 +1074,9 @@ bool32 RSDK::SKU::SaveUserFile(const char *filename, void *buffer, uint32 bufSiz
     if (strlen(customUserFileDir))
         sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", customUserFileDir, filename);
     else
-        sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", userFileDir, filename);
+        sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", SKU_userFileDir, filename);
 #else
-    sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", userFileDir, filename);
+    sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", SKU_userFileDir, filename);
 #endif
     PrintLog(PRINT_NORMAL, "Attempting to save user file: %s", fullFilePath);
 
@@ -1109,9 +1108,9 @@ bool32 RSDK::SKU::DeleteUserFile(const char *filename)
     if (strlen(customUserFileDir))
         sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", customUserFileDir, filename);
     else
-        sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", userFileDir, filename);
+        sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", SKU_userFileDir, filename);
 #else
-    sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", userFileDir, filename);
+    sprintf_s(fullFilePath, sizeof(fullFilePath), "%s%s", SKU_userFileDir, filename);
 #endif
     PrintLog(PRINT_NORMAL, "Attempting to delete user file: %s", fullFilePath);
     int32 status = remove(fullFilePath);

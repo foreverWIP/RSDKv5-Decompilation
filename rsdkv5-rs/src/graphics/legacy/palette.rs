@@ -4,9 +4,9 @@ use crate::*;
 
 use self::{
     engine_core::reader::{
-        close_file, init_file_info, read_bytes, seek_set, FileModes, LoadFile, DEFAULT_FILEINFO,
+        close_file, init_file_info, load_file, read_bytes, seek_set, FileModes, DEFAULT_FILEINFO,
     },
-    graphics::palette::fullPalette,
+    graphics::palette::{fullPalette, gfxLineBuffer},
 };
 
 pub const LEGACY_PALETTE_COUNT: usize = 0x8;
@@ -21,8 +21,6 @@ pub static mut Legacy_activePalette: &mut [uint16; LEGACY_PALETTE_COLOR_COUNT] =
 pub static mut Legacy_GFX_LINESIZE: int32 = 0;
 #[no_mangle]
 pub static mut Legacy_GFX_LINESIZE_MINUSONE: int32 = 0;
-#[no_mangle]
-pub static mut Legacy_GFX_LINESIZE_DOUBLE: int32 = 0;
 #[no_mangle]
 pub static mut Legacy_GFX_FRAMEBUFFERSIZE: int32 = 0;
 #[no_mangle]
@@ -201,7 +199,7 @@ pub extern "C" fn load_palette(
     init_file_info(&mut info);
 
     unsafe {
-        if LoadFile(
+        if load_file(
             &mut info,
             fullPath.as_ptr() as *const i8,
             FileModes::FMODE_RB as u8,
