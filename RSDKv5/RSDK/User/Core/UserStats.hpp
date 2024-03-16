@@ -1,8 +1,6 @@
 #ifndef USER_STATS_H
 #define USER_STATS_H
 
-#include <vector>
-
 namespace RSDK
 {
 namespace SKU

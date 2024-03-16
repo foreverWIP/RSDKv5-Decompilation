@@ -6,8 +6,6 @@
 // ================
 #include <stdio.h>
 #include <string.h>
-#include <cmath>
-#include <ctime>
 
 // ================
 // STANDARD TYPES
@@ -440,8 +438,6 @@ enum GameRegions {
 #include <timeapi.h>
 #include <commctrl.h>
 #include <dbt.h>
-
-#include <string>
 
 #if RETRO_RENDERDEVICE_DIRECTX9
 #include <d3d9.h>
