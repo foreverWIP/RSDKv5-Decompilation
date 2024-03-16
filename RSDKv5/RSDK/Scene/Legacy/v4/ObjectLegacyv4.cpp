@@ -13,7 +13,7 @@ char RSDK::Legacy::v4::typeNames[LEGACY_v4_OBJECT_COUNT][0x40];
 void RSDK::Legacy::v4::ProcessStartupObjects()
 {
     Legacy_scriptFrameCount = 0;
-    ClearAnimationData();
+    Legacy_ClearAnimationData();
     scriptEng.arrayPosition[8] = LEGACY_v4_TEMPENTITY_START;
     OBJECT_BORDER_X1           = 0x80;
     OBJECT_BORDER_X3           = 0x20;

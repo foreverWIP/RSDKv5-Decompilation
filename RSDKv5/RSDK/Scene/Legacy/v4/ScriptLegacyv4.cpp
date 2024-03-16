@@ -3136,7 +3136,7 @@ void RSDK::Legacy::v4::ClearScriptData()
     }
 #endif
 
-    ClearAnimationData();
+    Legacy_ClearAnimationData();
 
     for (int32 o = 0; o < LEGACY_v4_OBJECT_COUNT; ++o) {
         ObjectScript *scriptInfo               = &objectScriptList[o];
@@ -4656,7 +4656,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
 
             case FUNC_LOADANIMATION:
                 opcodeSize           = 0;
-                scriptInfo->animFile = AddAnimationFile(scriptText);
+                scriptInfo->animFile = Legacy_AddAnimationFile(scriptText);
                 break;
 
             case FUNC_SETUPMENU: {
@@ -4771,7 +4771,7 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 break;
             case FUNC_PROCESSANIMATION:
                 opcodeSize = 0;
-                ProcessObjectAnimation(scriptInfo, entity);
+                v4_ProcessObjectAnimation(scriptInfo, entity);
                 break;
             case FUNC_DRAWOBJECTANIMATION:
                 opcodeSize = 0;

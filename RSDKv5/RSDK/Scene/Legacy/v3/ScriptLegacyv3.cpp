@@ -2025,7 +2025,7 @@ void RSDK::Legacy::v3::ClearScriptData()
     lineID     = 0;
 
     ClearGraphicsData();
-    ClearAnimationData();
+    Legacy_ClearAnimationData();
 
     for (int32 p = 0; p < LEGACY_v3_PLAYER_COUNT; ++p) {
         playerList[p].animationFile = GetDefaultAnimationRef();
@@ -3357,7 +3357,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 break;
             case FUNC_LOADANIMATION:
                 opcodeSize           = 0;
-                scriptInfo->animFile = AddAnimationFile(scriptText);
+                scriptInfo->animFile = Legacy_AddAnimationFile(scriptText);
                 break;
             case FUNC_SETUPMENU: {
                 opcodeSize     = 0;
@@ -3505,7 +3505,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                 ProcessPlayerControl(player);
                 break;
             case FUNC_PROCESSANIMATION:
-                ProcessObjectAnimation(scriptInfo, entity);
+                v3_ProcessObjectAnimation(scriptInfo, entity);
                 opcodeSize = 0;
                 break;
             case FUNC_DRAWOBJECTANIMATION:

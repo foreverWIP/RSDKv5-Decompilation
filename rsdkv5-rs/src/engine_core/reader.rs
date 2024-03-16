@@ -391,7 +391,7 @@ pub extern "C" fn load_file(info: &mut FileInfo, filename: *const i8, fileMode: 
         PrintLog(
             PrintModes::PRINT_NORMAL,
             "Loaded file %s".as_ptr() as *const i8,
-            fullFilePath,
+            fullFilePath.as_ptr(),
         );
         return true32;
     }

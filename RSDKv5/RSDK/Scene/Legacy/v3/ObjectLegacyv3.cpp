@@ -21,7 +21,7 @@ void RSDK::Legacy::v3::SetObjectTypeName(const char *objectName, int32 objectID)
 void RSDK::Legacy::v3::ProcessStartupObjects()
 {
     Legacy_scriptFrameCount = 0;
-    ClearAnimationData();
+    Legacy_ClearAnimationData();
     activePlayer               = 0;
     activePlayerCount          = 1;
     scriptEng.arrayPosition[2] = LEGACY_v3_TEMPENTITY_START;

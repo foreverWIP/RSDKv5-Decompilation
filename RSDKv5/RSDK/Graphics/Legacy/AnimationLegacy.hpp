@@ -1,4 +1,5 @@
 
+#include "RSDK/Core/RetroEngine.hpp"
 namespace Legacy
 {
 
@@ -58,23 +59,15 @@ extern "C" {
     extern int32 Legacy_animationCount;
     extern Hitbox Legacy_hitboxList[LEGACY_HITBOX_COUNT];
     extern int32 Legacy_hitboxCount;
+    
+    void Legacy_LoadAnimationFile(char *filePath);
+    void Legacy_ClearAnimationData();
+    AnimationFile *Legacy_AddAnimationFile(char *filePath);
+
+    void v3_ProcessObjectAnimation(void *objScr, void *ent);
+    void v4_ProcessObjectAnimation(void *objScr, void *ent);
 }
-
-void LoadAnimationFile(char *filePath);
-void ClearAnimationData();
-
-AnimationFile *AddAnimationFile(char *filePath);
 
 inline AnimationFile *GetDefaultAnimationRef() { return &Legacy_animationFileList[0]; }
-
-namespace v3
-{
-void ProcessObjectAnimation(void *objScr, void *ent);
-}
-
-namespace v4
-{
-void ProcessObjectAnimation(void *objScr, void *ent);
-}
 
 } // namespace Legacy

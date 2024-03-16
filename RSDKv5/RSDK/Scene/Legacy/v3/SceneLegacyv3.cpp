@@ -28,7 +28,7 @@ void RSDK::Legacy::v3::InitFirstStage()
     StopMusic();
     Legacy_fadeMode = 0;
     ClearGraphicsData();
-    ClearAnimationData();
+    Legacy_ClearAnimationData();
     Legacy_activePalette = fullPalette[0];
     Legacy_LoadPalette("MasterPalette.act", 0, 0, 0, 256);
 #if RETRO_USE_MOD_LOADER
