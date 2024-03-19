@@ -115,20 +115,7 @@ extern "C" {
     int64 ReadInt64(FileInfo *info);
     float ReadSingle(FileInfo *info);
     void ReadString(FileInfo *info, char *buffer);
-}
-
-inline int32 Uncompress(uint8 **cBuffer, int32 cSize, uint8 **buffer, int32 size)
-{
-    if (!buffer || !cBuffer)
-        return 0;
-
-    uLongf cLen    = cSize;
-    uLongf destLen = size;
-
-    int32 result = uncompress(*buffer, &destLen, *cBuffer, cLen);
-    (void)result;
-
-    return (int32)destLen;
+    int32 Uncompress(uint8 **cBuffer, int32 cSize, uint8 **buffer, int32 size);
 }
 
 // The buffer passed in parameter is allocated here, so it's up to the caller to free it once it goes unused

@@ -47,7 +47,6 @@ set(RETRO_FILES
     dependencies/all/tinyxml2/tinyxml2.cpp
     dependencies/all/iniparser/iniparser.cpp
     dependencies/all/iniparser/dictionary.cpp
-    dependencies/all/miniz/miniz.c
 )
 
 if(NOT PLATFORM)

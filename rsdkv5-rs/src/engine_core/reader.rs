@@ -1,7 +1,9 @@
 use std::{
-    ffi::{c_long, CStr, CString},
+    ffi::{c_long, c_ulong, CStr, CString},
     fs::File,
 };
+
+use miniz_oxide_c_api::mz_uncompress;
 
 use crate::*;
 
@@ -658,4 +660,26 @@ pub extern "C" fn generate_e_load_keys(info: &mut FileInfo, key1: *const i8, key
             info.encryptionKeyB[i * 4 + j] = ((hash[i] >> (8 * (j ^ 3))) & 0xFF) as u8;
         }
     }
+}
+
+#[no_mangle]
+#[export_name = "Uncompress"]
+pub extern "C" fn uncompress(
+    cBuffer: *mut *mut uint8,
+    cSize: int32,
+    buffer: *mut *mut u8,
+    size: int32,
+) -> int32 {
+    if (buffer.is_null() || cBuffer.is_null()) {
+        return 0;
+    }
+
+    let cLen: c_ulong = cSize as c_ulong;
+    let mut destLen: c_ulong = size as c_ulong;
+
+    unsafe {
+        _ = mz_uncompress(*buffer, (&mut destLen) as *mut c_ulong, *cBuffer, cLen);
+    }
+
+    return destLen as i32;
 }
