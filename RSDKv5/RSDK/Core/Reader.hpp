@@ -116,36 +116,9 @@ extern "C" {
     float ReadSingle(FileInfo *info);
     void ReadString(FileInfo *info, char *buffer);
     int32 Uncompress(uint8 **cBuffer, int32 cSize, uint8 **buffer, int32 size);
-}
-
-// The buffer passed in parameter is allocated here, so it's up to the caller to free it once it goes unused
-inline int32 ReadCompressed(FileInfo *info, uint8 **buffer)
-{
-    if (!buffer)
-        return 0;
-
-    uint32 cSize  = ReadInt32(info, false) - 4;
-    uint32 sizeBE = ReadInt32(info, false);
-
-    uint32 sizeLE = (uint32)((sizeBE << 24) | ((sizeBE << 8) & 0x00FF0000) | ((sizeBE >> 8) & 0x0000FF00) | (sizeBE >> 24));
-    AllocateStorage((void **)buffer, sizeLE, DATASET_TMP, false);
-
-    uint8 *cBuffer = NULL;
-    AllocateStorage((void **)&cBuffer, cSize, DATASET_TMP, false);
-    ReadBytes(info, cBuffer, cSize);
-
-    uint32 newSize = Uncompress(&cBuffer, cSize, buffer, sizeLE);
-    RemoveStorageEntry((void **)&cBuffer);
-
-    return newSize;
-}
-
-inline void ClearDataFiles()
-{
-    // Unload file list
-    for (int32 f = 0; f < DATAFILE_COUNT; ++f) {
-        HASH_CLEAR_MD5(dataFileList[f].hash);
-    }
+    // The buffer passed in parameter is allocated here, so it's up to the caller to free it once it goes unused
+    int32 ReadCompressed(FileInfo *info, uint8 **buffer);
+    void ClearDataFiles();
 }
 
 } // namespace RSDK

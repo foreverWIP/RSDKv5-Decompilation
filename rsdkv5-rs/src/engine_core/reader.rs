@@ -9,7 +9,11 @@ use crate::*;
 
 use self::{
     dev::debug::{PrintLog, PrintModes},
-    storage::text::{gen_hash_md5, gen_hash_md5_buf, HashMD5},
+    storage::{
+        allocate_storage, remove_storage_entry,
+        text::{gen_hash_md5, gen_hash_md5_buf, HashMD5},
+        StorageDataSets,
+    },
     user::core::user_storage::SKU_userFileDir,
 };
 
@@ -682,4 +686,42 @@ pub extern "C" fn uncompress(
     }
 
     return destLen as i32;
+}
+
+// The buffer passed in parameter is allocated here, so it's up to the caller to free it once it goes unused
+#[no_mangle]
+#[export_name = "ReadCompressed"]
+pub extern "C" fn read_compressed(info: &mut FileInfo, buffer: *mut *mut u8) -> int32 {
+    if (buffer.is_null()) {
+        return 0;
+    }
+
+    let cSize: uint32 = (read_int_32(info, false32) - 4) as u32;
+    let sizeBE: uint32 = read_int_32(info, false32) as u32;
+
+    let sizeLE: uint32 = ((sizeBE << 24)
+        | ((sizeBE << 8) & 0x00FF0000)
+        | ((sizeBE >> 8) & 0x0000FF00)
+        | (sizeBE >> 24)) as u32;
+    allocate_storage(buffer, sizeLE, StorageDataSets::DATASET_TMP, false32);
+
+    let mut cBuffer: *mut u8 = std::ptr::null_mut();
+    allocate_storage(&mut cBuffer, cSize, StorageDataSets::DATASET_TMP, false32);
+    read_bytes(info, cBuffer, cSize as i32);
+
+    let newSize: uint32 = uncompress(&mut cBuffer, cSize as i32, buffer, sizeLE as i32) as u32;
+    remove_storage_entry(&mut cBuffer);
+
+    return newSize as i32;
+}
+
+#[no_mangle]
+#[export_name = "ClearDataFiles"]
+pub extern "C" fn clear_data_files() {
+    unsafe {
+        // Unload file list
+        for f in 0..DATAFILE_COUNT {
+            dataFileList[f].hash = HashMD5::default();
+        }
+    }
 }
