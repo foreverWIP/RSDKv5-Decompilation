@@ -697,10 +697,11 @@ pub fn read_compressed(info: &mut FileInfo) -> Vec<u8> {
         | ((sizeBE << 8) & 0x00FF0000)
         | ((sizeBE >> 8) & 0x0000FF00)
         | (sizeBE >> 24)) as u32;
-    let mut ret = Vec::with_capacity(sizeLE as usize);
+    let mut ret = Vec::new();
     ret.resize(sizeLE as usize, 0);
 
-    let mut cBuffer = Vec::with_capacity(cSize as usize);
+    let mut cBuffer = Vec::new();
+    cBuffer.resize(cSize as usize, 0);
     read_bytes(info, cBuffer.as_mut_ptr(), cSize as i32);
 
     let newSize: uint32 = uncompress(

@@ -12,7 +12,7 @@ use self::{
         drawing::{currentScreen, FlipFlags, CAMERA_COUNT, LAYER_COUNT},
         palette::{fullPalette, gfxLineBuffer},
     },
-    storage::{remove_storage_entry, text::HashMD5},
+    storage::{copy_storage, text::HashMD5},
 };
 const TILE_COUNT: usize = 0x400;
 const TILE_SIZE: usize = 0x10;
@@ -247,7 +247,7 @@ pub extern "C" fn load_scroll_indices(info: &mut FileInfo, layer: &mut TileLayer
     unsafe {
         layer
             .lineScroll
-            .copy_from(scrollIndexes.as_ptr(), TILE_SIZE * size as usize);
+            .copy_from(scrollIndexes.as_ptr(), scrollIndexes.len());
     }
 }
 

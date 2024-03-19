@@ -170,7 +170,7 @@ void RSDK::InitStringList(String *stringList, int32 size)
 
     for (int32 c = 0; c < size && c < stringList->length; ++c) text[c] = stringList->chars[c];
 
-    CopyStorage((uint32 **)&stringList->chars, (uint32 **)&text);
+    CopyStorage((uint8 **)&stringList->chars, (uint8 **)&text, sizeof(uint16) * size);
     stringList->size = size;
     if (stringList->length > (uint16)size)
         stringList->length = size;

@@ -95,7 +95,7 @@ extern "C" {
     float GetUsedStorageNormalized(StorageDataSets dataSet);
     void RemoveStorageEntry(void **dataPtr);
     void DefragmentAndGarbageCollectStorage(StorageDataSets set);
-    void CopyStorage(uint32 **src, uint32 **dst);
+    void CopyStorage(uint8 **dstManaged, uint8 **src, uint32 srcLen);
     void GarbageCollectStorage(StorageDataSets dataSet);
 }
 
