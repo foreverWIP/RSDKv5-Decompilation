@@ -211,10 +211,8 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
                         globalVarsPtr    = NULL;
                         globalVarsInitCB = NULL;
 
-                        dataStorage[DATASET_STG].entryCount  = 0;
-                        dataStorage[DATASET_STG].usedStorage = 0;
-                        dataStorage[DATASET_SFX].entryCount  = 0;
-                        dataStorage[DATASET_SFX].usedStorage = 0;
+                        ClearStorage(DATASET_STG);
+                        ClearStorage(DATASET_SFX);
 
                         for (int32 o = 0; o < objectClassCount; ++o) {
                             if (objectClassList[o].staticVars && *objectClassList[o].staticVars)

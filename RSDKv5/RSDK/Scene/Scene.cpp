@@ -282,7 +282,7 @@ void RSDK::LoadSceneAssets()
     char fullFilePath[0x40];
     sprintf_s(fullFilePath, sizeof(fullFilePath), "Data/Stages/%s/Scene%s.bin", currentSceneFolder, sceneEntry->id);
 
-    dataStorage[DATASET_TMP].usedStorage = 0;
+    ClearStorage(DATASET_TMP);
 
     for (int32 s = 0; s < SCREEN_COUNT; ++s) screens[s].waterDrawPos = screens[s].size.y;
 

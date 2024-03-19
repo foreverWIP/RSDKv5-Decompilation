@@ -90,6 +90,7 @@ extern "C" {
 
 namespace RSDK
 {
+enum FileModes { FMODE_NONE, FMODE_RB, FMODE_WB, FMODE_RB_PLUS };
 
 #if RETRO_REV0U
 void DetectEngineVersion_HandleMods(bool32 *readDataPack);
@@ -98,11 +99,6 @@ void DetectEngineVersion();
 extern "C" {
     bool32 LoadDataPack(const char *filename, size_t fileOffset, bool32 useBuffer);
     bool32 OpenDataFile(FileInfo *info, const char *filename);
-}
-
-enum FileModes { FMODE_NONE, FMODE_RB, FMODE_WB, FMODE_RB_PLUS };
-
-extern "C" {
     void GenerateELoadKeys(FileInfo *info, const char *key1, int32 key2);
     void InitFileInfo(FileInfo *info);
     void CloseFile(FileInfo *info);

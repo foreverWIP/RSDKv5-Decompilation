@@ -1,6 +1,8 @@
 pub mod legacy;
 pub mod text;
 
+use std::collections::HashMap;
+
 use crate::*;
 
 use self::engine_core::reader::{dataPackCount, dataPacks};
@@ -139,6 +141,15 @@ pub extern "C" fn release_storage() {
 }
 
 #[no_mangle]
+#[export_name = "ClearStorage"]
+pub extern "C" fn clear_storage(dataSet: StorageDataSets) {
+    unsafe {
+        dataStorage[dataSet as usize].entryCount = 0;
+        dataStorage[dataSet as usize].usedStorage = 0;
+    }
+}
+
+#[no_mangle]
 #[export_name = "AllocateStorage"]
 pub extern "C" fn allocate_storage(
     dataPtr: *mut *mut u8,
@@ -267,6 +278,15 @@ pub extern "C" fn allocate_storage(
                 }
             }
         }
+    }
+}
+
+#[no_mangle]
+#[export_name = "GetUsedStorageNormalized"]
+pub extern "C" fn get_used_storage_normalized(dataSet: StorageDataSets) -> f32 {
+    unsafe {
+        ((i32::BITS / 8) * dataStorage[dataSet as usize].usedStorage) as f32
+            / dataStorage[dataSet as usize].storageLimit as f32
     }
 }
 

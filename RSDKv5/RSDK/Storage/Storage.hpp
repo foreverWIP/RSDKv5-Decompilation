@@ -3,8 +3,6 @@
 
 namespace RSDK
 {
-#define STORAGE_ENTRY_COUNT (0x1000)
-
 enum StorageDataSets {
     DATASET_STG = 0,
     DATASET_MUS = 1,
@@ -12,16 +10,6 @@ enum StorageDataSets {
     DATASET_STR = 3,
     DATASET_TMP = 4,
     DATASET_MAX, // used to signify limits
-};
-
-struct DataStorage {
-    uint32 *memoryTable;
-    uint32 usedStorage;
-    uint32 storageLimit;
-    uint32 **dataEntries[STORAGE_ENTRY_COUNT];   // pointer to the actual variable
-    uint32 *storageEntries[STORAGE_ENTRY_COUNT]; // pointer to the storage in "memoryTable"
-    uint32 entryCount;
-    uint32 clearCount;
 };
 
 template <typename T> class List
@@ -100,11 +88,11 @@ public:
 };
 
 extern "C" {
-    extern DataStorage dataStorage[DATASET_MAX];
-
     bool32 InitStorage();
     void ReleaseStorage();
+    void ClearStorage(StorageDataSets dataSet);
     void AllocateStorage(void **dataPtr, uint32 size, StorageDataSets dataSet, bool32 clear);
+    float GetUsedStorageNormalized(StorageDataSets dataSet);
     void RemoveStorageEntry(void **dataPtr);
     void DefragmentAndGarbageCollectStorage(StorageDataSets set);
     void CopyStorage(uint32 **src, uint32 **dst);

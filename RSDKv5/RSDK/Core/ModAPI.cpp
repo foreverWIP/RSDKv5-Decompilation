@@ -274,7 +274,7 @@ void RSDK::ApplyModChanges()
 #if RETRO_REV0U
     uint32 category                      = sceneInfo.activeCategory;
     uint32 scene                         = sceneInfo.listPos;
-    dataStorage[DATASET_SFX].usedStorage = 0;
+    ClearStorage(DATASET_SFX);
     RefreshModFolders(true);
     LoadModSettings();
     DetectEngineVersion();
@@ -312,7 +312,7 @@ void RSDK::ApplyModChanges()
 #else
     uint32 category                      = sceneInfo.activeCategory;
     uint32 scene                         = sceneInfo.listPos;
-    dataStorage[DATASET_SFX].usedStorage = 0;
+    ClearStorage(DATASET_SFX);
     RefreshModFolders(true);
     LoadModSettings();
     LoadGameConfig();
@@ -484,11 +484,11 @@ void RSDK::UnloadMods()
     customUserFileDir[0] = 0;
 
     // Clear storage
-    dataStorage[DATASET_STG].usedStorage = 0;
+    ClearStorage(DATASET_STG);
     DefragmentAndGarbageCollectStorage(DATASET_MUS);
-    dataStorage[DATASET_SFX].usedStorage = 0;
-    dataStorage[DATASET_STR].usedStorage = 0;
-    dataStorage[DATASET_TMP].usedStorage = 0;
+    ClearStorage(DATASET_SFX);
+    ClearStorage(DATASET_STR);
+    ClearStorage(DATASET_TMP);
 
 #if RETRO_REV02
     // Clear out any userDBs
