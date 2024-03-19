@@ -4,11 +4,15 @@ pub mod legacy;
 use crate::*;
 
 use self::{
+    engine_core::reader::{
+        close_file, init_file_info, load_file, read_compressed, read_int_32, FileInfo, FileModes,
+        DEFAULT_FILEINFO,
+    },
     graphics::{
-        drawing::{currentScreen, CAMERA_COUNT, LAYER_COUNT},
+        drawing::{currentScreen, FlipFlags, CAMERA_COUNT, LAYER_COUNT},
         palette::{fullPalette, gfxLineBuffer},
     },
-    storage::text::HashMD5,
+    storage::{remove_storage_entry, text::HashMD5},
 };
 const TILE_COUNT: usize = 0x400;
 const TILE_SIZE: usize = 0x10;
@@ -235,6 +239,307 @@ pub static mut currentSceneFolder: [i8; 0x10] = [0; 0x10];
 pub static mut currentSceneID: [i8; 0x10] = [0; 0x10];
 #[no_mangle]
 pub static mut sceneInfo: SceneInfo = SceneInfo::new();
+
+#[no_mangle]
+#[export_name = "LoadScrollIndices"]
+pub extern "C" fn load_scroll_indices(info: &mut FileInfo, layer: &mut TileLayer, size: i32) {
+    let scrollIndexes = read_compressed(info);
+    unsafe {
+        layer
+            .lineScroll
+            .copy_from(scrollIndexes.as_ptr(), TILE_SIZE * size as usize);
+    }
+}
+
+#[no_mangle]
+#[export_name = "LoadTileLayout"]
+pub extern "C" fn load_tile_layout(info: &mut FileInfo, layer: &mut TileLayer) {
+    let tileLayout = read_compressed(info);
+
+    let mut id: int32 = 0;
+    unsafe {
+        for y in 0..(layer.ysize as u32) {
+            for x in 0..(layer.xsize as u32) {
+                *layer
+                    .layout
+                    .wrapping_add((x + (y << layer.widthShift)) as usize) =
+                    ((tileLayout[id as usize + 1] as u16) << 8)
+                        + tileLayout[id as usize + 0] as u16;
+                id += 2;
+            }
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "LoadTileConfig"]
+pub extern "C" fn load_tile_config(filepath: *const i8) {
+    unsafe {
+        let mut info = DEFAULT_FILEINFO;
+        init_file_info(&mut info);
+
+        if (load_file(&mut info, filepath, FileModes::FMODE_RB as u8) == true32) {
+            let sig: uint32 = read_int_32(&mut info, false32) as u32;
+            if (sig != RSDK_SIGNATURE_TIL) {
+                close_file(&mut info);
+                return;
+            }
+
+            let buffer = read_compressed(&mut info);
+
+            let mut bufPos: int32 = 0;
+            for p in 0..CPATH_COUNT {
+                // No Flip/Stored in file
+                for t in 0..TILE_COUNT {
+                    let mut maskHeights = [0u8; 0x10];
+                    let mut maskActive = [0u8; 0x10];
+
+                    maskHeights
+                        .copy_from_slice(&buffer[(bufPos as usize)..(bufPos as usize + TILE_SIZE)]);
+                    bufPos += TILE_SIZE as i32;
+                    maskActive
+                        .copy_from_slice(&buffer[(bufPos as usize)..(bufPos as usize + TILE_SIZE)]);
+                    bufPos += TILE_SIZE as i32;
+
+                    let yFlip: bool = buffer[bufPos as usize] != 0;
+                    bufPos += 1;
+                    tileInfo[p][t].floorAngle = buffer[bufPos as usize];
+                    bufPos += 1;
+                    tileInfo[p][t].lWallAngle = buffer[bufPos as usize];
+                    bufPos += 1;
+                    tileInfo[p][t].rWallAngle = buffer[bufPos as usize];
+                    bufPos += 1;
+                    tileInfo[p][t].roofAngle = buffer[bufPos as usize];
+                    bufPos += 1;
+                    tileInfo[p][t].flag = buffer[bufPos as usize];
+                    bufPos += 1;
+
+                    if (yFlip) {
+                        for c in 0..TILE_SIZE {
+                            if (maskActive[c] != 0) {
+                                collisionMasks[p][t].floorMasks[c] = 0x00;
+                                collisionMasks[p][t].roofMasks[c] = maskHeights[c];
+                            } else {
+                                collisionMasks[p][t].floorMasks[c] = 0xFF;
+                                collisionMasks[p][t].roofMasks[c] = 0xFF;
+                            }
+                        }
+
+                        // LWall rotations
+                        for c in 0..TILE_SIZE {
+                            let mut h: int32 = 0;
+                            while (true) {
+                                if (h == TILE_SIZE as i32) {
+                                    collisionMasks[p][t].lWallMasks[c] = 0xFF;
+                                    break;
+                                }
+
+                                let m: uint8 = collisionMasks[p][t].roofMasks[h as usize];
+                                if (m != 0xFF && c <= m as usize) {
+                                    collisionMasks[p][t].lWallMasks[c] = h as u8;
+                                    break;
+                                } else {
+                                    h += 1;
+                                    if (h <= -1) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // RWall rotations
+                        for c in 0..TILE_SIZE {
+                            let mut h: int32 = TILE_SIZE as i32 - 1;
+                            while (true) {
+                                if (h == -1) {
+                                    collisionMasks[p][t].rWallMasks[c] = 0xFF;
+                                    break;
+                                }
+
+                                let m: uint8 = collisionMasks[p][t].roofMasks[h as usize];
+                                if (m != 0xFF && c <= m as usize) {
+                                    collisionMasks[p][t].rWallMasks[c] = h as u8;
+                                    break;
+                                } else {
+                                    h -= 1;
+                                    if (h >= TILE_SIZE as i32) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } else
+                    // Regular Tile
+                    {
+                        // Collision heights
+                        for c in 0..TILE_SIZE {
+                            if (maskActive[c] != 0) {
+                                collisionMasks[p][t].floorMasks[c] = maskHeights[c];
+                                collisionMasks[p][t].roofMasks[c] = 0x0F;
+                            } else {
+                                collisionMasks[p][t].floorMasks[c] = 0xFF;
+                                collisionMasks[p][t].roofMasks[c] = 0xFF;
+                            }
+                        }
+
+                        // LWall rotations
+                        for c in 0..TILE_SIZE {
+                            let mut h: int32 = 0;
+                            while (true) {
+                                if (h == TILE_SIZE as i32) {
+                                    collisionMasks[p][t].lWallMasks[c] = 0xFF;
+                                    break;
+                                }
+
+                                let m: uint8 = collisionMasks[p][t].floorMasks[h as usize];
+                                if (m != 0xFF && c >= m as usize) {
+                                    collisionMasks[p][t].lWallMasks[c] = h as u8;
+                                    break;
+                                } else {
+                                    h += 1;
+                                    if (h <= -1) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        // RWall rotations
+                        for c in 0..TILE_SIZE {
+                            let mut h: int32 = TILE_SIZE as i32 - 1;
+                            while (true) {
+                                if (h == -1) {
+                                    collisionMasks[p][t].rWallMasks[c] = 0xFF;
+                                    break;
+                                }
+
+                                let m: uint8 = collisionMasks[p][t].floorMasks[h as usize];
+                                if (m != 0xFF && c >= m as usize) {
+                                    collisionMasks[p][t].rWallMasks[c] = h as u8;
+                                    break;
+                                } else {
+                                    h -= 1;
+                                    if (h >= TILE_SIZE as i32) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // FlipX
+                for t in 0..TILE_COUNT {
+                    let off: int32 = (FlipFlags::FLIP_X as i32 * TILE_COUNT as i32);
+                    tileInfo[p][t + off as usize].flag = tileInfo[p][t].flag;
+                    tileInfo[p][t + off as usize].floorAngle =
+                        (-(tileInfo[p][t].floorAngle as i8)) as u8;
+                    tileInfo[p][t + off as usize].lWallAngle =
+                        (-(tileInfo[p][t].rWallAngle as i8)) as u8;
+                    tileInfo[p][t + off as usize].roofAngle =
+                        (-(tileInfo[p][t].roofAngle as i8)) as u8;
+                    tileInfo[p][t + off as usize].rWallAngle =
+                        (-(tileInfo[p][t].lWallAngle as i8)) as u8;
+
+                    for c in 0..TILE_SIZE {
+                        let mut h: int32 = collisionMasks[p][t].lWallMasks[c] as i32;
+                        if (h == 0xFF) {
+                            collisionMasks[p][t + off as usize].rWallMasks[c] = 0xFF;
+                        } else {
+                            collisionMasks[p][t + off as usize].rWallMasks[c] = 0xF - h as u8;
+                        }
+
+                        h = collisionMasks[p][t].rWallMasks[c] as i32;
+                        if (h == 0xFF) {
+                            collisionMasks[p][t + off as usize].lWallMasks[c] = 0xFF;
+                        } else {
+                            collisionMasks[p][t + off as usize].lWallMasks[c] = 0xF - h as u8;
+                        }
+
+                        collisionMasks[p][t + off as usize].floorMasks[c] =
+                            collisionMasks[p][t].floorMasks[0xF - c];
+                        collisionMasks[p][t + off as usize].roofMasks[c] =
+                            collisionMasks[p][t].roofMasks[0xF - c];
+                    }
+                }
+
+                // FlipY
+                for t in 0..TILE_COUNT {
+                    let off: int32 = (FlipFlags::FLIP_Y as i32 * TILE_COUNT as i32);
+                    tileInfo[p][t + off as usize].flag = tileInfo[p][t].flag;
+                    tileInfo[p][t + off as usize].floorAngle =
+                        (-(0x80i8) as u8) - tileInfo[p][t].roofAngle;
+                    tileInfo[p][t + off as usize].lWallAngle =
+                        (-(0x80i8) as u8) - tileInfo[p][t].lWallAngle;
+                    tileInfo[p][t + off as usize].roofAngle =
+                        (-(0x80i8) as u8) - tileInfo[p][t].floorAngle;
+                    tileInfo[p][t + off as usize].rWallAngle =
+                        (-(0x80i8) as u8) - tileInfo[p][t].rWallAngle;
+
+                    for c in 0..TILE_SIZE {
+                        let mut h: int32 = collisionMasks[p][t].roofMasks[c] as i32;
+                        if (h == 0xFF) {
+                            collisionMasks[p][t + off as usize].floorMasks[c] = 0xFF;
+                        } else {
+                            collisionMasks[p][t + off as usize].floorMasks[c] = 0xF - h as u8;
+                        }
+
+                        h = collisionMasks[p][t].floorMasks[c] as i32;
+                        if (h == 0xFF) {
+                            collisionMasks[p][t + off as usize].roofMasks[c] = 0xFF;
+                        } else {
+                            collisionMasks[p][t + off as usize].roofMasks[c] = 0xF - h as u8;
+                        }
+
+                        collisionMasks[p][t + off as usize].lWallMasks[c] =
+                            collisionMasks[p][t].lWallMasks[0xF - c];
+                        collisionMasks[p][t + off as usize].rWallMasks[c] =
+                            collisionMasks[p][t].rWallMasks[0xF - c];
+                    }
+                }
+
+                // FlipXY
+                for t in 0..TILE_COUNT {
+                    let off: int32 = (FlipFlags::FLIP_XY as usize * TILE_COUNT) as i32;
+                    let offY: int32 = (FlipFlags::FLIP_Y as usize * TILE_COUNT) as i32;
+                    tileInfo[p][t + off as usize].flag = tileInfo[p][t + offY as usize].flag;
+                    tileInfo[p][t + off as usize].floorAngle =
+                        (-(tileInfo[p][t + offY as usize].floorAngle as i8)) as u8;
+                    tileInfo[p][t + off as usize].lWallAngle =
+                        (-(tileInfo[p][t + offY as usize].rWallAngle as i8)) as u8;
+                    tileInfo[p][t + off as usize].roofAngle =
+                        (-(tileInfo[p][t + offY as usize].roofAngle as i8)) as u8;
+                    tileInfo[p][t + off as usize].rWallAngle =
+                        (-(tileInfo[p][t + offY as usize].lWallAngle as i8)) as u8;
+
+                    for c in 0..TILE_SIZE {
+                        let mut h: int32 =
+                            collisionMasks[p][t + offY as usize].lWallMasks[c] as i32;
+                        if (h == 0xFF) {
+                            collisionMasks[p][t + off as usize].rWallMasks[c] = 0xFF;
+                        } else {
+                            collisionMasks[p][t + off as usize].rWallMasks[c] = 0xF - h as u8;
+                        }
+
+                        h = collisionMasks[p][t + offY as usize].rWallMasks[c] as i32;
+                        if (h == 0xFF) {
+                            collisionMasks[p][t + off as usize].lWallMasks[c] = 0xFF;
+                        } else {
+                            collisionMasks[p][t + off as usize].lWallMasks[c] = 0xF - h as u8;
+                        }
+
+                        collisionMasks[p][t + off as usize].floorMasks[c] =
+                            collisionMasks[p][t + offY as usize].floorMasks[0xF - c];
+                        collisionMasks[p][t + off as usize].roofMasks[c] =
+                            collisionMasks[p][t + offY as usize].roofMasks[0xF - c];
+                    }
+                }
+            }
+
+            close_file(&mut info);
+        }
+    }
+}
 
 #[no_mangle]
 #[export_name = "DrawLayerHScroll"]

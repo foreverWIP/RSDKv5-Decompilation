@@ -689,13 +689,7 @@ pub extern "C" fn uncompress(
 }
 
 // The buffer passed in parameter is allocated here, so it's up to the caller to free it once it goes unused
-#[no_mangle]
-#[export_name = "ReadCompressed"]
-pub extern "C" fn read_compressed(info: &mut FileInfo, buffer: *mut *mut u8) -> int32 {
-    if (buffer.is_null()) {
-        return 0;
-    }
-
+pub fn read_compressed(info: &mut FileInfo) -> Vec<u8> {
     let cSize: uint32 = (read_int_32(info, false32) - 4) as u32;
     let sizeBE: uint32 = read_int_32(info, false32) as u32;
 
@@ -703,16 +697,20 @@ pub extern "C" fn read_compressed(info: &mut FileInfo, buffer: *mut *mut u8) -> 
         | ((sizeBE << 8) & 0x00FF0000)
         | ((sizeBE >> 8) & 0x0000FF00)
         | (sizeBE >> 24)) as u32;
-    allocate_storage(buffer, sizeLE, StorageDataSets::DATASET_TMP, false32);
+    let mut ret = Vec::with_capacity(sizeLE as usize);
+    ret.resize(sizeLE as usize, 0);
 
-    let mut cBuffer: *mut u8 = std::ptr::null_mut();
-    allocate_storage(&mut cBuffer, cSize, StorageDataSets::DATASET_TMP, false32);
-    read_bytes(info, cBuffer, cSize as i32);
+    let mut cBuffer = Vec::with_capacity(cSize as usize);
+    read_bytes(info, cBuffer.as_mut_ptr(), cSize as i32);
 
-    let newSize: uint32 = uncompress(&mut cBuffer, cSize as i32, buffer, sizeLE as i32) as u32;
-    remove_storage_entry(&mut cBuffer);
+    let newSize: uint32 = uncompress(
+        &mut cBuffer.as_mut_ptr(),
+        cSize as i32,
+        &mut ret.as_mut_ptr(),
+        sizeLE as i32,
+    ) as u32;
 
-    return newSize as i32;
+    return ret;
 }
 
 #[no_mangle]

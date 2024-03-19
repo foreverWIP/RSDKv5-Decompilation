@@ -169,7 +169,9 @@ extern "C" {
 
 void LoadSceneFolder();
 void LoadSceneAssets();
-void LoadTileConfig(char *filepath);
+extern "C" {
+    void LoadTileConfig(char *filepath);
+}
 void LoadStageGIF(char *filepath);
 
 void ProcessParallaxAutoScroll();
@@ -314,6 +316,9 @@ inline void CopyTile(uint16 dest, uint16 src, uint16 count)
 inline ScanlineInfo *GetScanlines() { return scanlines; }
 
 extern "C" {
+    void LoadScrollIndices(FileInfo *info, TileLayer *layer, int32 size);
+    void LoadTileLayout(FileInfo *info, TileLayer *layer);
+
     // Draw a layer with horizonal scrolling capabilities
     void DrawLayerHScroll(RSDK::TileLayer *layer);
 

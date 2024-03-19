@@ -116,8 +116,6 @@ extern "C" {
     float ReadSingle(FileInfo *info);
     void ReadString(FileInfo *info, char *buffer);
     int32 Uncompress(uint8 **cBuffer, int32 cSize, uint8 **buffer, int32 size);
-    // The buffer passed in parameter is allocated here, so it's up to the caller to free it once it goes unused
-    int32 ReadCompressed(FileInfo *info, uint8 **buffer);
     void ClearDataFiles();
 }
 

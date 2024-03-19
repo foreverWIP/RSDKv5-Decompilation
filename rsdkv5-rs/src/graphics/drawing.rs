@@ -20,6 +20,14 @@ pub const RETRO_VIDEO_TEXTURE_W: usize = 1024;
 pub const RETRO_VIDEO_TEXTURE_H: usize = 512;
 
 #[repr(C)]
+pub enum FlipFlags {
+    FLIP_NONE,
+    FLIP_X,
+    FLIP_Y,
+    FLIP_XY,
+}
+
+#[repr(C)]
 pub struct ScreenInfo {
     // uint16 *frameBuffer;
     pub frameBuffer: [uint16; SCREEN_XMAX * SCREEN_YSIZE],
