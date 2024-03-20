@@ -511,7 +511,7 @@ void RSDK::DevMenu_MainMenu()
                 break;
 
 #if !RETRO_USE_MOD_LOADER
-            case 4: RenderDevice::isRunning = false; break;
+            case 4: isRunning = false; break;
 #else
             case 4:
                 LoadMods(true); // reload our mod list real quick
@@ -522,7 +522,7 @@ void RSDK::DevMenu_MainMenu()
                 }
                 break;
 
-            case 5: RenderDevice::isRunning = false; break;
+            case 5: isRunning = false; break;
 #endif
 
             default: break;

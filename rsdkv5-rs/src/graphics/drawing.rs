@@ -42,5 +42,30 @@ pub struct ScreenInfo {
     pub waterDrawPos: int32,
 }
 
+pub trait RenderDevice {
+    fn Init() -> bool;
+    fn CopyFrameBuffer();
+    fn ProcessDimming();
+    fn FlipScreen();
+    fn Release(isRefresh: bool32);
+
+    fn RefreshWindow();
+
+    fn SetupImageTexture(width: int32, height: int32, imagePixels: *const uint8);
+    fn SetupVideoTexture_YUV420(width: int32, height: int32, imagePixels: *const uint8);
+    fn SetupVideoTexture_YUV422(width: int32, height: int32, imagePixels: *const uint8);
+    fn SetupVideoTexture_YUV424(width: int32, height: int32, imagePixels: *const uint8);
+
+    fn ProcessEvents() -> bool;
+
+    fn InitFPSCap();
+    fn CheckFPSCap() -> bool;
+    fn UpdateFPSCap();
+
+    // Public since it's needed for the ModAPI
+    fn InitShaders() -> bool;
+    fn LoadShader(fileName: *const i8, linear: bool32);
+}
+
 #[no_mangle]
 pub static mut currentScreen: *mut ScreenInfo = std::ptr::null_mut();

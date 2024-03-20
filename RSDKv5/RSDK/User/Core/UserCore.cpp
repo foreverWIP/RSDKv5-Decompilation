@@ -230,7 +230,7 @@ void RSDK::SKU::LaunchManual()
     PrintLog(PRINT_NORMAL, "EMPTY LaunchManual()");
 #endif
 }
-void RSDK::SKU::ExitGame() { RenderDevice::isRunning = false; }
+void RSDK::SKU::ExitGame() { isRunning = false; }
 
 int32 RSDK::SKU::GetDefaultGamepadType()
 {

@@ -28,7 +28,7 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
 
     if (engine.consoleEnabled)
         InitConsole();
-    RenderDevice::isRunning = false;
+    isRunning = false;
 
     if (InitStorage()) {
         SKU::InitUserCore();
@@ -49,7 +49,7 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
         int32 shader = videoSettings.shaderID;
         strcpy(gameVerInfo.gameTitle, "RSDK" ENGINE_V_NAME);
         if (RenderDevice::Init()) {
-            RenderDevice::isRunning   = true;
+            isRunning   = true;
             currentScreen             = &screens[0];
             videoSettings.screenCount = 1;
         }
@@ -93,10 +93,10 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
         videoSettings.shaderID = shader;
         RenderDevice::InitShaders();
         RenderDevice::SetWindowTitle();
-        RenderDevice::lastShaderID = -1;
+        lastShaderID = -1;
 #else
         if (RenderDevice::Init()) {
-            RenderDevice::isRunning = true;
+            isRunning = true;
         }
         else {
             // No render device, throw a "QUIT" msg onto the message loop and call it a day :)
@@ -107,10 +107,10 @@ int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
 
     RenderDevice::InitFPSCap();
 
-    while (RenderDevice::isRunning) {
+    while (isRunning) {
         RenderDevice::ProcessEvents();
 
-        if (!RenderDevice::isRunning)
+        if (!isRunning)
             break;
 
         if (RenderDevice::CheckFPSCap()) {
@@ -569,7 +569,7 @@ void RSDK::ProcessEngine()
             ProcessInput();
 
             if (controller[0].keyStart.down)
-                RenderDevice::isRunning = false;
+                isRunning = false;
 
             currentScreen = &screens[0];
             int32 yOff    = DevOutput_GetStringYSize(outputString);

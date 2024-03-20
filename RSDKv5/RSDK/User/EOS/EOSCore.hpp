@@ -24,7 +24,7 @@ struct EOSCore : UserCore {
     int32 GetUserPlatform() { return PLATFORM_PC; }
     bool32 GetConfirmButtonFlip() { return false; }
     void LaunchManual() {}
-    void ExitGame() { RenderDevice::isRunning = false; }
+    void ExitGame() { isRunning = false; }
     bool32 IsOverlayEnabled(uint32 overlay) { return false; }
 
     bool32 SetupExtensionOverlay()

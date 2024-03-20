@@ -168,23 +168,23 @@ VideoSettings RSDK::videoSettingsBackup;
 int32 RSDK::userShaderCount = 0;
 #endif
 
-bool32 RenderDeviceBase::isRunning         = false;
-int32 RenderDeviceBase::windowRefreshDelay = 0;
+bool32 RSDK::isRunning         = false;
+int32 RSDK::windowRefreshDelay = 0;
 
 #if RETRO_REV02
-uint8 RenderDeviceBase::startVertex_2P[] = { 18, 24 };
-uint8 RenderDeviceBase::startVertex_3P[] = { 30, 36, 12 };
+uint8 RSDK::startVertex_2P[] = { 18, 24 };
+uint8 RSDK::startVertex_3P[] = { 30, 36, 12 };
 #endif
 
-float2 RenderDeviceBase::pixelSize   = { DEFAULT_PIXWIDTH, SCREEN_YSIZE };
-float2 RenderDeviceBase::textureSize = { 512.0, 256.0 };
-float2 RenderDeviceBase::viewSize    = { 0, 0 };
+float2 RSDK::pixelSize   = { DEFAULT_PIXWIDTH, SCREEN_YSIZE };
+float2 RSDK::textureSize = { 512.0, 256.0 };
+float2 RSDK::viewSize    = { 0, 0 };
 
-int32 RenderDeviceBase::displayWidth[16];
-int32 RenderDeviceBase::displayHeight[16];
-int32 RenderDeviceBase::displayCount = 0;
+int32 RSDK::displayWidth[16];
+int32 RSDK::displayHeight[16];
+int32 RSDK::displayCount = 0;
 
-int32 RenderDeviceBase::lastShaderID = -1;
+int32 RSDK::lastShaderID = -1;
 
 char RSDK::drawGroupNames[0x10][0x10] = {
     "Draw Group 0", "Draw Group 1", "Draw Group 2",  "Draw Group 3",  "Draw Group 4",  "Draw Group 5",  "Draw Group 6",  "Draw Group 7",
@@ -315,7 +315,7 @@ void RSDK::GetDisplayInfo(int32 *displayID, int32 *width, int32 *height, int32 *
 
     if (*displayID == -2) { // -2 == "get FS size display"
         if (videoSettings.fsWidth && videoSettings.fsHeight) {
-            for (display = 0; display < RenderDevice::displayCount; ++display) {
+            for (display = 0; display < displayCount; ++display) {
 #if RETRO_RENDERDEVICE_DIRECTX11
                 int32 refresh = RenderDevice::displayInfo.displays[display].refresh_rate.Numerator
                                 / RenderDevice::displayInfo.displays[display].refresh_rate.Denominator;
@@ -335,8 +335,8 @@ void RSDK::GetDisplayInfo(int32 *displayID, int32 *width, int32 *height, int32 *
     else {
         display = *displayID;
         if (prevDisplay < 0)
-            display = RenderDevice::displayCount;
-        else if (prevDisplay > RenderDevice::displayCount)
+            display = displayCount;
+        else if (prevDisplay > displayCount)
             display = 0;
     }
 

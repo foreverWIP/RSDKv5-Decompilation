@@ -29,7 +29,7 @@ struct SteamCore : UserCore {
     int32 GetUserPlatform() { return PLATFORM_PC; }
     bool32 GetConfirmButtonFlip() { return false; }
     void LaunchManual() {}
-    void ExitGame() { RenderDevice::isRunning = false; }
+    void ExitGame() { isRunning = false; }
     bool32 IsOverlayEnabled(uint32 overlay)
     {
         for (int32 i = 0; i < inputDeviceCount; ++i) {

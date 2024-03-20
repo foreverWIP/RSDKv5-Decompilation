@@ -122,7 +122,7 @@ void DummyCore::LaunchManual()
     PrintLog(PRINT_NORMAL, "EMPTY LaunchManual()");
 #endif
 }
-void DummyCore::ExitGame() { RenderDevice::isRunning = false; }
+void DummyCore::ExitGame() { isRunning = false; }
 
 int32 DummyCore::GetDefaultGamepadType()
 {

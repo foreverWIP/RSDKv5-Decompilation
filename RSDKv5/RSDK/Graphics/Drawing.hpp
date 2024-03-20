@@ -216,24 +216,6 @@ public:
     // RSDK COMMON START
     // ====================
 
-    static bool32 isRunning;
-    static int32 windowRefreshDelay;
-
-    static int32 displayWidth[16];
-    static int32 displayHeight[16];
-    static int32 displayCount;
-
-    static int32 lastShaderID;
-
-#if RETRO_REV02
-    static uint8 startVertex_2P[];
-    static uint8 startVertex_3P[];
-#endif
-
-    static float2 pixelSize;
-    static float2 textureSize;
-    static float2 viewSize;
-
 private:
     static bool SetupRendering();
     static void InitVertexBuffer();
@@ -275,6 +257,20 @@ extern "C" {
 extern int32 shaderCount;
 extern ShaderEntry shaderList[SHADER_COUNT];
 
+extern bool32 isRunning;
+extern int32 windowRefreshDelay;
+extern float2 pixelSize;
+extern float2 textureSize;
+extern float2 viewSize;
+extern int32 displayWidth[16];
+extern int32 displayHeight[16];
+extern int32 displayCount;
+extern int32 lastShaderID;
+#if RETRO_REV02
+extern uint8 startVertex_2P[];
+extern uint8 startVertex_3P[];
+#endif
+
 extern VideoSettings videoSettings;
 extern VideoSettings videoSettingsBackup;
 extern bool32 changedVideoSettings;
@@ -297,12 +293,12 @@ void GetWindowSize(int32 *width, int32 *height);
 #if RETRO_REV02
 inline void SetScreenVertices(uint8 startVert2P_S1, uint8 startVert2P_S2, uint8 startVert3P_S1, uint8 startVert3P_S2, uint8 startVert3P_S3)
 {
-    RenderDevice::startVertex_2P[0] = startVert2P_S1;
-    RenderDevice::startVertex_2P[1] = startVert2P_S2;
+    startVertex_2P[0] = startVert2P_S1;
+    startVertex_2P[1] = startVert2P_S2;
 
-    RenderDevice::startVertex_3P[0] = startVert3P_S1;
-    RenderDevice::startVertex_3P[1] = startVert3P_S2;
-    RenderDevice::startVertex_3P[2] = startVert3P_S3;
+    startVertex_3P[0] = startVert3P_S1;
+    startVertex_3P[1] = startVert3P_S2;
+    startVertex_3P[2] = startVert3P_S3;
 }
 #endif
 
