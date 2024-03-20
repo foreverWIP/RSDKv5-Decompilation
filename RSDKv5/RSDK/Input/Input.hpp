@@ -454,23 +454,25 @@ struct TouchInfo {
 #endif
 };
 
-extern InputDevice *inputDeviceList[INPUTDEVICE_COUNT];
-extern int32 inputDeviceCount;
+extern "C" {
+    extern InputDevice *inputDeviceList[INPUTDEVICE_COUNT];
+    extern int32 inputDeviceCount;
 
-extern int32 inputSlots[PLAYER_COUNT];
-extern InputDevice *inputSlotDevices[PLAYER_COUNT];
+    extern int32 inputSlots[PLAYER_COUNT];
+    extern InputDevice *inputSlotDevices[PLAYER_COUNT];
 
-extern ControllerState controller[PLAYER_COUNT + 1];
-extern AnalogState stickL[PLAYER_COUNT + 1];
+    extern ControllerState controller[PLAYER_COUNT + 1];
+    extern AnalogState stickL[PLAYER_COUNT + 1];
 #if RETRO_REV02
-extern AnalogState stickR[PLAYER_COUNT + 1];
-extern TriggerState triggerL[PLAYER_COUNT + 1];
-extern TriggerState triggerR[PLAYER_COUNT + 1];
+    extern AnalogState stickR[PLAYER_COUNT + 1];
+    extern TriggerState triggerL[PLAYER_COUNT + 1];
+    extern TriggerState triggerR[PLAYER_COUNT + 1];
 #endif
-extern TouchInfo touchInfo;
+    extern TouchInfo touchInfo;
 
-extern GamePadMappings *gamePadMappings;
-extern int32 gamePadCount;
+    extern GamePadMappings *gamePadMappings;
+    extern int32 gamePadCount;
+}
 
 #if RETRO_INPUTDEVICE_KEYBOARD
 #include "Keyboard/KBInputDevice.hpp"

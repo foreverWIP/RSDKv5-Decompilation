@@ -2,24 +2,6 @@
 
 using namespace RSDK;
 
-InputDevice *RSDK::inputDeviceList[INPUTDEVICE_COUNT];
-int32 RSDK::inputDeviceCount = 0;
-
-int32 RSDK::inputSlots[PLAYER_COUNT]              = { INPUT_NONE, INPUT_NONE, INPUT_NONE, INPUT_NONE };
-InputDevice *RSDK::inputSlotDevices[PLAYER_COUNT] = { NULL, NULL, NULL, NULL };
-
-ControllerState RSDK::controller[PLAYER_COUNT + 1];
-AnalogState RSDK::stickL[PLAYER_COUNT + 1];
-#if RETRO_REV02
-AnalogState RSDK::stickR[PLAYER_COUNT + 1];
-TriggerState RSDK::triggerL[PLAYER_COUNT + 1];
-TriggerState RSDK::triggerR[PLAYER_COUNT + 1];
-#endif
-TouchInfo RSDK::touchInfo;
-
-GamePadMappings *RSDK::gamePadMappings = NULL;
-int32 RSDK::gamePadCount               = 0;
-
 #if RETRO_INPUTDEVICE_KEYBOARD
 #include "Keyboard/KBInputDevice.cpp"
 #endif

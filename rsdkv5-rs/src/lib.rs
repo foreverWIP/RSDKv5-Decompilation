@@ -4,6 +4,7 @@
 pub mod dev;
 pub mod engine_core;
 pub mod graphics;
+pub mod input;
 pub mod scene;
 pub mod storage;
 pub mod user;
