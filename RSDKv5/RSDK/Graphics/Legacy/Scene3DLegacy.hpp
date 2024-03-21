@@ -55,13 +55,8 @@ extern Matrix matTemp;
 extern int32 projectionX;
 extern int32 projectionY;
 
-extern int32 faceLineStart[SCREEN_YSIZE];
-extern int32 faceLineEnd[SCREEN_YSIZE];
-
-extern int32 faceLineStartU[SCREEN_YSIZE];
-extern int32 faceLineEndU[SCREEN_YSIZE];
-extern int32 faceLineStartV[SCREEN_YSIZE];
-extern int32 faceLineEndV[SCREEN_YSIZE];
+extern ScanEdge scanEdgeBufferU[SCREEN_YSIZE * 2];
+extern ScanEdge scanEdgeBufferV[SCREEN_YSIZE * 2];
 
 extern Vertex vertexBuffer[LEGACY_VERTEXBUFFER_SIZE];
 extern Vertex vertexBufferT[LEGACY_VERTEXBUFFER_SIZE];

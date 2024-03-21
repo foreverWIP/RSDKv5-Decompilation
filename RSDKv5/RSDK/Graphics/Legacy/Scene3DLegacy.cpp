@@ -1,3 +1,4 @@
+#include "RSDK/Graphics/Scene3D.hpp"
 int32 RSDK::Legacy::vertexCount = 0;
 int32 RSDK::Legacy::faceCount   = 0;
 
@@ -9,12 +10,8 @@ RSDK::Matrix RSDK::Legacy::matTemp;
 int32 RSDK::Legacy::projectionX = 136;
 int32 RSDK::Legacy::projectionY = 160;
 
-int32 RSDK::Legacy::faceLineStart[SCREEN_YSIZE];
-int32 RSDK::Legacy::faceLineEnd[SCREEN_YSIZE];
-int32 RSDK::Legacy::faceLineStartU[SCREEN_YSIZE];
-int32 RSDK::Legacy::faceLineEndU[SCREEN_YSIZE];
-int32 RSDK::Legacy::faceLineStartV[SCREEN_YSIZE];
-int32 RSDK::Legacy::faceLineEndV[SCREEN_YSIZE];
+RSDK::ScanEdge RSDK::Legacy::scanEdgeBufferU[SCREEN_YSIZE * 2];
+RSDK::ScanEdge RSDK::Legacy::scanEdgeBufferV[SCREEN_YSIZE * 2];
 
 RSDK::Legacy::Vertex RSDK::Legacy::vertexBuffer[LEGACY_VERTEXBUFFER_SIZE];
 RSDK::Legacy::Vertex RSDK::Legacy::vertexBufferT[LEGACY_VERTEXBUFFER_SIZE];
@@ -28,36 +25,7 @@ int32 RSDK::Legacy::fogStrength = 0;
 
 void RSDK::Legacy::ProcessScanEdge(Vertex *vertA, Vertex *vertB)
 {
-    int32 bottom, top;
-
-    if (vertA->y == vertB->y)
-        return;
-    if (vertA->y >= vertB->y) {
-        top    = vertB->y;
-        bottom = vertA->y + 1;
-    }
-    else {
-        top    = vertA->y;
-        bottom = vertB->y + 1;
-    }
-    if (top > SCREEN_YSIZE - 1 || bottom < 0)
-        return;
-    if (bottom > SCREEN_YSIZE)
-        bottom = SCREEN_YSIZE;
-    int32 fullX  = vertA->x << 16;
-    int32 deltaX = ((vertB->x - vertA->x) << 16) / (vertB->y - vertA->y);
-    if (top < 0) {
-        fullX -= top * deltaX;
-        top = 0;
-    }
-    for (int32 i = top; i < bottom; ++i) {
-        int32 trueX = fullX >> 16;
-        if (trueX < faceLineStart[i])
-            faceLineStart[i] = trueX;
-        if (trueX > faceLineEnd[i])
-            faceLineEnd[i] = trueX;
-        fullX += deltaX;
-    }
+    RSDK::ProcessScanEdge(TO_FIXED(vertA->x), TO_FIXED(vertA->y), TO_FIXED(vertB->x), TO_FIXED(vertB->y));
 }
 void RSDK::Legacy::ProcessScanEdgeUV(Vertex *vertA, Vertex *vertB)
 {
@@ -100,15 +68,15 @@ void RSDK::Legacy::ProcessScanEdgeUV(Vertex *vertA, Vertex *vertB)
     }
     for (int32 i = top; i < bottom; ++i) {
         int32 trueX = fullX >> 16;
-        if (trueX < faceLineStart[i]) {
-            faceLineStart[i]  = trueX;
-            faceLineStartU[i] = fullU;
-            faceLineStartV[i] = fullV;
+        if (trueX < RSDK::scanEdgeBuffer[i].start) {
+            RSDK::scanEdgeBuffer[i].start  = trueX;
+            scanEdgeBufferU[i].start = fullU;
+            scanEdgeBufferV[i].start = fullV;
         }
-        if (trueX > faceLineEnd[i]) {
-            faceLineEnd[i]  = trueX;
-            faceLineEndU[i] = fullU;
-            faceLineEndV[i] = fullV;
+        if (trueX > RSDK::scanEdgeBuffer[i].end) {
+            RSDK::scanEdgeBuffer[i].end  = trueX;
+            scanEdgeBufferU[i].end = fullU;
+            scanEdgeBufferV[i].end = fullV;
         }
         fullX += deltaX;
         fullU += deltaU;

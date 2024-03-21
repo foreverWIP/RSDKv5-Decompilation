@@ -1452,11 +1452,31 @@ void RSDK::Legacy::DrawSubtractiveBlendedSprite(int32 XPos, int32 YPos,
 
 void RSDK::Legacy::DrawFace(void *v, uint32 color) {
   Vertex *verts = (Vertex *)v;
+
+  if (verts[0].x < 0 && verts[1].x < 0 && verts[2].x < 0 && verts[3].x < 0)
+      return;
+
+  if (verts[0].x > Legacy_GFX_LINESIZE && verts[1].x > Legacy_GFX_LINESIZE && verts[2].x > Legacy_GFX_LINESIZE && verts[3].x > Legacy_GFX_LINESIZE)
+      return;
+
+  if (verts[0].y < 0 && verts[1].y < 0 && verts[2].y < 0 && verts[3].y < 0)
+      return;
+
+  if (verts[0].y > SCREEN_YSIZE && verts[1].y > SCREEN_YSIZE && verts[2].y > SCREEN_YSIZE && verts[3].y > SCREEN_YSIZE)
+      return;
+
+  if (verts[0].x == verts[1].x && verts[1].x == verts[2].x && verts[2].x == verts[3].x)
+      return;
+
+  if (verts[0].y == verts[1].y && verts[1].y == verts[2].y && verts[2].y == verts[3].y)
+      return;
+
   Vector2 newVertices[4];
-  newVertices[0] = { verts[0].x << 16, verts[0].y << 16 };
-  newVertices[1] = { verts[2].x << 16, verts[2].y << 16 };
-  newVertices[2] = { verts[3].x << 16, verts[3].y << 16 };
-  newVertices[3] = { verts[1].x << 16, verts[1].y << 16 };
+  newVertices[0] = { TO_FIXED(verts[0].x), TO_FIXED(verts[0].y) };
+  newVertices[1] = { TO_FIXED(verts[1].x), TO_FIXED(verts[1].y) };
+  newVertices[2] = { TO_FIXED(verts[2].x), TO_FIXED(verts[2].y) };
+  newVertices[3] = { TO_FIXED(verts[3].x), TO_FIXED(verts[3].y) };
+
   RSDK::DrawFace((Vector2 *)&newVertices, 4, (color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, (color & 0x7F000000) >> 23, INK_ALPHA);
 }
 void RSDK::Legacy::DrawTexturedFace(void *v, uint8 sheetID) {
@@ -1520,8 +1540,8 @@ void RSDK::Legacy::DrawTexturedFace(void *v, uint8 sheetID) {
   if (faceBottom > SCREEN_YSIZE)
     faceBottom = SCREEN_YSIZE;
   for (int32 i = faceTop; i < faceBottom; ++i) {
-    faceLineStart[i] = 100000;
-    faceLineEnd[i] = -100000;
+    RSDK::scanEdgeBuffer[i].start = 100000;
+    RSDK::scanEdgeBuffer[i].end = -100000;
   }
 
   ProcessScanEdgeUV(&verts[vertexA], &verts[vertexB]);
@@ -1541,10 +1561,10 @@ void RSDK::Legacy::DrawTexturedFace(void *v, uint8 sheetID) {
     Legacy_activePalette = fullPalette[*lineBuffer];
     lineBuffer++;
 
-    int32 startX = faceLineStart[faceTop];
-    int32 endX = faceLineEnd[faceTop];
-    int32 UPos = faceLineStartU[faceTop];
-    int32 VPos = faceLineStartV[faceTop];
+    int32 startX = RSDK::scanEdgeBuffer[faceTop].start;
+    int32 endX = RSDK::scanEdgeBuffer[faceTop].end;
+    int32 UPos = scanEdgeBufferU[faceTop].start;
+    int32 VPos = scanEdgeBufferV[faceTop].start;
     if (startX >= Legacy_GFX_LINESIZE || endX <= 0) {
       frameBuffer += Legacy_GFX_LINESIZE;
     } else {
@@ -1555,8 +1575,8 @@ void RSDK::Legacy::DrawTexturedFace(void *v, uint8 sheetID) {
         bufferedUPos = 0;
         bufferedVPos = 0;
       } else {
-        bufferedUPos = (faceLineEndU[faceTop] - UPos) / posDifference;
-        bufferedVPos = (faceLineEndV[faceTop] - VPos) / posDifference;
+        bufferedUPos = (scanEdgeBufferU[faceTop].end - UPos) / posDifference;
+        bufferedVPos = (scanEdgeBufferV[faceTop].end - VPos) / posDifference;
       }
       if (endX > Legacy_GFX_LINESIZE_MINUSONE)
         posDifference = Legacy_GFX_LINESIZE_MINUSONE - startX;
@@ -1723,129 +1743,10 @@ void RSDK::Legacy::v4::DrawObjectAnimation(void *objScr, void *ent, int32 XPos,
 }
 
 void RSDK::Legacy::v4::DrawFadedFace(void *v, uint32 color, uint32 fogColor,
-                                     int32 alpha) {
-  Vertex *verts = (Vertex *)v;
-  if (alpha > 0xFF)
-    alpha = 0xFF;
-
-  if (alpha < 1)
-    return;
-
-  if (verts[0].x < 0 && verts[1].x < 0 && verts[2].x < 0 && verts[3].x < 0)
-    return;
-
-  if (verts[0].x > Legacy_GFX_LINESIZE && verts[1].x > Legacy_GFX_LINESIZE &&
-      verts[2].x > Legacy_GFX_LINESIZE && verts[3].x > Legacy_GFX_LINESIZE)
-    return;
-
-  if (verts[0].y < 0 && verts[1].y < 0 && verts[2].y < 0 && verts[3].y < 0)
-    return;
-
-  if (verts[0].y > SCREEN_YSIZE && verts[1].y > SCREEN_YSIZE &&
-      verts[2].y > SCREEN_YSIZE && verts[3].y > SCREEN_YSIZE)
-    return;
-
-  if (verts[0].x == verts[1].x && verts[1].x == verts[2].x &&
-      verts[2].x == verts[3].x)
-    return;
-
-  if (verts[0].y == verts[1].y && verts[1].y == verts[2].y &&
-      verts[2].y == verts[3].y)
-    return;
-
-  int32 vertexA = 0;
-  int32 vertexB = 1;
-  int32 vertexC = 2;
-  int32 vertexD = 3;
-  if (verts[1].y < verts[0].y) {
-    vertexA = 1;
-    vertexB = 0;
-  }
-  if (verts[2].y < verts[vertexA].y) {
-    int32 temp = vertexA;
-    vertexA = 2;
-    vertexC = temp;
-  }
-  if (verts[3].y < verts[vertexA].y) {
-    int32 temp = vertexA;
-    vertexA = 3;
-    vertexD = temp;
-  }
-  if (verts[vertexC].y < verts[vertexB].y) {
-    int32 temp = vertexB;
-    vertexB = vertexC;
-    vertexC = temp;
-  }
-  if (verts[vertexD].y < verts[vertexB].y) {
-    int32 temp = vertexB;
-    vertexB = vertexD;
-    vertexD = temp;
-  }
-  if (verts[vertexD].y < verts[vertexC].y) {
-    int32 temp = vertexC;
-    vertexC = vertexD;
-    vertexD = temp;
-  }
-
-  int32 faceTop = verts[vertexA].y;
-  int32 faceBottom = verts[vertexD].y;
-  if (faceTop < 0)
-    faceTop = 0;
-  if (faceBottom > SCREEN_YSIZE)
-    faceBottom = SCREEN_YSIZE;
-  for (int32 i = faceTop; i < faceBottom; ++i) {
-    faceLineStart[i] = 100000;
-    faceLineEnd[i] = -100000;
-  }
-
-  ProcessScanEdge(&verts[vertexA], &verts[vertexB]);
-  ProcessScanEdge(&verts[vertexA], &verts[vertexC]);
-  ProcessScanEdge(&verts[vertexA], &verts[vertexD]);
-  ProcessScanEdge(&verts[vertexB], &verts[vertexC]);
-  ProcessScanEdge(&verts[vertexC], &verts[vertexD]);
-  ProcessScanEdge(&verts[vertexB], &verts[vertexD]);
-
-  uint16 color16 = PACK_RGB888(((color >> 16) & 0xFF), ((color >> 8) & 0xFF),
-                               ((color >> 0) & 0xFF));
-  uint16 fogColor16 =
-      PACK_RGB888(((fogColor >> 16) & 0xFF), ((fogColor >> 8) & 0xFF),
-                  ((fogColor >> 0) & 0xFF));
-
-  uint16 *frameBuffer =
-      &currentScreen->frameBuffer[Legacy_GFX_LINESIZE * faceTop];
-  uint16 *fbufferBlend = &blendLookupTable[0x20 * (0xFF - alpha)];
-  uint16 *pixelBlend = &blendLookupTable[0x20 * alpha];
-
-  while (faceTop < faceBottom) {
-    int32 startX = faceLineStart[faceTop];
-    int32 endX = faceLineEnd[faceTop];
-    if (startX >= Legacy_GFX_LINESIZE || endX <= 0) {
-      frameBuffer += Legacy_GFX_LINESIZE;
-    } else {
-      if (startX < 0)
-        startX = 0;
-      if (endX > Legacy_GFX_LINESIZE_MINUSONE)
-        endX = Legacy_GFX_LINESIZE_MINUSONE;
-
-      uint16 *frameBufferPtr = &frameBuffer[startX];
-      frameBuffer += Legacy_GFX_LINESIZE;
-      int32 vertexwidth = endX - startX + 1;
-      while (vertexwidth--) {
-        int32 R = (fbufferBlend[(fogColor16 & 0xF800) >> 11] +
-                   pixelBlend[(color16 & 0xF800) >> 11])
-                  << 11;
-        int32 G = (fbufferBlend[(fogColor16 & 0x7E0) >> 6] +
-                   pixelBlend[(color16 & 0x7E0) >> 6])
-                  << 6;
-        int32 B = fbufferBlend[fogColor16 & 0x1F] + pixelBlend[color16 & 0x1F];
-
-        *frameBufferPtr = R | G | B;
-        ++frameBufferPtr;
-      }
-    }
-
-    ++faceTop;
-  }
+                                     int32 alpha) { 
+  RSDK::Legacy::DrawFace(v, color);
+  int32 fog = (fogColor & 0xFFFFFF) | (((1 - alpha) << 23) & 0x7F000000);
+  RSDK::Legacy::DrawFace(v, fog);
 }
 void RSDK::Legacy::v4::DrawTexturedFaceBlended(void *v, uint8 sheetID) {
   Vertex *verts = (Vertex *)v;
@@ -1912,8 +1813,8 @@ void RSDK::Legacy::v4::DrawTexturedFaceBlended(void *v, uint8 sheetID) {
   if (faceBottom > SCREEN_YSIZE)
     faceBottom = SCREEN_YSIZE;
   for (int32 i = faceTop; i < faceBottom; ++i) {
-    faceLineStart[i] = 100000;
-    faceLineEnd[i] = -100000;
+    RSDK::scanEdgeBuffer[i].start = 100000;
+    RSDK::scanEdgeBuffer[i].end = -100000;
   }
 
   ProcessScanEdgeUV(&verts[vertexA], &verts[vertexB]);
@@ -1932,10 +1833,10 @@ void RSDK::Legacy::v4::DrawTexturedFaceBlended(void *v, uint8 sheetID) {
     Legacy_activePalette = fullPalette[*lineBuffer];
     lineBuffer++;
 
-    int32 startX = faceLineStart[faceTop];
-    int32 endX = faceLineEnd[faceTop];
-    int32 UPos = faceLineStartU[faceTop];
-    int32 VPos = faceLineStartV[faceTop];
+    int32 startX = RSDK::scanEdgeBuffer[faceTop].start;
+    int32 endX = RSDK::scanEdgeBuffer[faceTop].end;
+    int32 UPos = scanEdgeBufferU[faceTop].start;
+    int32 VPos = scanEdgeBufferV[faceTop].start;
 
     if (startX >= Legacy_GFX_LINESIZE || endX <= 0) {
       frameBuffer += Legacy_GFX_LINESIZE;
@@ -1947,8 +1848,8 @@ void RSDK::Legacy::v4::DrawTexturedFaceBlended(void *v, uint8 sheetID) {
         bufferedUPos = 0;
         bufferedVPos = 0;
       } else {
-        bufferedUPos = (faceLineEndU[faceTop] - UPos) / posDifference;
-        bufferedVPos = (faceLineEndV[faceTop] - VPos) / posDifference;
+        bufferedUPos = (scanEdgeBufferU[faceTop].end - UPos) / posDifference;
+        bufferedVPos = (scanEdgeBufferV[faceTop].end - VPos) / posDifference;
       }
 
       if (endX > Legacy_GFX_LINESIZE_MINUSONE)
