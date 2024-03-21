@@ -114,17 +114,16 @@ const DEFAULT_RSDKFILEINFO: RSDKFileInfo = RSDKFileInfo {
 #[repr(C)]
 pub struct RSDKContainer {
     pub name: [i8; 0x100],
-    pub fileBuffer: *const uint8,
+    pub fileBuffer: Option<Box<[u8]>>,
     pub fileCount: i32,
 }
 const DEFAULT_RSDKCONTAINER: RSDKContainer = RSDKContainer {
     name: [0; 0x100],
-    fileBuffer: std::ptr::null(),
+    fileBuffer: None,
     fileCount: 0,
 };
 
 extern "C" {
-    fn malloc(size: usize) -> *mut u8;
     fn fopen(filename: *const i8, mode: *const i8) -> *mut FileIO;
     fn ftell(stream: *mut FileIO) -> u32;
 
@@ -239,16 +238,15 @@ pub extern "C" fn load_data_pack(
                 dataFileList[f as usize].packID = dataPackCount as i32;
             }
 
-            dataPacks[dataPackCount as usize].fileBuffer = std::ptr::null();
+            dataPacks[dataPackCount as usize].fileBuffer = None;
             if (useBuffer == true32) {
                 let fileSize = info.fileSize;
-                dataPacks[dataPackCount as usize].fileBuffer = malloc(fileSize as usize);
+                dataPacks[dataPackCount as usize].fileBuffer =
+                    Some(vec![0; fileSize as usize].into_boxed_slice());
                 seek_set(&mut info, 0);
-                read_bytes(
-                    &mut info,
-                    dataPacks[dataPackCount as usize].fileBuffer as *mut u8,
-                    fileSize,
-                );
+                let mut buf = vec![0u8; fileSize as usize].into_boxed_slice();
+                read_bytes(&mut info, buf.as_mut_ptr(), fileSize);
+                dataPacks[dataPackCount as usize].fileBuffer = Some(buf);
             }
 
             dataFileListCount += dataPacks[dataPackCount as usize].fileCount as u16;
@@ -300,6 +298,9 @@ pub extern "C" fn open_data_file(info: &mut FileInfo, filename: *const i8) -> bo
                 // a bit of a hack, but it is how it is in the original
                 info.file = &dataPacks[file.packID as usize]
                     .fileBuffer
+                    .as_ref()
+                    .unwrap()
+                    .as_ptr()
                     .wrapping_add(file.offset as usize);
 
                 let fileBuffer = info.file as *const u8;

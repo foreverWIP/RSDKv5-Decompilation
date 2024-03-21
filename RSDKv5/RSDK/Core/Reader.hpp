@@ -68,8 +68,9 @@ struct RSDKFileInfo {
 
 struct RSDKContainer {
     char name[0x100];
-    uint8 *fileBuffer;
-    int32 fileCount;
+    uint8 *_fileBuffer;
+    void *_padding;
+    int32 _fileCount;
 };
 
 extern "C" {

@@ -32,10 +32,6 @@ impl From<usize> for StorageDataSets {
 
 static mut DATA_STORAGE_NEW: Vec<HashMap<*mut *mut u8, Vec<u8>>> = Vec::new();
 
-extern "C" {
-    fn free(ptr: *mut u8);
-}
-
 const fn get_storage_limit(set: StorageDataSets) -> usize {
     match set {
         StorageDataSets::DATASET_STG => 24 * 1024 * 1024, // 24MB
@@ -67,11 +63,7 @@ pub extern "C" fn release_storage() {
         // I don't think it's in the console versions either, but this never seems to be freed in those versions.
         // so, I figured doing it here would be the neatest.
         for p in 0..(dataPackCount as usize) {
-            if (!dataPacks[p].fileBuffer.is_null()) {
-                free(dataPacks[p].fileBuffer as *mut u8);
-            }
-
-            dataPacks[p].fileBuffer = std::ptr::null();
+            dataPacks[p].fileBuffer = None;
         }
     }
 }
