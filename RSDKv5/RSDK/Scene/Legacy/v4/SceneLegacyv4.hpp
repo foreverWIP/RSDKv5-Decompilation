@@ -10,7 +10,6 @@ enum StageModes {
     STAGEMODE_2P,
 };
 
-void InitFirstStage();
 void ProcessStage();
 void HandleCameras();
 
@@ -19,7 +18,6 @@ void ProcessParallaxAutoScroll();
 void LoadStageFiles();
 
 void LoadActLayout();
-void LoadStageBackground();
 
 void SetPlayerScreenPosition(Entity *target);
 void SetPlayerScreenPositionCDStyle(Entity *target);

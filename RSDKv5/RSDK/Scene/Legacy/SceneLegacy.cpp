@@ -1,3 +1,7 @@
+#if RETRO_USE_MOD_LOADER
+bool32 RSDK::Legacy::loadGlobalScripts = false; // stored here so I can use it later
+int32 RSDK::Legacy::globalObjCount     = 0;
+#endif
 
 #include "v3/SceneLegacyv3.cpp"
 #include "v4/SceneLegacyv4.cpp"
@@ -66,6 +70,128 @@ RSDK::Legacy::Tiles128x128 RSDK::Legacy::tiles128x128;
 RSDK::Legacy::CollisionMasks RSDK::Legacy::collisionMasks[2];
 
 uint8 RSDK::Legacy::tilesetGFXData[LEGACY_TILESET_SIZE];
+
+void RSDK::Legacy::InitFirstStage(void)
+{
+    xScrollOffset = 0;
+    yScrollOffset = 0;
+    StopMusic();
+    Legacy_fadeMode = 0;
+    ClearGraphicsData();
+    Legacy_ClearAnimationData();
+    Legacy_activePalette = fullPalette[0];
+    if (engine.version == 3) {
+        Legacy_LoadPalette("MasterPalette.act", 0, 0, 0, 256);
+#if RETRO_USE_MOD_LOADER
+        LoadGameXML(true);
+#endif
+    }
+    Legacy_stageMode     = STAGEMODE_LOAD;
+    legacy_gameMode      = ENGINE_MAINGAME;
+}
+
+void RSDK::Legacy::LoadStageBackground()
+{
+    for (int32 i = 0; i < LEGACY_LAYER_COUNT; ++i) {
+        stageLayouts[i].type               = LAYER_NOSCROLL;
+        stageLayouts[i].deformationOffset  = 0;
+        stageLayouts[i].deformationOffsetW = 0;
+    }
+
+    for (int32 i = 0; i < LEGACY_PARALLAX_COUNT; ++i) {
+        hParallax.scrollPos[i] = 0;
+        vParallax.scrollPos[i] = 0;
+    }
+
+    FileInfo info;
+    InitFileInfo(&info);
+    if (LoadStageFile("Backgrounds.bin", &info)) {
+        uint8 layerCount = ReadInt8(&info);
+
+        hParallax.entryCount = ReadInt8(&info);
+        for (uint8 i = 0; i < hParallax.entryCount; ++i) {
+            hParallax.parallaxFactor[i] = ReadInt8(&info);
+            hParallax.parallaxFactor[i] |= ReadInt8(&info) << 8;
+
+            hParallax.scrollSpeed[i] = ReadInt8(&info) << 10;
+
+            hParallax.scrollPos[i] = 0;
+
+            hParallax.deform[i] = ReadInt8(&info);
+        }
+
+        vParallax.entryCount = ReadInt8(&info);
+        for (uint8 i = 0; i < vParallax.entryCount; ++i) {
+            vParallax.parallaxFactor[i] = ReadInt8(&info);
+            vParallax.parallaxFactor[i] |= ReadInt8(&info) << 8;
+
+            vParallax.scrollSpeed[i] = ReadInt8(&info) << 10;
+
+            vParallax.scrollPos[i] = 0;
+
+            vParallax.deform[i] = ReadInt8(&info);
+        }
+
+        for (uint8 i = 1; i < layerCount + 1; ++i) {
+            stageLayouts[i].xsize = ReadInt8(&info);
+            if (engine.version == 4) {
+                ReadInt8(&info); // unused
+            }
+
+            stageLayouts[i].ysize = ReadInt8(&info);
+            if (engine.version == 4) {
+                ReadInt8(&info);
+            }
+
+            stageLayouts[i].type = ReadInt8(&info);
+
+            stageLayouts[i].parallaxFactor = ReadInt8(&info);
+            stageLayouts[i].parallaxFactor |= ReadInt8(&info) << 8;
+
+            stageLayouts[i].scrollSpeed = ReadInt8(&info) << 10;
+            stageLayouts[i].scrollPos   = 0;
+
+            memset(stageLayouts[i].tiles, 0, LEGACY_TILELAYER_CHUNK_COUNT * sizeof(uint16));
+            uint8 *lineScrollPtr = stageLayouts[i].lineScroll;
+            memset(stageLayouts[i].lineScroll, 0, 0x7FFF);
+
+            // Read Line Scroll
+            uint8 buf[3];
+            while (true) {
+                buf[0] = ReadInt8(&info);
+
+                if (buf[0] == 0xFF) {
+                    buf[1] = ReadInt8(&info);
+                    if (buf[1] == 0xFF) {
+                        break;
+                    }
+                    else {
+                        buf[2]      = ReadInt8(&info);
+                        int32 index = buf[1];
+                        int32 cnt   = buf[2] - 1;
+                        for (int32 c = 0; c < cnt; ++c) *lineScrollPtr++ = index;
+                    }
+                }
+                else {
+                    *lineScrollPtr++ = buf[0];
+                }
+            }
+
+            // Read Layout
+            for (int32 y = 0; y < stageLayouts[i].ysize; ++y) {
+                uint16 *chunks = &stageLayouts[i].tiles[y * LEGACY_TILELAYER_CHUNK_H];
+                for (int32 x = 0; x < stageLayouts[i].xsize; ++x) {
+                    *chunks = ReadInt8(&info);
+                    *chunks |= ReadInt8(&info) << 8;
+
+                    ++chunks;
+                }
+            }
+        }
+
+        CloseFile(&info);
+    }
+}
 
 void RSDK::Legacy::GetStageFilepath(char *dest, const char *filePath)
 {

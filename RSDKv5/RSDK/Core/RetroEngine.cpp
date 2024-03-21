@@ -674,7 +674,7 @@ void RSDK::InitEngine()
             strcpy(gameVerInfo.version, "Legacy v4 Mode");
 
             RSDK::GenerateBlendLookupTable();
-            Legacy::v4::InitFirstStage();
+            Legacy::InitFirstStage();
             Legacy::ResetCurrentStageFolder();
             Legacy::v4::ClearScriptData();
             break;
@@ -714,7 +714,7 @@ void RSDK::InitEngine()
             strcpy(gameVerInfo.version, "Legacy v3 Mode");
 
             RSDK::GenerateBlendLookupTable();
-            Legacy::v3::InitFirstStage();
+            Legacy::InitFirstStage();
             Legacy::ResetCurrentStageFolder();
             Legacy::v3::ClearScriptData();
             break;

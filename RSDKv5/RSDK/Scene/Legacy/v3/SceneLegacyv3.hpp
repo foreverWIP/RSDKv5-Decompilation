@@ -11,7 +11,6 @@ extern int32 xScrollA;
 extern int32 xScrollB;
 extern int32 yScrollMove;
 
-void InitFirstStage();
 void ProcessStage();
 void HandleCameras();
 
@@ -19,7 +18,6 @@ void ProcessParallaxAutoScroll();
 
 void LoadStageFiles();
 void LoadActLayout();
-void LoadStageBackground();
 
 void SetPlayerScreenPosition(Player *player);
 void SetPlayerScreenPositionCDStyle(Player *player);

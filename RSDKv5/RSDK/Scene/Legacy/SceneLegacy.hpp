@@ -136,6 +136,9 @@ struct LineScroll {
     uint8 entryCount;
 };
 
+extern bool32 loadGlobalScripts;
+extern int32 globalObjCount;
+
 extern Camera cameras[2];
 extern Camera *currentCamera;
 
@@ -215,10 +218,13 @@ inline bool CheckCurrentStageFolder()
     }
 }
 
+extern void InitFirstStage();
+
 void GetStageFilepath(char *dest, const char *filePath);
 int32 LoadStageFile(const char *filePath, FileInfo *info);
 int32 LoadActFile(const char *ext, FileInfo *info);
 
+void LoadStageBackground();
 void LoadStageChunks();
 void LoadStageCollisions();
 void LoadStageGIFFile();
