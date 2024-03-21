@@ -22,7 +22,7 @@ void (*RSDK::globalVarsInitCB)(void *globals) = NULL;
 
 RetroEngine RSDK::engine = RetroEngine();
 
-int32 RSDK::RunRetroEngine(int32 argc, char *argv[])
+int32 RunRetroEngine(int32 argc, char *argv[])
 {
     ParseArguments(argc, argv);
 
@@ -1459,7 +1459,7 @@ static void initNxLink()
 }
 #endif
 
-void RSDK::InitCoreAPI()
+void InitCoreAPI()
 {
 #if RETRO_RENDERDEVICE_DIRECTX9 || RETRO_RENDERDEVICE_DIRECTX11
     MSG Msg;
@@ -1477,7 +1477,7 @@ void RSDK::InitCoreAPI()
     SDL_Init(0);
 #endif
 }
-void RSDK::ReleaseCoreAPI()
+void ReleaseCoreAPI()
 {
 #if RETRO_RENDERDEVICE_SDL2 || RETRO_AUDIODEVICE_SDL2 || RETRO_INPUTDEVICE_SDL2
     SDL_Quit();

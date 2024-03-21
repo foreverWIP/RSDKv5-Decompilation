@@ -9,7 +9,10 @@ pub mod scene;
 pub mod storage;
 pub mod user;
 
-use engine_core::math::Vector2;
+use engine_core::{
+    link::{linkGameLogic, LogicLinkHandle},
+    math::Vector2,
+};
 use scene::collision::{CollisionModes, TileCollisionModes};
 
 // -------------------------
@@ -101,4 +104,30 @@ pub struct Entity {
     inkEffect: uint8,
     visible: uint8,
     onScreen: uint8,
+}
+
+extern "C" {
+    fn InitCoreAPI();
+    fn RunRetroEngine(argc: i32, argv: *const *const i8) -> i32;
+    fn ReleaseCoreAPI();
+}
+
+#[no_mangle]
+#[export_name = "RSDK_main"]
+pub extern "C" fn rsdk_main(
+    argc: i32,
+    argv: *const *const i8,
+    linkLogicPtr: LogicLinkHandle,
+) -> int32 {
+    unsafe {
+        linkGameLogic = Some(linkLogicPtr);
+
+        InitCoreAPI();
+
+        let exitCode: int32 = RunRetroEngine(argc, argv);
+
+        ReleaseCoreAPI();
+
+        return exitCode;
+    }
 }

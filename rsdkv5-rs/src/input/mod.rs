@@ -214,7 +214,8 @@ const DEFAULT_TRIGGERSTATE: TriggerState = TriggerState {
     triggerDelta: 0.0,
 };
 
-struct TouchInfo {
+#[repr(C)]
+pub struct TouchInfo {
     x: [float; 0x10],
     y: [float; 0x10],
     down: [bool32; 0x10],

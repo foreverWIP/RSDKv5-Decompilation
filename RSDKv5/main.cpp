@@ -77,16 +77,3 @@ void android_main(struct android_app *ap)
 #else
 int32 main(int32 argc, char *argv[]) { return RSDK_main(argc, argv, (void *)LinkGameLogic); }
 #endif
-
-int32 RSDK_main(int32 argc, char **argv, void *linkLogicPtr)
-{
-    RSDK::linkGameLogic = (RSDK::LogicLinkHandle)linkLogicPtr;
-
-    RSDK::InitCoreAPI();
-
-    int32 exitCode = RSDK::RunRetroEngine(argc, argv);
-
-    RSDK::ReleaseCoreAPI();
-
-    return exitCode;
-}

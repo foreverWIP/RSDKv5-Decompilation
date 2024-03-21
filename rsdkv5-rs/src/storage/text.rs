@@ -2,6 +2,19 @@ use std::{ffi::CStr, fs, io::Write};
 
 use crate::*;
 
+#[repr(C)]
+pub struct GameVersionInfo {
+    gameTitle: [i8; 0x40],
+    gameSubtitle: [i8; 0x100],
+    version: [i8; 0x10],
+    #[cfg(not(feature = "version_2"))]
+    platform: uint8,
+    #[cfg(not(feature = "version_2"))]
+    language: uint8,
+    #[cfg(not(feature = "version_2"))]
+    region: uint8,
+}
+
 pub type HashMD5 = [u32; 4];
 
 #[repr(C)]

@@ -577,6 +577,16 @@ extern "C" {
 #define ENGINE_V_NAME  "v5U"
 #endif
 
+extern "C" {
+    int32 RunRetroEngine(int32 argc, char *argv[]);
+}
+
+// Used to Init API stuff that should be done regardless of Render/Audio/Input device APIs
+extern "C" {
+    void InitCoreAPI();
+    void ReleaseCoreAPI();
+}
+
 namespace RSDK
 {
 
@@ -652,7 +662,6 @@ extern LogicLinkHandle linkGameLogic;
 // CORE ENGINE FUNCTIONS
 // ============================
 
-int32 RunRetroEngine(int32 argc, char *argv[]);
 void ProcessEngine();
 
 void ParseArguments(int32 argc, char *argv[]);
@@ -706,10 +715,6 @@ inline void RegisterGlobalVariables(void **globals, int32 size)
 #endif
 
 // Some misc API stuff that needs a home
-
-// Used to Init API stuff that should be done regardless of Render/Audio/Input device APIs
-void InitCoreAPI();
-void ReleaseCoreAPI();
 
 void InitConsole();
 void ReleaseConsole();
