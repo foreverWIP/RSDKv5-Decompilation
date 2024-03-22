@@ -1364,12 +1364,12 @@ void RSDK::Legacy::DrawRectangle(int32 XPos, int32 YPos, int32 width,
   if (A >= 0xFF) {
     inkEffect = INK_NONE;
   }
-  DrawRectangle(XPos, YPos, width, height, (R << 16) | (G << 8) | B, A, inkEffect, true);
+  ::DrawRectangle(XPos, YPos, width, height, (R << 16) | (G << 8) | B, A, inkEffect, true);
 }
 
 void RSDK::Legacy::DrawTintRectangle(int32 XPos, int32 YPos, int32 width,
                                      int32 height) {
-  DrawRectangle(XPos, YPos, width, height, 0, 0, INK_TINT, true);
+  ::DrawRectangle(XPos, YPos, width, height, 0, 0, INK_TINT, true);
 }
 void RSDK::Legacy::DrawScaledTintMask(int32 direction, int32 XPos, int32 YPos,
                                       int32 pivotX, int32 pivotY, int32 scaleX,
