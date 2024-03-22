@@ -28,3 +28,8 @@ cfg_if::cfg_if! {
         }
     }
 }
+
+extern "C" {
+    pub fn SKU_GetConfirmButtonFlip() -> bool32;
+    pub fn SKU_CheckDLC(id: u8) -> bool32;
+}

@@ -1,6 +1,10 @@
 #ifndef INPUT_H
 #define INPUT_H
 
+extern "C" {
+    void AssignInputSlotToDevice(uint8 inputSlot, uint32 deviceID);
+}
+
 namespace RSDK
 {
 
@@ -698,35 +702,6 @@ inline int32 InputSlotUnknown2(uint8 inputSlot, int32 unknown1, int32 unknown2)
         return inputSlotDevices[slotID]->Unknown2(unknown1, unknown2);
 
     return 0;
-}
-
-inline void AssignInputSlotToDevice(uint8 inputSlot, uint32 deviceID)
-{
-    uint8 slotID = inputSlot - 1;
-
-    if (slotID < PLAYER_COUNT) {
-        if (deviceID && deviceID != INPUT_AUTOASSIGN) {
-            if (deviceID == INPUT_UNASSIGNED) {
-                inputSlots[slotID] = INPUT_UNASSIGNED;
-            }
-            else {
-                for (int32 i = 0; i < inputDeviceCount; ++i) {
-                    if (inputDeviceList[i] && inputDeviceList[i]->id == deviceID) {
-                        inputDeviceList[i]->isAssigned = true;
-                        inputSlots[slotID]             = deviceID;
-                        inputSlotDevices[slotID]       = inputDeviceList[i];
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            InputDevice *device = InputDeviceFromID(inputSlots[slotID]);
-            if (device)
-                device->isAssigned = false;
-            inputSlots[slotID] = deviceID;
-        }
-    }
 }
 
 #if RETRO_REV02

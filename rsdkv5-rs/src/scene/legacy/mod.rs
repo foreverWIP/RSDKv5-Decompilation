@@ -29,3 +29,5 @@ pub enum LegacyStageModes {
 
 #[no_mangle]
 pub static mut Legacy_stageMode: LegacyStageModes = LegacyStageModes::STAGEMODE_LOAD;
+#[no_mangle]
+pub static mut Legacy_debugMode: bool32 = false32;

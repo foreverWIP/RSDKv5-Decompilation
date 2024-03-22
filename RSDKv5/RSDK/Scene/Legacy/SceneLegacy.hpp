@@ -4,6 +4,7 @@
 
 extern "C" {
     extern int32 Legacy_stageMode;
+    extern bool32 Legacy_debugMode;
 }
 
 namespace Legacy
@@ -172,7 +173,6 @@ extern int32 lastYSize;
 
 extern bool32 pauseEnabled;
 extern bool32 timeEnabled;
-extern bool32 debugMode;
 extern int32 frameCounter;
 extern int32 stageMilliseconds;
 extern int32 stageSeconds;

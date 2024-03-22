@@ -26,6 +26,26 @@ const RSDK_SIGNATURE_SCN: u32 = 0x4E4353; // "SCN"
 const RSDK_SIGNATURE_TIL: u32 = 0x4C4954; // "TIL"
 
 #[repr(C)]
+pub enum EngineStates {
+    ENGINESTATE_LOAD,
+    ENGINESTATE_REGULAR,
+    ENGINESTATE_PAUSED,
+    ENGINESTATE_FROZEN,
+    ENGINESTATE_STEPOVER = 4,
+    ENGINESTATE_DEVMENU = 8,
+    ENGINESTATE_VIDEOPLAYBACK,
+    ENGINESTATE_SHOWIMAGE,
+    #[cfg(feature = "version_2")]
+    ENGINESTATE_ERRORMSG,
+    #[cfg(feature = "version_2")]
+    ENGINESTATE_ERRORMSG_FATAL,
+    ENGINESTATE_NONE,
+    #[cfg(feature = "version_u")]
+    // Probably origins-only, called by the ending so I assume this handles playing ending movies and returning to menu
+    ENGINESTATE_GAME_FINISHED,
+}
+
+#[repr(C)]
 #[derive(Clone, Copy)]
 pub struct ScrollInfo {
     tilePos: int32,
@@ -71,7 +91,7 @@ pub struct TileLayer {
     deformationOffsetW: int32,
     deformationData: [int32; 0x400],
     deformationDataW: [int32; 0x400],
-    scanlineCallback: extern "C" fn(*mut ScanlineInfo),
+    scanlineCallback: Option<extern "C" fn(*mut ScanlineInfo)>,
     scrollInfoCount: uint16,
     scrollInfo: [ScrollInfo; 0x100],
     name: HashMD5,
@@ -121,48 +141,48 @@ impl TileInfo {
 
 #[repr(C)]
 pub struct SceneListInfo {
-    hash: HashMD5,
-    name: [i8; 0x20],
-    sceneOffsetStart: uint16,
-    sceneOffsetEnd: uint16,
-    sceneCount: uint8,
+    pub hash: HashMD5,
+    pub name: [i8; 0x20],
+    pub sceneOffsetStart: uint16,
+    pub sceneOffsetEnd: uint16,
+    pub sceneCount: uint8,
 }
 
 #[repr(C)]
 pub struct SceneListEntry {
-    hash: HashMD5,
-    name: [i8; 0x20],
-    folder: [i8; 0x10],
-    id: [i8; 0x08],
+    pub hash: HashMD5,
+    pub name: [i8; 0x20],
+    pub folder: [i8; 0x10],
+    pub id: [i8; 0x08],
     #[cfg(feature = "version_2")]
-    filter: u8,
+    pub filter: u8,
 }
 
 #[repr(C)]
 pub struct SceneInfo {
-    entity: *mut Entity,
-    listData: *mut SceneListEntry,
-    listCategory: *mut SceneListInfo,
-    timeCounter: int32,
-    currentDrawGroup: int32,
-    currentScreenID: int32,
+    pub entity: *mut Entity,
+    pub listData: *mut SceneListEntry,
+    pub listCategory: *mut SceneListInfo,
+    pub timeCounter: int32,
+    pub currentDrawGroup: int32,
+    pub currentScreenID: int32,
     pub listPos: uint16,
-    entitySlot: uint16,
-    createSlot: uint16,
-    classCount: uint16,
-    inEditor: bool32,
-    effectGizmo: bool32,
-    debugMode: bool32,
-    useGlobalObjects: bool32,
-    timeEnabled: bool32,
+    pub entitySlot: uint16,
+    pub createSlot: uint16,
+    pub classCount: uint16,
+    pub inEditor: bool32,
+    pub effectGizmo: bool32,
+    pub debugMode: bool32,
+    pub useGlobalObjects: bool32,
+    pub timeEnabled: bool32,
     pub activeCategory: uint8,
-    categoryCount: uint8,
-    state: uint8,
+    pub categoryCount: uint8,
+    pub state: uint8,
     #[cfg(feature = "version_2")]
-    filter: uint8,
-    milliseconds: uint8,
-    seconds: uint8,
-    minutes: uint8,
+    pub filter: uint8,
+    pub milliseconds: uint8,
+    pub seconds: uint8,
+    pub minutes: uint8,
 }
 impl SceneInfo {
     pub const fn new() -> Self {
@@ -193,8 +213,6 @@ impl SceneInfo {
     }
 }
 
-extern "C" fn default_scanline_callback(_scanline_info: *mut ScanlineInfo) {}
-
 #[no_mangle]
 pub static mut scanlines: *mut ScanlineInfo = std::ptr::null_mut();
 #[no_mangle]
@@ -216,7 +234,7 @@ pub static mut tileLayers: [TileLayer; LAYER_COUNT] = [TileLayer {
     deformationOffsetW: 0,
     deformationData: [0; 1024],
     deformationDataW: [0; 1024],
-    scanlineCallback: default_scanline_callback,
+    scanlineCallback: None,
     scrollInfoCount: 0,
     scrollInfo: [ScrollInfo::new(); 256],
     name: [0; 4],

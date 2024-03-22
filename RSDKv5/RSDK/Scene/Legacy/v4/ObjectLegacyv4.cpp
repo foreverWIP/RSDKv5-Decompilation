@@ -6,8 +6,6 @@ RSDK::Legacy::v4::Entity RSDK::Legacy::v4::objectEntityList[LEGACY_v4_ENTITY_COU
 int32 RSDK::Legacy::v4::processObjectFlag[LEGACY_v4_ENTITY_COUNT];
 RSDK::Legacy::v4::TypeGroupList RSDK::Legacy::v4::objectTypeGroupList[LEGACY_v4_TYPEGROUP_COUNT];
 
-int32 RSDK::Legacy::v4::playerListPos = 0;
-
 char RSDK::Legacy::v4::typeNames[LEGACY_v4_OBJECT_COUNT][0x40];
 
 void RSDK::Legacy::v4::ProcessStartupObjects()

@@ -1,6 +1,7 @@
 #![allow(non_snake_case, non_camel_case_types, unused_parens)]
 #![feature(adt_const_params)]
 
+pub mod audio;
 pub mod dev;
 pub mod engine_core;
 pub mod graphics;
@@ -8,6 +9,8 @@ pub mod input;
 pub mod scene;
 pub mod storage;
 pub mod user;
+
+use std::ffi::CStr;
 
 use engine_core::{
     link::{linkGameLogic, LogicLinkHandle},
@@ -26,6 +29,8 @@ type uint16 = u16;
 type int32 = i32;
 type uint32 = u32;
 type float = f32;
+type double = f64;
+type cstr = *const i8;
 
 #[repr(C)]
 #[derive(Clone, Copy, Eq, PartialEq)]

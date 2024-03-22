@@ -73,9 +73,9 @@ pub struct InputDevice {
 
 #[repr(C)]
 pub struct InputState {
-    down: bool32,
-    press: bool32,
-    keyMap: int32,
+    pub down: bool32,
+    pub press: bool32,
+    pub keyMap: int32,
 }
 const DEFAULT_INPUTSTATE: InputState = InputState {
     down: false32,
@@ -85,32 +85,32 @@ const DEFAULT_INPUTSTATE: InputState = InputState {
 
 #[repr(C)]
 pub struct ControllerState {
-    keyUp: InputState,
-    keyDown: InputState,
-    keyLeft: InputState,
-    keyRight: InputState,
-    keyA: InputState,
-    keyB: InputState,
-    keyC: InputState,
-    keyX: InputState,
-    keyY: InputState,
-    keyZ: InputState,
-    keyStart: InputState,
-    keySelect: InputState,
+    pub keyUp: InputState,
+    pub keyDown: InputState,
+    pub keyLeft: InputState,
+    pub keyRight: InputState,
+    pub keyA: InputState,
+    pub keyB: InputState,
+    pub keyC: InputState,
+    pub keyX: InputState,
+    pub keyY: InputState,
+    pub keyZ: InputState,
+    pub keyStart: InputState,
+    pub keySelect: InputState,
 
     // Rev01 hasn't split these into different structs yet
     #[cfg(not(feature = "version_2"))]
-    keyBumperL: InputState,
+    pub keyBumperL: InputState,
     #[cfg(not(feature = "version_2"))]
-    keyBumperR: InputState,
+    pub keyBumperR: InputState,
     #[cfg(not(feature = "version_2"))]
-    keyTriggerL: InputState,
+    pub keyTriggerL: InputState,
     #[cfg(not(feature = "version_2"))]
-    keyTriggerR: InputState,
+    pub keyTriggerR: InputState,
     #[cfg(not(feature = "version_2"))]
-    keyStickL: InputState,
+    pub keyStickL: InputState,
     #[cfg(not(feature = "version_2"))]
-    keyStickR: InputState,
+    pub keyStickR: InputState,
 }
 const DEFAULT_CONTROLLERSTATE: ControllerState = ControllerState {
     keyUp: DEFAULT_INPUTSTATE,
@@ -216,22 +216,22 @@ const DEFAULT_TRIGGERSTATE: TriggerState = TriggerState {
 
 #[repr(C)]
 pub struct TouchInfo {
-    x: [float; 0x10],
-    y: [float; 0x10],
-    down: [bool32; 0x10],
-    count: uint8,
+    pub x: [float; 0x10],
+    pub y: [float; 0x10],
+    pub down: [bool32; 0x10],
+    pub count: uint8,
     #[cfg(not(feature = "version_2"))]
-    pauseHold: bool32,
+    pub pauseHold: bool32,
     #[cfg(not(feature = "version_2"))]
-    pausePress: bool32,
+    pub pausePress: bool32,
     #[cfg(not(feature = "version_2"))]
-    unknown1: bool32,
+    pub unknown1: bool32,
     #[cfg(not(feature = "version_2"))]
-    anyKeyHold: bool32,
+    pub anyKeyHold: bool32,
     #[cfg(not(feature = "version_2"))]
-    anyKeyPress: bool32,
+    pub anyKeyPress: bool32,
     #[cfg(not(feature = "version_2"))]
-    unknown2: bool32,
+    pub unknown2: bool32,
 }
 const DEFAULT_TOUCHINFO: TouchInfo = TouchInfo {
     x: [0.0; 0x10],
@@ -274,7 +274,7 @@ static mut inputSlotDevices: [*mut InputDevice; PLAYER_COUNT] = [
 ];
 
 #[no_mangle]
-static mut controller: [ControllerState; PLAYER_COUNT + 1] =
+pub static mut controller: [ControllerState; PLAYER_COUNT + 1] =
     [DEFAULT_CONTROLLERSTATE; PLAYER_COUNT + 1];
 #[no_mangle]
 static mut stickL: [AnalogState; PLAYER_COUNT + 1] = [DEFAULT_ANALOGSTATE; PLAYER_COUNT + 1];
@@ -288,9 +288,13 @@ static mut triggerL: [TriggerState; PLAYER_COUNT + 1] = [DEFAULT_TRIGGERSTATE; P
 #[no_mangle]
 static mut triggerR: [TriggerState; PLAYER_COUNT + 1] = [DEFAULT_TRIGGERSTATE; PLAYER_COUNT + 1];
 #[no_mangle]
-static mut touchInfo: TouchInfo = DEFAULT_TOUCHINFO;
+pub static mut touchInfo: TouchInfo = DEFAULT_TOUCHINFO;
 
 #[no_mangle]
 static mut gamePadMappings: *mut GamePadMappings = std::ptr::null_mut();
 #[no_mangle]
 static mut gamePadCount: int32 = 0;
+
+extern "C" {
+    pub fn AssignInputSlotToDevice( inputSlot: uint8, deviceID:  uint32);
+}

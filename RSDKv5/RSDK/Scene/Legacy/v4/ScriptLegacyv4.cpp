@@ -3771,8 +3771,8 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_STAGEWATERLEVEL: scriptEng.operands[i] = waterLevel; break;
                     case VAR_STAGEACTIVELAYER: scriptEng.operands[i] = activeTileLayers[arrayVal]; break;
                     case VAR_STAGEMIDPOINT: scriptEng.operands[i] = tLayerMidPoint; break;
-                    case VAR_STAGEPLAYERLISTPOS: scriptEng.operands[i] = playerListPos; break;
-                    case VAR_STAGEDEBUGMODE: scriptEng.operands[i] = debugMode; break;
+                    case VAR_STAGEPLAYERLISTPOS: scriptEng.operands[i] = Legacy_playerListPos; break;
+                    case VAR_STAGEDEBUGMODE: scriptEng.operands[i] = Legacy_debugMode; break;
                     case VAR_STAGEENTITYPOS: scriptEng.operands[i] = objectEntityPos; break;
                     case VAR_SCREENCAMERAENABLED: scriptEng.operands[i] = currentCamera->enabled; break;
                     case VAR_SCREENCAMERATARGET: scriptEng.operands[i] = currentCamera->target; break;
@@ -5898,8 +5898,8 @@ void RSDK::Legacy::v4::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_STAGEWATERLEVEL: waterLevel = scriptEng.operands[i]; break;
                     case VAR_STAGEACTIVELAYER: activeTileLayers[arrayVal] = scriptEng.operands[i]; break;
                     case VAR_STAGEMIDPOINT: tLayerMidPoint = scriptEng.operands[i]; break;
-                    case VAR_STAGEPLAYERLISTPOS: playerListPos = scriptEng.operands[i]; break;
-                    case VAR_STAGEDEBUGMODE: debugMode = scriptEng.operands[i]; break;
+                    case VAR_STAGEPLAYERLISTPOS: Legacy_playerListPos = scriptEng.operands[i]; break;
+                    case VAR_STAGEDEBUGMODE: Legacy_debugMode = scriptEng.operands[i]; break;
                     case VAR_STAGEENTITYPOS: objectEntityPos = scriptEng.operands[i]; break;
                     case VAR_SCREENCAMERAENABLED: currentCamera->enabled = scriptEng.operands[i]; break;
                     case VAR_SCREENCAMERATARGET: currentCamera->target = scriptEng.operands[i]; break;

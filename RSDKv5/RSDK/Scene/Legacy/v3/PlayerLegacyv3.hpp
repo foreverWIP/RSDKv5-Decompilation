@@ -60,7 +60,6 @@ struct Player {
 };
 
 extern Player playerList[LEGACY_v3_PLAYER_COUNT];
-extern int32 playerListPos;
 extern int32 activePlayer;
 extern int32 activePlayerCount;
 

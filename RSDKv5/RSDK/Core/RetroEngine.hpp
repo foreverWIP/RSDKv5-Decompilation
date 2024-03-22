@@ -648,7 +648,9 @@ struct RetroEngine {
     float soundFXVolume   = 1.0f;
 };
 
-extern RetroEngine engine;
+extern "C" {
+    extern RetroEngine engine;
+}
 
 #if RETRO_REV02
 typedef void (*LogicLinkHandle)(EngineInfo *info);

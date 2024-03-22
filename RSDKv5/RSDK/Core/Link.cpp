@@ -90,20 +90,20 @@ void RSDK::SetupFunctionTables()
     // ============================
 
     // API Core
-    ADD_API_FUNCTION(APITable_GetUserLanguage, GetUserLanguage);
-    ADD_API_FUNCTION(APITable_GetConfirmButtonFlip, GetConfirmButtonFlip);
-    ADD_API_FUNCTION(APITable_ExitGame, ExitGame);
-    ADD_API_FUNCTION(APITable_LaunchManual, LaunchManual);
+    ADD_API_FUNCTION(APITable_GetUserLanguage, SKU_GetUserLanguage);
+    ADD_API_FUNCTION(APITable_GetConfirmButtonFlip, SKU_GetConfirmButtonFlip);
+    ADD_API_FUNCTION(APITable_ExitGame, SKU_ExitGame);
+    ADD_API_FUNCTION(APITable_LaunchManual, SKU_LaunchManual);
 #if RETRO_REV0U
-    ADD_API_FUNCTION(APITable_GetDefaultGamepadType, GetDefaultGamepadType);
+    ADD_API_FUNCTION(APITable_GetDefaultGamepadType, SKU_GetDefaultGamepadType);
 #endif
-    ADD_API_FUNCTION(APITable_IsOverlayEnabled, IsOverlayEnabled);
-    ADD_API_FUNCTION(APITable_CheckDLC, CheckDLC);
+    ADD_API_FUNCTION(APITable_IsOverlayEnabled, SKU_IsOverlayEnabled);
+    ADD_API_FUNCTION(APITable_CheckDLC, SKU_CheckDLC);
 #if RETRO_VER_EGS
     ADD_API_FUNCTION(APITable_SetupExtensionOverlay, SetupExtensionOverlay);
     ADD_API_FUNCTION(APITable_CanShowExtensionOverlay, CanShowExtensionOverlay);
 #endif
-    ADD_API_FUNCTION(APITable_ShowExtensionOverlay, ShowExtensionOverlay);
+    ADD_API_FUNCTION(APITable_ShowExtensionOverlay, SKU_ShowExtensionOverlay);
 #if RETRO_VER_EGS
     ADD_API_FUNCTION(APITable_CanShowAltExtensionOverlay, CanShowAltExtensionOverlay);
     ADD_API_FUNCTION(APITable_ShowAltExtensionOverlay, ShowAltExtensionOverlay);

@@ -85,7 +85,7 @@ void RSDK::Legacy::v4::MoveMod(uint32 *id, int32 *up)
     modList[option]    = swap;
 }
 
-void RSDK::Legacy::v4::ExitGame() { RSDK::SKU::ExitGame(); }
+void RSDK::Legacy::v4::ExitGame() { SKU_ExitGame(); }
 
 void RSDK::Legacy::v4::FileExists(int32 *unused, const char *filePath)
 {

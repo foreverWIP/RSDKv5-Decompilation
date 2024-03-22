@@ -161,7 +161,9 @@ target_compile_definitions(RetroEngine PRIVATE
 
 set(RUST_CONF $<$<CONFIG:Debug>:debug>$<$<CONFIG:Release>:release>)
 if(WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:LIBCMTD")
     target_link_libraries(RetroEngine ws2_32.dll userenv.dll bcrypt.dll ntdll.dll dbghelp.dll)
+    target_link_libraries(RetroEngine Synchronization.lib)
     target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/${RUST_CONF}/rsdkv5rs.lib)
 else()
     target_link_libraries(RetroEngine ${CMAKE_SOURCE_DIR}/rsdkv5-rs/target/${RUST_CONF}/librsdkv5rs.a)

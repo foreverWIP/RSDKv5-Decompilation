@@ -34,14 +34,14 @@ void RSDK::Legacy::v3::ProcessStage()
 
 #if RSDK_AUTOBUILD
             // Prevent playing as Knuckles or Amy if on autobuilds
-            if (Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES"))
-                playerListPos = 0;
-            else if (GetGlobalVariableByName("PLAYER_KNUCKLES_TAILS") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES_TAILS"))
-                playerListPos = 0;
-            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY"))
-                playerListPos = 0;
-            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS"))
-                playerListPos = 0;
+            if (Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES") && Legacy_playerListPos == Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES"))
+                Legacy_playerListPos = 0;
+            else if (GetGlobalVariableByName("PLAYER_KNUCKLES_TAILS") && Legacy_playerListPos == Legacy_GetGlobalVariableByName("PLAYER_KNUCKLES_TAILS"))
+                Legacy_playerListPos = 0;
+            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY") && Legacy_playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY"))
+                Legacy_playerListPos = 0;
+            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS") && Legacy_playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS"))
+                Legacy_playerListPos = 0;
 #endif
 
             for (int32 p = 0; p < LEGACY_v3_PLAYER_COUNT; ++p) {

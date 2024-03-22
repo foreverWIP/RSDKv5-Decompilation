@@ -330,3 +330,32 @@ int32 RSDK::GetInputDeviceType(uint32 deviceID)
     }
 #endif
 }
+
+void AssignInputSlotToDevice(uint8 inputSlot, uint32 deviceID)
+{
+    uint8 slotID = inputSlot - 1;
+
+    if (slotID < PLAYER_COUNT) {
+        if (deviceID && deviceID != INPUT_AUTOASSIGN) {
+            if (deviceID == INPUT_UNASSIGNED) {
+                inputSlots[slotID] = INPUT_UNASSIGNED;
+            }
+            else {
+                for (int32 i = 0; i < inputDeviceCount; ++i) {
+                    if (inputDeviceList[i] && inputDeviceList[i]->id == deviceID) {
+                        inputDeviceList[i]->isAssigned = true;
+                        inputSlots[slotID]             = deviceID;
+                        inputSlotDevices[slotID]       = inputDeviceList[i];
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            InputDevice *device = InputDeviceFromID(inputSlots[slotID]);
+            if (device)
+                device->isAssigned = false;
+            inputSlots[slotID] = deviceID;
+        }
+    }
+}

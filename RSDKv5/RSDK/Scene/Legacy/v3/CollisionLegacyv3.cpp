@@ -3057,7 +3057,7 @@ void RSDK::Legacy::v3::EnemyCollision(int32 left, int32 top, int32 right, int32 
     collisionBottom = collisionTop;
 
     if (!scriptEng.checkResult) {
-        if (playerListPos == playerAmy) {
+        if (Legacy_playerListPos == playerAmy) {
             if (player->boundEntity->animation == aniHammerDash) {
                 int32 frame        = (miniPlayerFlag ? player->boundEntity->frame % 3 : player->boundEntity->frame % 8) * 4;
 

@@ -37,7 +37,6 @@ int32 RSDK::Legacy::lastXSize = -1;
 
 bool32 RSDK::Legacy::pauseEnabled     = true;
 bool32 RSDK::Legacy::timeEnabled      = true;
-bool32 RSDK::Legacy::debugMode        = false;
 int32 RSDK::Legacy::frameCounter      = 0;
 int32 RSDK::Legacy::stageMilliseconds = 0;
 int32 RSDK::Legacy::stageSeconds      = 0;

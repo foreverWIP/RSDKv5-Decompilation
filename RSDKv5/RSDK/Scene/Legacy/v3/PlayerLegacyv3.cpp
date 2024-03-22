@@ -1,6 +1,5 @@
 
 RSDK::Legacy::v3::Player RSDK::Legacy::v3::playerList[LEGACY_v3_PLAYER_COUNT];
-int32 RSDK::Legacy::v3::playerListPos     = 0;
 int32 RSDK::Legacy::v3::activePlayer      = 0;
 int32 RSDK::Legacy::v3::activePlayerCount = 1;
 

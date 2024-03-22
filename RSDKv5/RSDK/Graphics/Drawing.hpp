@@ -1,6 +1,11 @@
 #ifndef DRAWING_H
 #define DRAWING_H
 
+extern "C" {
+    void DrawRectangle(int32 x, int32 y, int32 width, int32 height, uint32 color, int32 alpha, int32 inkEffect, bool32 screenRelative);
+    void DrawDevString(const char *string, int32 x, int32 y, int32 align, uint32 color);
+}
+
 namespace RSDK
 {
 
@@ -248,7 +253,9 @@ extern GFXSurface gfxSurface[SURFACE_COUNT];
 
 extern float dpi;
 extern int32 cameraCount;
-extern ScreenInfo screens[SCREEN_COUNT];
+extern "C" {
+    extern ScreenInfo screens[SCREEN_COUNT];
+}
 extern CameraInfo cameras[CAMERA_COUNT];
 extern "C" {
     extern ScreenInfo *currentScreen;
@@ -373,7 +380,6 @@ void SwapDrawListEntries(uint8 drawGroup, uint16 slot1, uint16 slot2, uint16 cou
 void FillScreen(uint32 color, int32 alphaR, int32 alphaG, int32 alphaB);
 
 void DrawLine(int32 x1, int32 y1, int32 x2, int32 y2, uint32 color, int32 alpha, int32 inkEffect, bool32 screenRelative);
-void DrawRectangle(int32 x, int32 y, int32 width, int32 height, uint32 color, int32 alpha, int32 inkEffect, bool32 screenRelative);
 void DrawCircle(int32 x, int32 y, int32 radius, uint32 color, int32 alpha, int32 inkEffect, bool32 screenRelative);
 void DrawCircleOutline(int32 x, int32 y, int32 innerRadius, int32 outerRadius, uint32 color, int32 alpha, int32 inkEffect, bool32 screenRelative);
 
@@ -407,7 +413,6 @@ inline void DrawDynamicAniTile(Animator *animator, uint16 tileIndex)
 
 void DrawString(Animator *animator, Vector2 *position, String *string, int32 endFrame, int32 textLength, int32 align, int32 spacing, void *unused,
                 Vector2 *charPositions, bool32 screenRelative);
-void DrawDevString(const char *string, int32 x, int32 y, int32 align, uint32 color);
 
 inline void ClearGfxSurfaces()
 {

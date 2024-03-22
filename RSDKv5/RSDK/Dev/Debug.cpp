@@ -23,8 +23,6 @@ int32 RSDK::viewableVarCount = 0;
 ViewableVariable RSDK::viewableVarList[VIEWVAR_LIST_COUNT];
 #endif
 
-DevMenu RSDK::devMenu = DevMenu();
-
 inline void PrintConsole(const char *message) { printf("%s", message); }
 
 void PrintLog(int32 mode, const char *message, ...)
@@ -186,82 +184,6 @@ void RSDK::PrintMessage(void *msg, uint8 type)
 
     useEndLine = true;
 }
-#endif
-
-#if !RETRO_USE_ORIGINAL_CODE
-uint8 touchTimer = 0;
-
-namespace RSDK
-{
-void DevMenu_HandleTouchControls(int8 cornerButton)
-{
-    bool32 cornerCheck = cornerButton != CORNERBUTTON_START ? !controller[CONT_ANY].keyLeft.down && !controller[CONT_ANY].keyRight.down
-                                                            : !controller[CONT_ANY].keyStart.down;
-
-    if (cornerCheck && !controller[CONT_ANY].keyUp.down && !controller[CONT_ANY].keyDown.down) {
-        for (int32 t = 0; t < touchInfo.count; ++t) {
-            int32 tx = (int32)(touchInfo.x[t] * screens->size.x);
-            int32 ty = (int32)(touchInfo.y[t] * screens->size.y);
-
-            bool32 touchingSlider = cornerButton == CORNERBUTTON_SLIDER && tx > screens->center.x && ty > screens->center.y;
-
-            if (touchInfo.down[t] && (!(touchTimer % 8) || touchingSlider)) {
-                if (tx < screens->center.x) {
-                    if (ty >= screens->center.y) {
-                        if (!controller[CONT_ANY].keyDown.down)
-                            controller[CONT_ANY].keyDown.press = true;
-
-                        controller[CONT_ANY].keyDown.down = true;
-                        break;
-                    }
-                    else {
-                        if (!controller[CONT_ANY].keyUp.down)
-                            controller[CONT_ANY].keyUp.press = true;
-
-                        controller[CONT_ANY].keyUp.down = true;
-                        break;
-                    }
-                }
-                else if (tx > screens->center.x) {
-                    if (ty > screens->center.y) {
-                        if (cornerButton == CORNERBUTTON_START) {
-                            if (!controller[CONT_ANY].keyStart.down)
-                                controller[CONT_ANY].keyStart.press = true;
-
-                            controller[CONT_ANY].keyStart.down = true;
-                        }
-                        else {
-                            if (tx < screens->size.x * 0.75) {
-                                if (!controller[CONT_ANY].keyLeft.down)
-                                    controller[CONT_ANY].keyLeft.press = true;
-
-                                controller[CONT_ANY].keyLeft.down = true;
-                            }
-                            else {
-                                if (!controller[CONT_ANY].keyRight.down)
-                                    controller[CONT_ANY].keyRight.press = true;
-
-                                controller[CONT_ANY].keyRight.down = true;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    else {
-                        if (!controller[CONT_ANY].keyB.down)
-                            controller[CONT_ANY].keyB.press = true;
-
-                        controller[CONT_ANY].keyB.down = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    touchTimer++;
-}
-} // namespace RSDK
 #endif
 
 void RSDK::OpenDevMenu()
@@ -450,11 +372,7 @@ void RSDK::DevMenu_MainMenu()
     }
 
     bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-    if (SKU::userCore->GetConfirmButtonFlip())
-#else
-    if (SKU::GetConfirmButtonFlip())
-#endif
+    if (SKU_GetConfirmButtonFlip())
         confirm = controller[CONT_ANY].keyB.press;
 
     if (controller[CONT_ANY].keyStart.press || confirm) {
@@ -640,11 +558,7 @@ void RSDK::DevMenu_CategorySelectMenu()
     }
 
     bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap)
         confirm = controller[CONT_ANY].keyB.press;
 
@@ -679,156 +593,6 @@ void RSDK::DevMenu_CategorySelectMenu()
 #endif //! RETRO_REV0U && RETRO_USE_MOD_LOADER
     }
 #endif // ! !RETRO_USE_ORIGINAL_CODE
-}
-void RSDK::DevMenu_SceneSelectMenu()
-{
-    uint32 selectionColors[] = {
-        0x808090, 0x808090, 0x808090, 0x808090, 0x808090, 0x808090, 0x808090, 0x808090,
-    };
-    selectionColors[devMenu.selection - devMenu.scrollPos] = 0xF0F0F0;
-
-    int32 dy = currentScreen->center.y;
-    DrawRectangle(currentScreen->center.x - 128, dy - 84, 0x100, 0x30, 0x80, 0xFF, INK_NONE, true);
-
-    dy -= 68;
-    DrawDevString("SELECT STAGE SCENE", currentScreen->center.x, dy, ALIGN_CENTER, 0xF0F0F0);
-    DrawRectangle(currentScreen->center.x - 128, dy + 36, 0x100, 0x48, 0x80, 0xFF, INK_NONE, true);
-
-    int32 y             = dy + 40;
-    SceneListInfo *list = &sceneInfo.listCategory[devMenu.listPos];
-    int32 start         = list->sceneOffsetStart;
-    for (int32 i = 0; i < 8; ++i) {
-        if (devMenu.scrollPos + i < list->sceneCount) {
-            DrawDevString(sceneInfo.listData[start + (devMenu.scrollPos + i)].name, currentScreen->center.x + 96, y, ALIGN_RIGHT, selectionColors[i]);
-            y += 8;
-            devMenu.scrollPos = devMenu.scrollPos; //? look into
-        }
-    }
-
-#if !RETRO_USE_ORIGINAL_CODE
-    DevMenu_HandleTouchControls(CORNERBUTTON_START);
-#endif
-
-    if (controller[CONT_ANY].keyUp.press) {
-        if (start + --devMenu.selection < list->sceneOffsetStart)
-            devMenu.selection = list->sceneCount - 1;
-
-        if (devMenu.selection >= devMenu.scrollPos) {
-            if (devMenu.selection > devMenu.scrollPos + 7) {
-                devMenu.scrollPos = devMenu.selection - 7;
-            }
-        }
-        else {
-            devMenu.scrollPos = devMenu.selection;
-        }
-
-        devMenu.timer = 1;
-    }
-    else if (controller[CONT_ANY].keyUp.down) {
-        if (!devMenu.timer && start + --devMenu.selection < list->sceneOffsetStart)
-            devMenu.selection = list->sceneCount - 1;
-
-        devMenu.timer = (devMenu.timer + 1) & 7;
-
-        if (devMenu.selection >= devMenu.scrollPos) {
-            if (devMenu.selection > devMenu.scrollPos + 7)
-                devMenu.scrollPos = devMenu.selection - 7;
-        }
-        else {
-            devMenu.scrollPos = devMenu.selection;
-        }
-    }
-
-    if (controller[CONT_ANY].keyDown.press) {
-        if (++devMenu.selection >= list->sceneCount)
-            devMenu.selection = 0;
-
-        if (devMenu.selection >= devMenu.scrollPos) {
-            if (devMenu.selection > devMenu.scrollPos + 7)
-                devMenu.scrollPos = devMenu.selection - 7;
-        }
-        else {
-            devMenu.scrollPos = devMenu.selection;
-        }
-
-        devMenu.timer = 1;
-    }
-    else if (controller[CONT_ANY].keyDown.down) {
-        if (!devMenu.timer && ++devMenu.selection >= list->sceneCount)
-            devMenu.selection = 0;
-
-        devMenu.timer = (devMenu.timer + 1) & 7;
-
-        if (devMenu.selection >= devMenu.scrollPos) {
-            if (devMenu.selection > devMenu.scrollPos + 7)
-                devMenu.scrollPos = devMenu.selection - 7;
-        }
-        else {
-            devMenu.scrollPos = devMenu.selection;
-        }
-    }
-
-    bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
-    if (swap)
-        confirm = controller[CONT_ANY].keyB.press;
-
-    if (controller[CONT_ANY].keyStart.press || confirm) {
-
-#if RETRO_REV02
-        // they hardcoded a check in here that forces you to own the encore DLC to select encore mode stages
-        bool32 disabled = strcmp(list->name, "Encore Mode") == 0 && !SKU::userCore->CheckDLC(0);
-#else
-        bool32 disabled = false;
-#endif
-
-        if (!disabled) {
-            sceneInfo.activeCategory = devMenu.listPos;
-            sceneInfo.listPos        = devMenu.selection + list->sceneOffsetStart;
-
-#if RETRO_REV0U
-            switch (engine.version) {
-                default: break;
-                case 5: sceneInfo.state = ENGINESTATE_LOAD; break;
-                case 4:
-                case 3:
-#if !RETRO_USE_ORIGINAL_CODE
-                    RSDK::Legacy::debugMode = confirm;
-#endif
-#if RETRO_USE_MOD_LOADER
-                    switch (engine.version) {
-                        case 3: RSDK::Legacy::v3::playerListPos = devMenu.playerListPos; break;
-                        case 4: RSDK::Legacy::v4::playerListPos = devMenu.playerListPos; break;
-                    }
-#endif
-                    legacy_gameMode  = RSDK::Legacy::ENGINE_MAINGAME;
-                    Legacy_stageMode = RSDK::Legacy::STAGEMODE_LOAD;
-                    break;
-            }
-#else
-            sceneInfo.state = ENGINESTATE_LOAD;
-#endif //! RETRO_REV0U
-
-                // Bug Details(?):
-                // rev01 had this here, rev02 does not.
-                // This can cause an annoying popup when starting a stage
-#if !RETRO_REV02
-            AssignInputSlotToDevice(CONT_P1, INPUT_AUTOASSIGN);
-#endif
-        }
-    }
-#if !RETRO_USE_ORIGINAL_CODE
-    else if (swap ? controller[CONT_ANY].keyA.press : controller[CONT_ANY].keyB.press) {
-        devMenu.state     = DevMenu_CategorySelectMenu;
-        devMenu.scrollPos = 0;
-        devMenu.selection = 0;
-        devMenu.listPos   = 0;
-    }
-#endif
 }
 void RSDK::DevMenu_OptionsMenu()
 {
@@ -895,11 +659,7 @@ void RSDK::DevMenu_OptionsMenu()
     }
 
     bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap)
         confirm = controller[CONT_ANY].keyB.press;
 
@@ -1097,11 +857,7 @@ void RSDK::DevMenu_VideoOptionsMenu()
         case 4: // confirm
         {
             bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-            if (SKU::userCore->GetConfirmButtonFlip())
-#else
-            if (SKU::GetConfirmButtonFlip())
-#endif
+            if (SKU_GetConfirmButtonFlip())
                 confirm = controller[CONT_ANY].keyB.press;
 
             if (controller[CONT_ANY].keyStart.press || confirm) {
@@ -1144,11 +900,7 @@ void RSDK::DevMenu_VideoOptionsMenu()
         case 5: // cancel
         {
             bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-            if (SKU::userCore->GetConfirmButtonFlip())
-#else
-            if (SKU::GetConfirmButtonFlip())
-#endif
+            if (SKU_GetConfirmButtonFlip())
                 confirm = controller[CONT_ANY].keyB.press;
 
             if (controller[CONT_ANY].keyStart.press || confirm) {
@@ -1160,11 +912,7 @@ void RSDK::DevMenu_VideoOptionsMenu()
     }
 
 #if !RETRO_USE_ORIGINAL_CODE
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap ? controller[CONT_ANY].keyA.press : controller[CONT_ANY].keyB.press) {
         devMenu.state     = DevMenu_OptionsMenu;
         devMenu.selection = 0;
@@ -1287,11 +1035,7 @@ void RSDK::DevMenu_AudioOptionsMenu()
 
         case 3: {
             bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-            if (SKU::userCore->GetConfirmButtonFlip())
-#else
-            if (SKU::GetConfirmButtonFlip())
-#endif
+            if (SKU_GetConfirmButtonFlip())
                 confirm = controller[CONT_ANY].keyB.press;
 
             if (controller[CONT_ANY].keyStart.press || confirm) {
@@ -1303,11 +1047,7 @@ void RSDK::DevMenu_AudioOptionsMenu()
     }
 
 #if !RETRO_USE_ORIGINAL_CODE
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap ? controller[CONT_ANY].keyA.press : controller[CONT_ANY].keyB.press) {
         devMenu.state     = DevMenu_OptionsMenu;
         devMenu.selection = 1;
@@ -1372,11 +1112,7 @@ void RSDK::DevMenu_InputOptionsMenu()
     }
 
     bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-    if (SKU::userCore->GetConfirmButtonFlip())
-#else
-    if (SKU::GetConfirmButtonFlip())
-#endif
+    if (SKU_GetConfirmButtonFlip())
         confirm = controller[CONT_ANY].keyB.press;
 
     if (controller[CONT_ANY].keyStart.press || confirm) {
@@ -1394,11 +1130,7 @@ void RSDK::DevMenu_InputOptionsMenu()
     }
 
 #if !RETRO_USE_ORIGINAL_CODE
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap ? controller[CONT_ANY].keyA.press : controller[CONT_ANY].keyB.press) {
         devMenu.state     = DevMenu_OptionsMenu;
         devMenu.selection = 2;
@@ -1520,11 +1252,7 @@ void RSDK::DevMenu_KeyMappingsMenu()
     }
 
 #if !RETRO_USE_ORIGINAL_CODE
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap ? controller[CONT_ANY].keyA.press : controller[CONT_ANY].keyB.press) {
         devMenu.state     = DevMenu_OptionsMenu;
         devMenu.selection = 3;
@@ -1551,7 +1279,7 @@ void RSDK::DevMenu_DebugOptionsMenu()
 #endif
 
     bool32 confirm = controller[CONT_ANY].keyA.press;
-    if (SKU::userCore->GetConfirmButtonFlip())
+    if (SKU_GetConfirmButtonFlip())
         confirm = controller[CONT_ANY].keyB.press;
 
     confirm |= controller[CONT_ANY].keyStart.press;
@@ -1802,11 +1530,7 @@ void RSDK::DevMenu_DebugOptionsMenu()
     }
 
 #if !RETRO_USE_ORIGINAL_CODE
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip()
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap ? controller[CONT_ANY].keyA.press : controller[CONT_ANY].keyB.press) {
         devMenu.state     = DevMenu_OptionsMenu;
         devMenu.selection = 4;
@@ -1903,11 +1627,7 @@ void RSDK::DevMenu_ModsMenu()
     }
 
     bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap)
         confirm = controller[CONT_ANY].keyB.press;
 
@@ -2029,11 +1749,7 @@ void RSDK::DevMenu_PlayerSelectMenu()
     }
 
     bool32 confirm = controller[CONT_ANY].keyA.press;
-#if RETRO_REV02
-    bool32 swap = SKU::userCore->GetConfirmButtonFlip();
-#else
-    bool32 swap = SKU::GetConfirmButtonFlip();
-#endif
+    bool32 swap = SKU_GetConfirmButtonFlip();
     if (swap)
         confirm = controller[CONT_ANY].keyB.press;
 

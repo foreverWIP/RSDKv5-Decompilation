@@ -100,8 +100,6 @@ extern TypeGroupList objectTypeGroupList[LEGACY_v4_TYPEGROUP_COUNT];
 
 extern char typeNames[LEGACY_v4_OBJECT_COUNT][0x40];
 
-extern int32 playerListPos;
-
 void ProcessStartupObjects();
 void ProcessObjects();
 void ProcessPausedObjects();

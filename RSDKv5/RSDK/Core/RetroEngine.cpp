@@ -20,8 +20,6 @@ int32 *RSDK::globalVarsPtr = NULL;
 void (*RSDK::globalVarsInitCB)(void *globals) = NULL;
 #endif
 
-RetroEngine RSDK::engine = RetroEngine();
-
 int32 RunRetroEngine(int32 argc, char *argv[])
 {
     ParseArguments(argc, argv);

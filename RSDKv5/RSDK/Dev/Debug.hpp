@@ -123,11 +123,21 @@ struct DevMenu {
 #endif
 };
 
-extern DevMenu devMenu;
+extern "C" {
+    extern DevMenu devMenu;
+}
+
+#if !RETRO_USE_ORIGINAL_CODE
+extern "C" {
+    void DevMenu_HandleTouchControls(int8 cornerButton);
+}
+#endif
 
 void DevMenu_MainMenu();
-void DevMenu_CategorySelectMenu();
-void DevMenu_SceneSelectMenu();
+extern "C" {
+    void DevMenu_CategorySelectMenu();
+    void DevMenu_SceneSelectMenu();
+}
 void DevMenu_OptionsMenu();
 void DevMenu_VideoOptionsMenu();
 void DevMenu_AudioOptionsMenu();

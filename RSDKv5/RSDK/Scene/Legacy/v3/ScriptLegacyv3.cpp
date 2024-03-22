@@ -2618,7 +2618,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_STAGEWATERLEVEL: scriptEng.operands[i] = waterLevel; break;
                     case VAR_STAGEACTIVELAYER: scriptEng.operands[i] = activeTileLayers[arrayVal]; break;
                     case VAR_STAGEMIDPOINT: scriptEng.operands[i] = tLayerMidPoint; break;
-                    case VAR_STAGEPLAYERLISTPOS: scriptEng.operands[i] = playerListPos; break;
+                    case VAR_STAGEPLAYERLISTPOS: scriptEng.operands[i] = Legacy_playerListPos; break;
                     case VAR_STAGEACTIVEPLAYER: scriptEng.operands[i] = activePlayer; break;
                     case VAR_SCREENCAMERAENABLED: scriptEng.operands[i] = currentCamera->enabled; break;
                     case VAR_SCREENCAMERATARGET: scriptEng.operands[i] = currentCamera->target; break;
@@ -2690,7 +2690,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_3DSCENEPROJECTIONX: scriptEng.operands[i] = projectionX; break;
                     case VAR_3DSCENEPROJECTIONY: scriptEng.operands[i] = projectionY; break;
                     case VAR_ENGINESTATE: scriptEng.operands[i] = legacy_gameMode; break;
-                    case VAR_STAGEDEBUGMODE: scriptEng.operands[i] = debugMode; break;
+                    case VAR_STAGEDEBUGMODE: scriptEng.operands[i] = Legacy_debugMode; break;
                     case VAR_ENGINEMESSAGE: scriptEng.operands[i] = engineMessage; break;
                     case VAR_SAVERAM: scriptEng.operands[i] = Legacy_saveRAM[arrayVal]; break;
                     case VAR_ENGINELANGUAGE: scriptEng.operands[i] = legacy_language; break;
@@ -4395,7 +4395,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_STAGEWATERLEVEL: waterLevel = scriptEng.operands[i]; break;
                     case VAR_STAGEACTIVELAYER: activeTileLayers[arrayVal] = scriptEng.operands[i]; break;
                     case VAR_STAGEMIDPOINT: tLayerMidPoint = scriptEng.operands[i]; break;
-                    case VAR_STAGEPLAYERLISTPOS: playerListPos = scriptEng.operands[i]; break;
+                    case VAR_STAGEPLAYERLISTPOS: Legacy_playerListPos = scriptEng.operands[i]; break;
                     case VAR_STAGEACTIVEPLAYER: activePlayer = scriptEng.operands[i]; break;
                     case VAR_SCREENCAMERAENABLED: currentCamera->enabled = scriptEng.operands[i]; break;
                     case VAR_SCREENCAMERATARGET: currentCamera->target = scriptEng.operands[i]; break;
@@ -4486,7 +4486,7 @@ void RSDK::Legacy::v3::ProcessScript(int32 scriptCodeStart, int32 jumpTableStart
                     case VAR_3DSCENEPROJECTIONX: projectionX = scriptEng.operands[i]; break;
                     case VAR_3DSCENEPROJECTIONY: projectionY = scriptEng.operands[i]; break;
                     case VAR_ENGINESTATE: legacy_gameMode = scriptEng.operands[i]; break;
-                    case VAR_STAGEDEBUGMODE: debugMode = scriptEng.operands[i]; break;
+                    case VAR_STAGEDEBUGMODE: Legacy_debugMode = scriptEng.operands[i]; break;
                     case VAR_ENGINEMESSAGE: break;
                     case VAR_SAVERAM: Legacy_saveRAM[arrayVal] = scriptEng.operands[i]; break;
                     case VAR_ENGINELANGUAGE: legacy_language = scriptEng.operands[i]; break;

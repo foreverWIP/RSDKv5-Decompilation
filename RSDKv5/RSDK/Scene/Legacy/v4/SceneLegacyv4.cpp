@@ -31,10 +31,10 @@ void RSDK::Legacy::v4::ProcessStage(void)
 
 #if RSDK_AUTOBUILD
             // Prevent playing as Amy if on autobuilds
-            if (Legacy_GetGlobalVariableByName("PLAYER_AMY") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY"))
-                playerListPos = 0;
-            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS") && playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS"))
-                playerListPos = 0;
+            if (Legacy_GetGlobalVariableByName("PLAYER_AMY") && Legacy_playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY"))
+                Legacy_playerListPos = 0;
+            else if (Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS") && Legacy_playerListPos == Legacy_GetGlobalVariableByName("PLAYER_AMY_TAILS"))
+                Legacy_playerListPos = 0;
 #endif
 
 #if RETRO_USE_MOD_LOADER

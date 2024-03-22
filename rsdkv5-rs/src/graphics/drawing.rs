@@ -20,11 +20,30 @@ pub const RETRO_VIDEO_TEXTURE_W: usize = 1024;
 pub const RETRO_VIDEO_TEXTURE_H: usize = 512;
 
 #[repr(C)]
+pub enum InkEffects {
+    INK_NONE,
+    INK_BLEND,
+    INK_ALPHA,
+    INK_ADD,
+    INK_SUB,
+    INK_TINT,
+    INK_MASKED,
+    INK_UNMASKED,
+}
+
+#[repr(C)]
 pub enum FlipFlags {
     FLIP_NONE,
     FLIP_X,
     FLIP_Y,
     FLIP_XY,
+}
+
+#[repr(C)]
+pub enum Alignments {
+    ALIGN_LEFT,
+    ALIGN_RIGHT,
+    ALIGN_CENTER,
 }
 
 #[repr(C)]
@@ -40,6 +59,32 @@ pub struct ScreenInfo {
     pub clipBound_X2: int32,
     pub clipBound_Y2: int32,
     pub waterDrawPos: int32,
+}
+pub const DEFAULT_SCREENINFO: ScreenInfo = ScreenInfo {
+    frameBuffer: [0; SCREEN_XMAX * SCREEN_YSIZE],
+    position: Vector2::new(),
+    size: Vector2::new(),
+    center: Vector2::new(),
+    pitch: 0,
+    clipBound_X1: 0,
+    clipBound_Y1: 0,
+    clipBound_X2: 0,
+    clipBound_Y2: 0,
+    waterDrawPos: 0,
+};
+
+extern "C" {
+    pub fn DrawRectangle(
+        x: int32,
+        y: int32,
+        width: int32,
+        height: int32,
+        color: uint32,
+        alpha: int32,
+        inkEffect: int32,
+        screenRelative: bool32,
+    );
+    pub fn DrawDevString(string: *const i8, x: int32, y: int32, align: int32, color: uint32);
 }
 
 pub trait RenderDevice {
@@ -67,5 +112,7 @@ pub trait RenderDevice {
     fn LoadShader(fileName: *const i8, linear: bool32);
 }
 
+#[no_mangle]
+pub static mut screens: [ScreenInfo; SCREEN_COUNT] = [DEFAULT_SCREENINFO; SCREEN_COUNT];
 #[no_mangle]
 pub static mut currentScreen: *mut ScreenInfo = std::ptr::null_mut();
