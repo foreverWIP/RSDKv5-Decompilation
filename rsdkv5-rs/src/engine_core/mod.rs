@@ -29,16 +29,16 @@ pub struct RetroEngine {
     pub version: uint8, // determines what RSDK version to use, default to RSDKv5 since thats the "core" version
 
     #[cfg(feature = "version_u")]
-    gamePlatform: cstr,
+    gamePlatform: strptr,
     #[cfg(feature = "version_u")]
-    gameRenderType: cstr,
+    gameRenderType: strptr,
     #[cfg(feature = "version_u")]
-    gameHapticSetting: cstr,
+    gameHapticSetting: strptr,
 
     #[cfg(feature = "version_u")]
     gameReleaseID: int32,
     #[cfg(feature = "version_u")]
-    releaseType: cstr,
+    releaseType: strptr,
 
     storedShaderID: int32,
     storedState: int32,

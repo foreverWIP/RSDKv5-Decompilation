@@ -11,8 +11,6 @@ using namespace RSDK;
 #include <string.h>
 #include <math.h>
 
-char RSDK::textBuffer[0x400];
-
 uint8 utf8CharSizes[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -20,57 +18,6 @@ uint8 utf8CharSizes[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
                           1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
                           2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6 };
-
-void RSDK::SetString(String *string, const char *text)
-{
-    if (!*text)
-        return;
-
-    int32 newLength = 0;
-    for (int32 c = 0; text[c]; ++newLength) c += utf8CharSizes[*text & 0xFF];
-
-    if (!newLength)
-        return;
-
-    if (string->size < newLength || !string->chars) {
-        string->size = newLength;
-        AllocateStorage((void **)&string->chars, sizeof(uint16) * string->size, DATASET_STR, false);
-    }
-
-    string->length = newLength;
-    for (int32 pos = 0; pos < string->length; ++pos) {
-        uint16 c = 0;
-        switch (utf8CharSizes[*text & 0xFF]) {
-            default: break;
-
-            case 1:
-                c = text[0];
-                ++text;
-                break;
-
-            case 2:
-                c = (text[1] & 0x3F) | ((text[0] & 0x1F) << 6);
-                text += 2;
-                break;
-
-            case 3:
-                c = (text[2] & 0x3F) | ((text[1] & 0x3F) << 6) | (text[0] << 12);
-                text += 3;
-                break;
-
-            case 4:
-                c = (text[3] & 0x3F) | ((text[2] & 0x3F) << 6) | (text[1] << 12);
-                text += 4;
-                break;
-
-            case 5: text += 5; break;
-
-            case 6: text += 6; break;
-        }
-
-        string->chars[pos] = c;
-    }
-}
 
 void RSDK::AppendText(String *string, const char *appendString)
 {
@@ -312,32 +259,3 @@ bool32 RSDK::SplitStringList(String *splitStrings, String *stringList, int32 sta
 
     return hasSplitString;
 }
-
-#if RETRO_REV0U
-int32 RSDK::FindStringToken(const char *string, const char *token, uint8 stopID)
-{
-    int32 tokenCharID  = 0;
-    bool32 tokenMatch  = true;
-    int32 stringCharID = 0;
-    int32 foundTokenID = 0;
-
-    while (string[stringCharID]) {
-        tokenCharID = 0;
-        tokenMatch  = true;
-        while (token[tokenCharID]) {
-            if (!string[tokenCharID + stringCharID])
-                return -1;
-
-            if (string[tokenCharID + stringCharID] != token[tokenCharID])
-                tokenMatch = false;
-
-            ++tokenCharID;
-        }
-        if (tokenMatch && ++foundTokenID == stopID)
-            return stringCharID;
-
-        ++stringCharID;
-    }
-    return -1;
-}
-#endif

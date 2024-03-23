@@ -2,6 +2,8 @@ use std::{ffi::CStr, fs, io::Write};
 
 use crate::*;
 
+use super::{allocate_storage, StorageDataSets};
+
 #[repr(C)]
 pub struct GameVersionInfo {
     gameTitle: [i8; 0x40],
@@ -23,6 +25,9 @@ pub struct RetroString {
     pub length: u16,     // length of text
     pub size: u16,       // allocated size
 }
+
+#[no_mangle]
+pub static mut textBuffer: [i8; 0x400] = [0; 0x400];
 
 pub fn gen_hash_md5(message: &str) -> HashMD5 {
     unsafe {
@@ -54,12 +59,16 @@ pub fn gen_hash_md5_ptr(ptr: *const i8) -> HashMD5 {
 
 #[no_mangle]
 #[export_name = "GenerateHashMD5"]
-pub extern "C" fn gen_hash_md5_buf(buffer: *mut uint32, textBuffer: *mut i8, textBufferLen: int32) {
+pub extern "C" fn gen_hash_md5_buf(
+    buffer: *mut uint32,
+    local_textBuffer: *mut i8,
+    textBufferLen: int32,
+) {
     unsafe {
         let c_str = {
-            assert!(!textBuffer.is_null());
+            assert!(!local_textBuffer.is_null());
 
-            CStr::from_ptr(textBuffer)
+            CStr::from_ptr(local_textBuffer)
         };
         buffer.copy_from(gen_hash_md5(c_str.to_str().unwrap()).as_ptr(), 4);
     }
@@ -122,6 +131,62 @@ pub extern "C" fn gen_hash_crc(id: *mut uint32, mut input_string: *mut u8) {
             input_string = input_string.wrapping_add(1);
         }
         *id = !*id;
+    }
+}
+
+const utf8CharSizes: [u8; 256] = [
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6,
+];
+
+#[no_mangle]
+#[export_name = "InitString"]
+pub extern "C" fn init_string(string: *mut RetroString, text: strptr, textLength: u32) {
+    unsafe {
+        (*string).length = 0;
+        (*string).size = 0;
+
+        if (!text.is_null()) {
+            (*string).length = 0;
+            while (*text.wrapping_add((*string).length as usize) != 0) {
+                (*string).length += 1;
+            }
+
+            if (textLength != 0 && textLength >= (*string).length as u32) {
+                (*string).size = textLength as u16;
+            } else {
+                (*string).size = (*string).length;
+            }
+
+            if ((*string).size == 0) {
+                (*string).size = 1;
+            }
+
+            allocate_storage(
+                (&mut (*string).chars) as *mut *mut u16 as *mut *mut u8,
+                std::mem::size_of::<uint16>() as u32 * (*string).size as u32,
+                StorageDataSets::DATASET_STR,
+                false32,
+            );
+
+            let mut pos: u32 = 0;
+            loop {
+                if *text.wrapping_add(pos as usize) == 0 {
+                    break;
+                }
+
+                *(*string).chars.wrapping_add(pos as usize) =
+                    *text.wrapping_add(pos as usize) as u16;
+
+                pos += 1;
+            }
+        }
     }
 }
 
@@ -193,4 +258,208 @@ pub extern "C" fn str_comp(mut stringA: *const i8, mut stringB: *const i8) -> bo
     }
 
     return _match;
+}
+
+#[no_mangle]
+#[export_name = "StrCopy"]
+pub extern "C" fn str_copy(dest: mut_strptr, src: strptr) {
+    let mut i = 0;
+    unsafe {
+        loop {
+            let src_index = src.wrapping_add(i);
+            let dest_index = dest.wrapping_add(i);
+            *dest_index = *src_index;
+            i += 1;
+            if *src_index == 0 {
+                break;
+            }
+        }
+        *dest.wrapping_add(i) = 0;
+    }
+}
+
+#[no_mangle]
+#[export_name = "StrAdd"]
+pub extern "C" fn str_add(dest: mut_strptr, src: strptr) {
+    let dest_string = to_string(dest);
+    let src_string = to_string(src);
+    let added = dest_string + &src_string + "\0";
+
+    unsafe {
+        dest.copy_from(added.as_ptr() as *const i8, added.len());
+    }
+}
+
+#[no_mangle]
+#[export_name = "StrLength"]
+pub extern "C" fn str_length(string: strptr) -> int32 {
+    to_string(string).len() as i32
+}
+
+#[cfg(feature = "version_u")]
+#[no_mangle]
+#[export_name = "FindStringToken"]
+pub extern "C" fn find_string_token(string: strptr, token: strptr, stopID: u8) -> int32 {
+    let mut tokenCharID: int32 = 0;
+    let mut tokenMatch: bool32 = true32;
+    let mut stringCharID: int32 = 0;
+    let mut foundTokenID: int32 = 0;
+
+    let string: Vec<char> = to_string(string).chars().collect();
+    let token: Vec<char> = to_string(token).chars().collect();
+    while (string[stringCharID as usize] != '\0') {
+        tokenCharID = 0;
+        tokenMatch = true32;
+        while (token[tokenCharID as usize] != '\0') {
+            if (string[(tokenCharID + stringCharID) as usize] == '\0') {
+                return -1;
+            }
+
+            if (string[(tokenCharID + stringCharID) as usize] != token[tokenCharID as usize]) {
+                tokenMatch = false32;
+            }
+
+            tokenCharID += 1;
+        }
+        if tokenMatch == true32 {
+            foundTokenID += 1;
+            if (foundTokenID == stopID as i32) {
+                return stringCharID;
+            }
+        }
+
+        stringCharID += 1;
+    }
+    return -1;
+}
+
+#[no_mangle]
+#[export_name = "CopyString"]
+pub extern "C" fn copy_string(dst: *mut RetroString, src: *const RetroString) {
+    if dst as *const RetroString == src {
+        return;
+    }
+
+    unsafe {
+        let srcLength: int32 = (*src).length as i32;
+        (*dst).chars = std::ptr::null_mut();
+        if ((*dst).size >= srcLength as u16) {
+            if ((*dst).chars.is_null()) {
+                allocate_storage(
+                    (&mut (*dst).chars) as *mut *mut u16 as *mut *mut u8,
+                    std::mem::size_of::<uint16>() as u32 * (*dst).size as u32,
+                    StorageDataSets::DATASET_STR,
+                    false32,
+                );
+            }
+        } else {
+            (*dst).size = srcLength as u16;
+            allocate_storage(
+                (&mut (*dst).chars) as *mut *mut u16 as *mut *mut u8,
+                std::mem::size_of::<uint16>() as u32 * (*dst).size as u32,
+                StorageDataSets::DATASET_STR,
+                false32,
+            );
+        }
+
+        (*dst).length = (*src).length;
+        for c in 0..(*dst).length {
+            *(*dst).chars.wrapping_add(c as usize) = *(*src).chars.wrapping_add(c as usize);
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "SetString"]
+pub extern "C" fn SetString(string: *mut RetroString, text: strptr) {
+    let text = to_string(text);
+
+    if text.len() == 0 {
+        return;
+    }
+
+    let newLength: int32 = text.len() as i32;
+
+    unsafe {
+        if ((*string).size < newLength as u16 || (*string).chars.is_null()) {
+            (*string).size = newLength as u16;
+            allocate_storage(
+                (&mut (*string).chars) as *mut *mut u16 as *mut *mut u8,
+                std::mem::size_of::<uint16>() as u32 * (*string).size as u32,
+                StorageDataSets::DATASET_STR,
+                false32,
+            );
+        }
+
+        (*string).length = newLength as u16;
+        let mut text_index = 0usize;
+        let text: Vec<u8> = text.bytes().collect();
+        for pos in 0..(*string).length {
+            let mut c: uint16 = 0;
+            match (utf8CharSizes[text[text_index] as usize & 0xFF]) {
+                1 => {
+                    c = text[text_index + 0] as u16;
+                    text_index += 1;
+                }
+
+                2 => {
+                    c = (text[text_index + 1] as u16 & 0x3F)
+                        | ((text[text_index + 0] as u16 & 0x1F) << 6);
+                    text_index += 2;
+                }
+
+                3 => {
+                    c = (text[text_index + 2] as u16 & 0x3F)
+                        | ((text[text_index + 1] as u16 & 0x3F) << 6)
+                        | ((text[text_index + 0] as u16) << 12);
+                    text_index += 3;
+                }
+
+                4 => {
+                    c = (text[text_index + 3] as u16 & 0x3F)
+                        | ((text[text_index + 2] as u16 & 0x3F) << 6)
+                        | ((text[text_index + 1] as u16) << 12);
+                    text_index += 4;
+                }
+
+                5 => {
+                    text_index += 5;
+                }
+
+                6 => {
+                    text_index += 6;
+                }
+
+                _ => {}
+            }
+
+            *(*string).chars.wrapping_add(pos as usize) = c;
+        }
+    }
+}
+
+#[no_mangle]
+#[export_name = "GetCString"]
+pub extern "C" fn get_c_string(destChars: strptr, string: *const RetroString) {
+    unsafe {
+        if ((*string).chars.is_null()) {
+            return;
+        }
+
+        let cString: mut_strptr = if !destChars.is_null() {
+            destChars as *mut i8
+        } else {
+            textBuffer.as_mut_ptr()
+        };
+        let textLen: int32 = if !destChars.is_null() {
+            (*string).length as i32
+        } else {
+            0x400
+        };
+
+        for c in 0..textLen {
+            *cString.wrapping_add(c as usize) = *(*string).chars.wrapping_add(c as usize) as i8;
+        }
+        *cString.wrapping_add(textLen as usize) = 0;
+    }
 }

@@ -30,7 +30,12 @@ type int32 = i32;
 type uint32 = u32;
 type float = f32;
 type double = f64;
-type cstr = *const i8;
+type strptr = *const i8;
+type mut_strptr = *mut i8;
+
+pub fn to_string(ptr: strptr) -> String {
+    unsafe { CStr::from_ptr(ptr).to_str().unwrap().to_owned() }
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Eq, PartialEq)]

@@ -242,9 +242,11 @@ pub extern "C" fn dev_menu_scene_select() {
         dev_menu_handle_touch_controls(TouchCornerButtons::CORNERBUTTON_START);
 
         if (controller[InputSlotIDs::CONT_ANY as usize].keyUp.press == true32) {
-            devMenu.selection -= 1;
-            if (start + devMenu.selection < (*list).sceneOffsetStart as i32) {
-                devMenu.selection = (*list).sceneCount as i32 - 1;
+            if devMenu.timer == 0 {
+                devMenu.selection -= 1;
+                if (start + devMenu.selection < (*list).sceneOffsetStart as i32) {
+                    devMenu.selection = (*list).sceneCount as i32 - 1;
+                }
             }
 
             if (devMenu.selection >= devMenu.scrollPos) {
@@ -257,9 +259,11 @@ pub extern "C" fn dev_menu_scene_select() {
 
             devMenu.timer = 1;
         } else if (controller[InputSlotIDs::CONT_ANY as usize].keyUp.down == true32) {
-            devMenu.selection -= 1;
-            if (devMenu.timer == 0 && start + devMenu.selection < (*list).sceneOffsetStart as i32) {
-                devMenu.selection = (*list).sceneCount as i32 - 1;
+            if devMenu.timer == 0 {
+                devMenu.selection -= 1;
+                if (start + devMenu.selection < (*list).sceneOffsetStart as i32) {
+                    devMenu.selection = (*list).sceneCount as i32 - 1;
+                }
             }
 
             devMenu.timer = (devMenu.timer + 1) & 7;
@@ -289,9 +293,11 @@ pub extern "C" fn dev_menu_scene_select() {
 
             devMenu.timer = 1;
         } else if (controller[InputSlotIDs::CONT_ANY as usize].keyDown.down == true32) {
-            devMenu.selection += 1;
-            if (devMenu.timer == 0 && devMenu.selection >= (*list).sceneCount as i32) {
-                devMenu.selection = 0;
+            if devMenu.timer == 0 {
+                devMenu.selection += 1;
+                if (devMenu.selection >= (*list).sceneCount as i32) {
+                    devMenu.selection = 0;
+                }
             }
 
             devMenu.timer = (devMenu.timer + 1) & 7;
