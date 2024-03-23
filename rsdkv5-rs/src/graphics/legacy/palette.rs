@@ -1,5 +1,3 @@
-use std::ffi::CStr;
-
 use crate::*;
 
 use self::{
@@ -192,8 +190,7 @@ pub extern "C" fn load_palette(
     startIndex: int32,
     endIndex: int32,
 ) {
-    let fullPath =
-        "Data/Palettes/".to_owned() + unsafe { CStr::from_ptr(filePath).to_str().unwrap() } + "\0";
+    let fullPath = "Data/Palettes/".to_owned() + &to_string(filePath) + "\0";
 
     let mut info = DEFAULT_FILEINFO;
     init_file_info(&mut info);

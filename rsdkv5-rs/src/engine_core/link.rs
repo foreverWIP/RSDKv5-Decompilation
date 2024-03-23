@@ -1,4 +1,4 @@
-use std::{ffi::CStr, path::Path};
+use crate::*;
 
 use dlopen::raw::Library;
 
@@ -79,7 +79,7 @@ static mut error_string: String = String::new();
 #[export_name = "Link_Open"]
 pub extern "C" fn link_open(path: *const i8) -> Handle {
     unsafe {
-        let path = CStr::from_ptr(path).to_str().unwrap().to_owned()
+        let path = to_string(path)
             + if cfg!(target_os = "windows") {
                 ".dll"
             } else if cfg!(target_family = "macos") {
@@ -116,7 +116,7 @@ pub extern "C" fn link_get_symbol(handle: Handle, symbol: *const i8) -> *const u
     }
 
     unsafe {
-        match (*handle.handle).symbol_cstr::<*const u8>(&CStr::from_ptr(symbol)) {
+        match (*handle.handle).symbol(&to_string(symbol)) {
             Ok(s) => s,
             Err(e) => {
                 error_string = e.to_string();

@@ -1,5 +1,3 @@
-use std::ffi::CStr;
-
 use crate::*;
 
 use self::engine_core::reader::{
@@ -224,8 +222,8 @@ pub extern "C" fn legacy_clear_animation_data() {
 #[export_name = "Legacy_AddAnimationFile"]
 pub extern "C" fn legacy_add_animation_file(filePath: *const i8) -> *const AnimationFile {
     unsafe {
-        let filePathStr = CStr::from_ptr(filePath).to_str().unwrap();
-        let path = "Data/Animations/".to_owned() + filePathStr + "\0";
+        let filePathStr = to_string(filePath);
+        let path = "Data/Animations/".to_owned() + &filePathStr + "\0";
 
         for a in 0..LEGACY_ANIFILE_COUNT {
             if (Legacy_animationFileList[a].fileName[0] == 0) {
@@ -239,9 +237,7 @@ pub extern "C" fn legacy_add_animation_file(filePath: *const i8) -> *const Anima
             }
 
             let aniFileNameStr =
-                CStr::from_ptr(Legacy_animationFileList[a].fileName.as_ptr() as *const i8)
-                    .to_str()
-                    .unwrap();
+                to_string(Legacy_animationFileList[a].fileName.as_ptr() as *const i8);
             if (aniFileNameStr == filePathStr) {
                 return &Legacy_animationFileList[a];
             }

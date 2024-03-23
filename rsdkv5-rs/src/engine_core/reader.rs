@@ -1,5 +1,5 @@
 use std::{
-    ffi::{c_long, c_ulong, CStr, CString},
+    ffi::{c_long, c_ulong},
     fs::File,
 };
 
@@ -183,11 +183,7 @@ pub extern "C" fn load_data_pack(
 
         let mut dataPackPath = [0u8; 0x100];
 
-        let fullFilePathStr = CStr::from_ptr(SKU_userFileDir.as_ptr() as *const i8)
-            .to_str()
-            .unwrap()
-            .to_owned()
-            + CStr::from_ptr(filePath).to_str().unwrap();
+        let fullFilePathStr = to_string(SKU_userFileDir.as_ptr()) + &to_string(filePath);
         dataPackPath[..(fullFilePathStr.len())].copy_from_slice(fullFilePathStr.as_bytes());
 
         init_file_info(&mut info);
@@ -266,13 +262,7 @@ pub extern "C" fn load_data_pack(
 #[export_name = "OpenDataFile"]
 pub extern "C" fn open_data_file(info: &mut FileInfo, filename: *const i8) -> bool32 {
     unsafe {
-        let hash = gen_hash_md5(
-            &CStr::from_ptr(filename)
-                .to_str()
-                .unwrap()
-                .to_owned()
-                .to_ascii_lowercase(),
-        );
+        let hash = gen_hash_md5(&to_string(filename).to_ascii_lowercase());
 
         for f in 0..dataFileListCount {
             let file = &dataFileList[f as usize];
@@ -346,7 +336,7 @@ pub extern "C" fn load_file(info: &mut FileInfo, filename: *const i8, fileMode: 
     }
 
     unsafe {
-        let mut fullFilePath = CStr::from_ptr(filename).to_str().unwrap().to_owned() + "\0";
+        let mut fullFilePath = to_string(filename) + "\0";
 
         if cfg!(feature = "mod_loader") {
             LoadFile_HandleMods(info, filename, fullFilePath.as_ptr() as *const i8);
@@ -354,11 +344,7 @@ pub extern "C" fn load_file(info: &mut FileInfo, filename: *const i8, fileMode: 
 
         // somewhat hacky but also pleases the mod gods
         if (info.externalFile == false32) {
-            fullFilePath = CStr::from_ptr(SKU_userFileDir.as_ptr() as *const i8)
-                .to_str()
-                .unwrap()
-                .to_owned()
-                + &fullFilePath;
+            fullFilePath = to_string(SKU_userFileDir.as_ptr()) + &fullFilePath;
         }
 
         if (info.externalFile == false32
@@ -642,14 +628,8 @@ pub extern "C" fn decrypt_bytes(info: &mut FileInfo, buffer: *mut u8, mut size: 
 #[no_mangle]
 #[export_name = "GenerateELoadKeys"]
 pub extern "C" fn generate_e_load_keys(info: &mut FileInfo, key1: *const i8, key2: i32) {
-    let c_str = unsafe {
-        assert!(!key1.is_null());
-
-        std::ffi::CStr::from_ptr(key1).to_str().unwrap()
-    };
-
     // KeyA
-    let hash = gen_hash_md5(&c_str.to_ascii_uppercase());
+    let hash = gen_hash_md5(&to_string(key1).to_ascii_uppercase());
 
     for i in 0..4 {
         for j in 0..4 {

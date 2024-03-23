@@ -181,8 +181,6 @@ pub extern "C" fn rotate_palette(bankID: uint8, startIndex: uint8, endIndex: uin
 #[no_mangle]
 #[export_name = "LoadPalette"]
 pub extern "C" fn load_palette(bankID: uint8, filename: *const i8, disabledRows: uint16) {
-    use std::ffi::CStr;
-
     use crate::engine_core::reader::{
         close_file, load_file, read_int_8, seek_cur, FileInfo, FileModes, DEFAULT_FILEINFO,
     };
@@ -190,8 +188,7 @@ pub extern "C" fn load_palette(bankID: uint8, filename: *const i8, disabledRows:
     use self::engine_core::reader::init_file_info;
 
     unsafe {
-        let fullFilePath =
-            "Data/Palettes/".to_owned() + CStr::from_ptr(filename).to_str().unwrap() + "\0";
+        let fullFilePath = "Data/Palettes/".to_owned() + &to_string(filename) + "\0";
 
         let mut info = DEFAULT_FILEINFO;
         init_file_info(&mut info);

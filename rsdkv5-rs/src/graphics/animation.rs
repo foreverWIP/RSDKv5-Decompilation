@@ -1,5 +1,3 @@
-use std::ffi::CStr;
-
 use crate::*;
 
 use self::{
@@ -103,10 +101,7 @@ pub extern "C" fn load_sprite_animation(filePath: *const i8, scope: uint8) -> ui
     }
 
     unsafe {
-        let fullFilePath =
-            ("Data/Sprites/".to_owned() + CStr::from_ptr(filePath).to_str().unwrap() + "\0")
-                .as_str()
-                .to_owned();
+        let fullFilePath = ("Data/Sprites/".to_owned() + &to_string(filePath) + "\0");
         let hash = gen_hash_md5(&fullFilePath);
 
         for i in 0..SPRFILE_COUNT {
@@ -397,9 +392,7 @@ pub extern "C" fn create_sprite_animation(
     }
 
     unsafe {
-        let hash = gen_hash_md5(
-            ("Data/Sprites/".to_owned() + CStr::from_ptr(filename).to_str().unwrap()).as_str(),
-        );
+        let hash = gen_hash_md5(&("Data/Sprites/".to_owned() + &to_string(filename)));
 
         for i in 0..SPRFILE_COUNT {
             if spriteAnimationList[i].hash == hash {

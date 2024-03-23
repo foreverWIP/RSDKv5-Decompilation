@@ -1,5 +1,3 @@
-use std::{ffi::CStr, fs, io::Write};
-
 use crate::*;
 
 use super::{allocate_storage, StorageDataSets};
@@ -46,15 +44,7 @@ pub fn gen_hash_md5(message: &str) -> HashMD5 {
 }
 
 pub fn gen_hash_md5_ptr(ptr: *const i8) -> HashMD5 {
-    unsafe {
-        let c_str = {
-            assert!(!ptr.is_null());
-
-            CStr::from_ptr(ptr)
-        };
-
-        gen_hash_md5(c_str.to_str().unwrap())
-    }
+    gen_hash_md5(&to_string(ptr))
 }
 
 #[no_mangle]
@@ -65,12 +55,7 @@ pub extern "C" fn gen_hash_md5_buf(
     textBufferLen: int32,
 ) {
     unsafe {
-        let c_str = {
-            assert!(!local_textBuffer.is_null());
-
-            CStr::from_ptr(local_textBuffer)
-        };
-        buffer.copy_from(gen_hash_md5(c_str.to_str().unwrap()).as_ptr(), 4);
+        buffer.copy_from(gen_hash_md5(&to_string(local_textBuffer)).as_ptr(), 4);
     }
 }
 

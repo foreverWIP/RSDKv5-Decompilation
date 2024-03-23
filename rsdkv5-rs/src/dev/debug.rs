@@ -1,5 +1,3 @@
-use std::ffi::CStr;
-
 use crate::*;
 
 use self::{
@@ -322,8 +320,7 @@ pub extern "C" fn dev_menu_scene_select() {
         {
             let disabled: bool = if cfg!(feature = "version_2") {
                 // they hardcoded a check in here that forces you to own the encore DLC to select encore mode stages
-                CStr::from_ptr((*list).name.as_ptr()).to_str().unwrap() == "Encore Mode"
-                    && SKU_CheckDLC(0) == false32
+                to_string((*list).name.as_ptr()) == "Encore Mode" && SKU_CheckDLC(0) == false32
             } else {
                 false
             };
